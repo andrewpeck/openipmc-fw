@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "dimm_gpios.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -443,7 +443,18 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(500);
+    BLUE_LED_SET_STATE(SET);
+    LED_0_SET_STATE(SET);
+    LED_1_SET_STATE(SET);
+    LED_2_SET_STATE(SET);
+
+    osDelay(500);
+    BLUE_LED_SET_STATE(RESET);
+    LED_0_SET_STATE(RESET);
+    LED_1_SET_STATE(RESET);
+    LED_2_SET_STATE(RESET);
+
   }
   /* USER CODE END 5 */
 }
