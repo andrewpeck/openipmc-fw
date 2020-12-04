@@ -735,18 +735,12 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
     osDelay(500);
-    BLUE_LED_SET_STATE(SET);
-    LED_0_SET_STATE(SET);
-    LED_1_SET_STATE(SET);
     LED_2_SET_STATE(SET);
 
     osDelay(500);
-    BLUE_LED_SET_STATE(RESET);
-    LED_0_SET_STATE(RESET);
-    LED_1_SET_STATE(RESET);
     LED_2_SET_STATE(RESET);
 
-    ipmc_ios_printf("Blink\n\r");
+    //ipmc_ios_printf("Blink\n\r");
 
   }
   /* USER CODE END 5 */

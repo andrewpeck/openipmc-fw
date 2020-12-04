@@ -83,7 +83,7 @@ extern UART_HandleTypeDef huart4;
 int openipmc_hal_init(void)
 {
 
-	// Create the semaphores and mutex
+	// Create the semaphores and mutexes
 	printf_mutex = xSemaphoreCreateMutex();
 	ipmb_rec_semphr = xSemaphoreCreateBinary();
 	ipmba_send_semphr = xSemaphoreCreateBinary();
@@ -95,6 +95,8 @@ int openipmc_hal_init(void)
 
 	// Now peripherals are ready and can be used bu OpenIPMC
 	ipmc_ios_ready_flag = pdTRUE;
+
+	return 0;
 }
 
 
@@ -124,7 +126,10 @@ _Bool ipmc_ios_ready(void)
  */
 int ipmc_ios_read_handle(void)
 {
-	return 0;
+	if( HANDLE_GET_STATE() == GPIO_PIN_RESET ) // LOW = LOCKED/CLOSED
+		return 0;
+	else                                       // HIGH = UNLOCKED/OPEN
+		return 1;
 }
 
 
@@ -135,7 +140,48 @@ int ipmc_ios_read_handle(void)
  */
 uint8_t ipmc_ios_read_haddress(void)
 {
-	return 0;
+	int i;
+	uint8_t  HA_bit[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t  HA_num;
+	int parity_odd;
+
+	// Get HA0 to HA7
+	if( HW_0_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[0] = 1;
+	if( HW_1_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[1] = 1;
+	if( HW_2_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[2] = 1;
+	if( HW_3_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[3] = 1;
+	if( HW_4_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[4] = 1;
+	if( HW_5_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[5] = 1;
+	if( HW_6_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[6] = 1;
+	if( HW_7_GET_STATE() == GPIO_PIN_SET )
+		HA_bit[7] = 1;
+
+	return 0x43; // THIS IS ONLY FOR TESTING (skips parity check, return hard coded addr)
+
+	/* Calculate parity */
+	parity_odd = 0; // initialize as EVEN
+	for(i=0; i<8; i++)
+		if(HA_bit[i] == 1)
+			parity_odd = ~parity_odd; // flip parity
+
+	/* Result */
+	HA_num = 0;
+	if( parity_odd )
+	{
+		for(i=0; i<=6; i++)
+			HA_num |= (HA_bit[i]<<i);
+
+		return HA_num; // 7bit addr
+	}
+	else
+		return HA_PARITY_FAIL; //parity fail (must be ODD)
 }
 
 
@@ -357,9 +403,9 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 void ipmc_ios_blue_led(int blue_led_state)
 {
 	if (blue_led_state == 0)
-	{}//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET); // LED OFF
+		BLUE_LED_SET_STATE(RESET); // LED OFF
 	else
-	{}//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET); // LED ON
+		BLUE_LED_SET_STATE(SET); // LED ON
 }
 
 
