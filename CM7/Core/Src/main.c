@@ -26,6 +26,11 @@
 #include "stream_buffer.h"
 #include "dimm_gpios.h"
 #include "printf.h"
+#include "ipmc_tasks.h"
+#include "ipmc_ios.h"
+#include "fru_state_machine.h"
+#include "ipmb_0.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,6 +76,57 @@ const osThreadAttr_t keyboardTask_attributes = {
   .stack_size = 128 * 4
 };
 
+
+osThreadId_t ipmb_0_msg_receiver_task_handle;
+const osThreadAttr_t ipmb_0_msg_receiver_task_attributes = {
+  .name = "MNG",
+  .priority = (osPriority_t) osPriorityNormal3,
+  .stack_size = 512 * 4
+};
+
+osThreadId_t ipmb_0_msg_sender_task_handle;
+const osThreadAttr_t ipmb_0_msg_sender_task_attributes = {
+  .name = "MNGO",
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 512 * 4
+};
+
+osThreadId_t fru_state_machine_task_handle;
+const osThreadAttr_t fru_state_machine_task_attributes = {
+  .name = "SMM",
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 512 * 4
+};
+
+osThreadId_t ipmi_income_requests_manager_task_handle;
+const osThreadAttr_t ipmi_income_requests_manager_task_attributes = {
+  .name = "IPMI_MSG_MGMT",
+  .priority = (osPriority_t) osPriorityNormal2,
+  .stack_size = 512 * 4
+};
+
+osThreadId_t ipmc_handle_switch_task_handle;
+const osThreadAttr_t ipmc_handle_switch_task_attributes = {
+  .name = "IPMC_HANDLE_TRANS",
+  .priority = (osPriority_t) osPriorityNormal2,
+  .stack_size = 128 * 4
+};
+
+osThreadId_t ipmc_blue_led_blink_task_handle;
+const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
+  .name = "BLUE_LED",
+  .priority = (osPriority_t) osPriorityNormal2,
+  .stack_size = 128 * 4
+};
+
+//osThreadId_t keyboard_input_task_handle;
+//const osThreadAttr_t keyboard_input_task_attributes = {
+//  .name = "KEYBOARD",
+//  .priority = (osPriority_t) osPriorityNormal,
+//  .stack_size = 128 * 4
+//};
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,7 +136,7 @@ static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
 void StartDefaultTask(void *argument);
-void ipmc_ios_printf(const char* format, ...);  //JUST FOT TEST
+
 /* USER CODE BEGIN PFP */
 void KeyboardTask(void *argument);
 
@@ -180,6 +236,14 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   keyboardTaskHandle = osThreadNew(KeyboardTask, NULL, &keyboardTask_attributes);
+
+  ipmb_0_msg_receiver_task_handle = osThreadNew(ipmb_0_msg_receiver_task, NULL, &ipmb_0_msg_receiver_task_attributes);
+  ipmb_0_msg_sender_task_handle = osThreadNew(ipmb_0_msg_sender_task, NULL, &ipmb_0_msg_sender_task_attributes);
+  fru_state_machine_task_handle = osThreadNew(fru_state_machine_task, NULL, &fru_state_machine_task_attributes);
+  ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
+  ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
+  ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
+  //keyboard_input_task_handle = osThreadNew(KeyboardInput_task, NULL, &keyboard_input_task_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -605,6 +669,7 @@ static void MX_GPIO_Init(void)
 void KeyboardTask(void *argument)
 {
   char c;
+  fru_transition_t fru_trigg_val;
 
   // Start receiving bytes from keyboard
   uart4_input_stram = xStreamBufferCreate(10, 1);
@@ -614,8 +679,25 @@ void KeyboardTask(void *argument)
   {
 	xStreamBufferReceive( uart4_input_stram, &c, 1, portMAX_DELAY);
 
+	ipmc_ios_printf("Pressed Key: %c\r\n", c);
+	switch (c){
+		case 'a':
+			ipmc_ios_printf("ADDR: %x\r\n", ipmb_0_addr);
+			break;
+		case 'c':
+			fru_trigg_val = CLOSE_HANDLE;
+			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
+			break;
+		case 'o':
+			fru_trigg_val = OPEN_HANDLE;
+			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
+			break;
+		default:
+			break;
+	}
+
 	//echo test
-	HAL_UART_Transmit(&huart4, &c, 1, 100);
+	//HAL_UART_Transmit(&huart4, &c, 1, 100);
   }
 }
 
@@ -647,6 +729,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+  openipmc_hal_init();
 
   /* Infinite loop */
   for(;;)

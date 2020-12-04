@@ -1,6 +1,6 @@
 
 /*
- * This file contains the all specific implementation of the OpenIPMC's Hardware
+ * This file contains all specific implementation of the OpenIPMC's Hardware
  * Abstraction Layer functions. These functions are all declared in ipmc_ios.h.
  */
 
@@ -16,11 +16,13 @@
 #include "cmsis_os.h"
 
 // OpenIPMC includes
-//#include "openipmc/src/ipmc_ios.h"
+#include "ipmc_ios.h"
 //#include "openipmc/src/ipmb_0.h"
 //#include "openipmc/src/ipmi_msg_manager.h"
 //#include "openipmc/src/fru_state_machine.h"
 //#include "openipmc/src/ipmc_tasks.h"
+
+#include "dimm_gpios.h"
 
 // printf lib include
 #include "printf.h"
@@ -37,12 +39,12 @@
 static _Bool ipmc_ios_ready_flag = pdFALSE;
 
 // I2C state control variables in OpenIPMC HAL
-static uint8_t i2c1_current_state;
-static uint8_t i2c4_current_state;
+static uint8_t i2c1_current_state;   // CHANGE THIS NAME
+static uint8_t i2c4_current_state;   // CHANGE THIS NAME
 
 // Length of the the received message
-static uint32_t i2c1_recv_len = 0;
-static uint32_t i2c4_recv_len = 0;
+static uint32_t i2c1_recv_len = 0;   // CHANGE THIS NAME
+static uint32_t i2c4_recv_len = 0;   // CHANGE THIS NAME
 
 // IPMB Hardware Address
 static uint8_t  ipmb_addr;
@@ -87,7 +89,9 @@ int openipmc_hal_init(void)
 	ipmba_send_semphr = xSemaphoreCreateBinary();
 	ipmbb_send_semphr = xSemaphoreCreateBinary();
 
-	//ADICIONAR CÓDIGO PARA HABILITAR OS CANAIS
+	// Enable the IPMB channels
+	GPIO_SET_STATE(SET, IPMB_A_EN);
+	GPIO_SET_STATE(SET, IPMB_B_EN);
 
 	// Now peripherals are ready and can be used bu OpenIPMC
 	ipmc_ios_ready_flag = pdTRUE;
@@ -154,40 +158,40 @@ void ipmc_ios_ipmb_set_addr(uint8_t addr)
  */
 int ipmc_ios_ipmba_send(uint8_t *MsgPtr, int ByteCount)
 {
-    _Bool semphr_timeout;
-    uint16_t dest_addr;
-    HAL_StatusTypeDef tx_ret_val;
+	_Bool semphr_timeout;
+	uint16_t dest_addr;
+	HAL_StatusTypeDef tx_ret_val;
 
-    dest_addr = (uint16_t)MsgPtr[0]; // Address already shifted
+	dest_addr = (uint16_t)MsgPtr[0]; // Address already shifted
 
-    // Must reconfigure the I2C peripheral before attempting to transmit in master mode
-    HAL_I2C_DeInit(&hi2c_ipmba);
-    HAL_I2C_Init(&hi2c_ipmba);
+	// Must reconfigure the I2C peripheral before attempting to transmit in master mode
+	HAL_I2C_DeInit(&hi2c_ipmba);
+	HAL_I2C_Init(&hi2c_ipmba);
 	HAL_I2CEx_ConfigAnalogFilter(&hi2c_ipmba, I2C_ANALOGFILTER_ENABLE);
 	HAL_I2CEx_ConfigDigitalFilter(&hi2c_ipmba, 0);
 
-    // set current mode as Master
-    i2c1_current_state = I2C_MODE_MASTER;
+	// set current mode as Master
+	i2c1_current_state = I2C_MODE_MASTER;
 
-    // begin the transmission
-    tx_ret_val = HAL_I2C_Master_Transmit_IT(&hi2c_ipmba, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1);
+	// begin the transmission
+	tx_ret_val = HAL_I2C_Master_Transmit_IT(&hi2c_ipmba, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1);
 
-    // Wait for transmission to finish or timeout
-    semphr_timeout = xSemaphoreTake (ipmba_send_semphr, pdMS_TO_TICKS(100));
+	// Wait for transmission to finish or timeout
+	semphr_timeout = xSemaphoreTake (ipmba_send_semphr, pdMS_TO_TICKS(100));
 
-    // return I2C to Slave mode
-    i2c1_recv_len = 0;
-    HAL_I2C_DeInit(&hi2c_ipmba);
-    HAL_I2C_Init(&hi2c_ipmba);
-    HAL_I2CEx_ConfigAnalogFilter(&hi2c_ipmba, I2C_ANALOGFILTER_ENABLE);
-    HAL_I2CEx_ConfigDigitalFilter(&hi2c_ipmba, 0);
-    HAL_I2C_Slave_Receive_IT(&hi2c_ipmba, &ipmba_input_buffer[0], IPMB_BUFF_SIZE);
-    i2c1_current_state = I2C_MODE_SLAVE;
-/*
-    if ( (tx_ret_val == HAL_OK) && (semphr_timeout != pdFALSE) )
-        return IPMB_SEND_DONE;
-    else
-    	return IPMB_SEND_FAIL;*/
+	// return I2C to Slave mode
+	i2c1_recv_len = 0;
+	HAL_I2C_DeInit(&hi2c_ipmba);
+	HAL_I2C_Init(&hi2c_ipmba);
+	HAL_I2CEx_ConfigAnalogFilter(&hi2c_ipmba, I2C_ANALOGFILTER_ENABLE);
+	HAL_I2CEx_ConfigDigitalFilter(&hi2c_ipmba, 0);
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmba, &ipmba_input_buffer[0], IPMB_BUFF_SIZE);
+	i2c1_current_state = I2C_MODE_SLAVE;
+
+	if ( (tx_ret_val == HAL_OK) && (semphr_timeout != pdFALSE) )
+		return IPMB_SEND_DONE;
+	else
+		return IPMB_SEND_FAIL;
 }
 
 
@@ -198,21 +202,82 @@ int ipmc_ios_ipmba_send(uint8_t *MsgPtr, int ByteCount)
 */
 int ipmc_ios_ipmbb_send(uint8_t *MsgPtr, int ByteCount)
 {
-	return 0;
+	_Bool semphr_timeout;
+	uint16_t dest_addr;
+	HAL_StatusTypeDef tx_ret_val;
+
+	dest_addr = (uint16_t)MsgPtr[0]; // Address already shifted
+
+	// must reconfigure the I2C peripheral before attempting to transmit in master mode
+	HAL_I2C_DeInit(&hi2c_ipmbb);
+	HAL_I2C_Init(&hi2c_ipmbb);
+	HAL_I2CEx_ConfigAnalogFilter(&hi2c_ipmbb, I2C_ANALOGFILTER_ENABLE);
+	HAL_I2CEx_ConfigDigitalFilter(&hi2c_ipmbb, 0);
+
+	// set current mode as Master
+	i2c4_current_state = I2C_MODE_MASTER;
+
+	// begin the transmission
+	tx_ret_val = HAL_I2C_Master_Transmit_IT(&hi2c_ipmbb, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1);
+
+	// Wait transmission finish or timeout
+	semphr_timeout = xSemaphoreTake ( ipmbb_send_semphr, pdMS_TO_TICKS(100) );
+
+	// return I2C to Slave mode
+	i2c4_recv_len = 0;
+	HAL_I2C_DeInit(&hi2c_ipmbb);
+	HAL_I2C_Init(&hi2c_ipmbb);
+	HAL_I2CEx_ConfigAnalogFilter(&hi2c_ipmbb, I2C_ANALOGFILTER_ENABLE);
+	HAL_I2CEx_ConfigDigitalFilter(&hi2c_ipmbb, 0);
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
+	i2c4_current_state = I2C_MODE_SLAVE;
+
+	if ( (tx_ret_val == HAL_OK) && (semphr_timeout != pdFALSE) )
+		return IPMB_SEND_DONE;
+	else
+		return IPMB_SEND_FAIL;
 }
 
 
 
 int ipmc_ios_ipmba_read(uint8_t *MsgPtr)
 {
-	return 0;
+    int i;
+    // Length zero means no message received
+    if(i2c1_recv_len > 0)
+    {
+        MsgPtr[0] = ipmb_addr << 1;
+        for(i=0; (i < i2c1_recv_len); i++)
+            MsgPtr[i+1] = ipmba_input_buffer[i];
+
+        i2c1_recv_len = 0;
+        HAL_I2C_Slave_Receive_IT(&hi2c_ipmba, &ipmba_input_buffer[0], IPMB_BUFF_SIZE);
+        ipmc_ios_printf("\n");
+        return i+1;
+    }
+    else
+        return 0;
 }
 
 
 
 int ipmc_ios_ipmbb_read(uint8_t *MsgPtr )
 {
-	return 0;
+    int i;
+    // Length zero means no message received
+    if(i2c4_recv_len > 0)
+    {
+        MsgPtr[0] = ipmb_addr << 1;
+        for(i=0; (i < i2c4_recv_len); i++)
+            MsgPtr[i+1] = ipmbb_input_buffer[i];
+
+        i2c4_recv_len = 0;
+        HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
+        ipmc_ios_printf("\n");
+        return i+1;
+    }
+    else
+        return 0;
 }
 
 
@@ -224,6 +289,64 @@ int ipmc_ios_ipmbb_read(uint8_t *MsgPtr )
 void ipmc_ios_ipmb_wait_input_msg(void)
 {
     xSemaphoreTake (ipmb_rec_semphr, portMAX_DELAY);
+}
+
+
+
+
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	static BaseType_t xHigherPriorityTaskWoken;
+	xHigherPriorityTaskWoken = pdFALSE;
+
+    if( (hi2c->Instance==I2C1) && (i2c1_current_state==I2C_MODE_MASTER) )
+	{
+        xSemaphoreGiveFromISR(ipmba_send_semphr, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
+ 	else if ( (hi2c->Instance==I2C2) && (i2c4_current_state==I2C_MODE_MASTER) )
+    {
+        xSemaphoreGiveFromISR(ipmbb_send_semphr, &xHigherPriorityTaskWoken);
+ 		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+ 	}
+}
+
+
+
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+  /** Error_Handler() function is called when error occurs.
+    * 1- When Slave don't acknowledge it's address, Master restarts communication.
+    * 2- When Master don't acknowledge the last data transferred, Slave don't care in this example.
+    */
+	static BaseType_t xHigherPriorityTaskWoken;
+	xHigherPriorityTaskWoken = pdFALSE;
+
+	if(hi2c->Instance==I2C1 && i2c1_current_state == I2C_MODE_SLAVE)
+	{
+		i2c1_recv_len = IPMB_BUFF_SIZE - hi2c->XferSize;
+		if (i2c1_recv_len>0)
+		{
+			xSemaphoreGiveFromISR(ipmb_rec_semphr, &xHigherPriorityTaskWoken);
+		}
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
+	else if (hi2c->Instance==I2C2 && i2c4_current_state == I2C_MODE_SLAVE)
+    {
+		i2c4_recv_len = IPMB_BUFF_SIZE - hi2c->XferSize;
+		if (i2c4_recv_len>0)
+		{
+			xSemaphoreGiveFromISR(ipmb_rec_semphr, &xHigherPriorityTaskWoken);
+		}
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
+	else if ((i2c1_current_state == I2C_MODE_MASTER) || (i2c4_current_state == I2C_MODE_MASTER))
+    {
+        //ipmc_ios_printf("I2C MASTER SEND FAIL - ISR ERROR CALLED");
+    }
+
 }
 
 
