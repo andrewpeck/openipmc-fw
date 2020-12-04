@@ -1,0 +1,6 @@
+[submodule "CM7/Core/printf"]
+	path = CM7/Core/printf
+	url = https://github.com/mpaland/printf.git
+[submodule "CM7/Core/openipmc"]
+	path = CM7/Core/openipmc
+	url = https://gitlab.com/openipmc/openipmc.git

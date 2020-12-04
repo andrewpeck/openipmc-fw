@@ -23,7 +23,8 @@
 //#include "openipmc/src/ipmc_tasks.h"
 
 // printf lib include
-//#include "../printf/printf.h"
+#include "printf.h"
+
 
 #define ACK_CHECK_EN 0x1       /*!< I2C master will check ack from slave*/
 #define ACK_CHECK_DIS 0x0      /*!< I2C master will not check ack from slave */
@@ -58,12 +59,15 @@ static SemaphoreHandle_t ipmbb_send_semphr = NULL;
 // Mutex to avoid printf overlapping.
 static SemaphoreHandle_t printf_mutex = NULL;
 
-// Remap I2C peripherals handlers for IPMB channels
-I2C_HandleTypeDef hi2c1;  // JUST FOR TEST
-I2C_HandleTypeDef hi2c2;  // JUST FOR TEST
+// Re-map I2C peripherals handlers for IPMB channels
+extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 #define hi2c_ipmba hi2c1
 #define hi2c_ipmbb hi2c2
 
+// Re-map UART peripherals handlers for printing outputs
+extern UART_HandleTypeDef huart4;
+#define huart4_printout huart4
 
 
 /*
@@ -243,15 +247,20 @@ void ipmc_ios_blue_led(int blue_led_state)
  */
 void ipmc_ios_printf(const char* format, ...)
 {
-//	va_list args;
+	va_list args;
 
-//	xSemaphoreTake(printf_mutex, portMAX_DELAY);
+	xSemaphoreTake(printf_mutex, portMAX_DELAY);
 
-//	va_start( args, format );
-//	vprintf_( format, args );
-//	va_end( args );
+	va_start( args, format );
+	vprintf_( format, args );
+	va_end( args );
 
-//	xSemaphoreGive(printf_mutex);
+	xSemaphoreGive(printf_mutex);
 }
 
 
+void _putchar(char character)
+{
+	HAL_UART_Transmit(&huart4_printout, &character, 1, 1000);
+	//outbyte(character);
+}

@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "stream_buffer.h"
 #include "dimm_gpios.h"
+#include "printf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,7 +80,7 @@ static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
 void StartDefaultTask(void *argument);
-
+void ipmc_ios_printf(const char* format, ...);  //JUST FOT TEST
 /* USER CODE BEGIN PFP */
 void KeyboardTask(void *argument);
 
@@ -661,6 +662,8 @@ void StartDefaultTask(void *argument)
     LED_0_SET_STATE(RESET);
     LED_1_SET_STATE(RESET);
     LED_2_SET_STATE(RESET);
+
+    ipmc_ios_printf("Blink\n\r");
 
   }
   /* USER CODE END 5 */
