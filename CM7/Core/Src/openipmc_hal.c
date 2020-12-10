@@ -92,6 +92,18 @@ int openipmc_hal_init(void)
 	// Enable the IPMB channels
 	GPIO_SET_STATE(SET, IPMB_A_EN);
 	GPIO_SET_STATE(SET, IPMB_B_EN);
+	osDelay(100);
+	if(IPMB_A_RDY_GET_STATE() && IPMB_B_RDY_GET_STATE())
+		ipmc_ios_printf("IPMB Decouplers Ready\n\r");
+	else
+		ipmc_ios_printf("IPMB Decouplers NOT Ready\n\r");
+
+
+	// Start Receiving on IPMB
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmba, &ipmba_input_buffer[0], IPMB_BUFF_SIZE);
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
+	i2c1_current_state = I2C_MODE_SLAVE;
+	i2c4_current_state = I2C_MODE_SLAVE;
 
 	// Now peripherals are ready and can be used bu OpenIPMC
 	ipmc_ios_ready_flag = pdTRUE;
@@ -221,6 +233,7 @@ int ipmc_ios_ipmba_send(uint8_t *MsgPtr, int ByteCount)
 
 	// begin the transmission
 	tx_ret_val = HAL_I2C_Master_Transmit_IT(&hi2c_ipmba, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1);
+	//tx_ret_val = HAL_I2C_Master_Transmit(&hi2c_ipmba, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1, 2000);
 
 	// Wait for transmission to finish or timeout
 	semphr_timeout = xSemaphoreTake (ipmba_send_semphr, pdMS_TO_TICKS(100));
@@ -265,6 +278,7 @@ int ipmc_ios_ipmbb_send(uint8_t *MsgPtr, int ByteCount)
 
 	// begin the transmission
 	tx_ret_val = HAL_I2C_Master_Transmit_IT(&hi2c_ipmbb, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1);
+	//tx_ret_val = HAL_I2C_Master_Transmit(&hi2c_ipmbb, dest_addr, &MsgPtr[1], (uint16_t) ByteCount -1, 2000);
 
 	// Wait transmission finish or timeout
 	semphr_timeout = xSemaphoreTake ( ipmbb_send_semphr, pdMS_TO_TICKS(100) );
@@ -433,3 +447,4 @@ void _putchar(char character)
 	HAL_UART_Transmit(&huart4_printout, &character, 1, 1000);
 	//outbyte(character);
 }
+
