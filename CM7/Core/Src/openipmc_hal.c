@@ -206,6 +206,20 @@ void ipmc_ios_ipmb_set_addr(uint8_t addr)
 	// Convert into 7-bit format to be used by the I2C driver
 	ipmb_addr = addr >> 1;
 
+	// Set I2C address
+	HAL_I2C_DeInit(&hi2c_ipmba);
+	hi2c_ipmba.Init.OwnAddress1 = (0x300 | ipmb_addr << 1);
+	HAL_I2C_Init(&hi2c_ipmba);
+
+	HAL_I2C_DeInit(&hi2c_ipmbb);
+	hi2c_ipmbb.Init.OwnAddress1 = (0x300 | ipmb_addr << 1);
+	HAL_I2C_Init(&hi2c_ipmbb);
+
+	// Start Receiving on IPMB
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmba, &ipmba_input_buffer[0], IPMB_BUFF_SIZE);
+	HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
+	i2c1_current_state = I2C_MODE_SLAVE;
+	i2c4_current_state = I2C_MODE_SLAVE;
 }
 
 
