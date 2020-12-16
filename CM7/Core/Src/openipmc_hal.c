@@ -171,7 +171,6 @@ uint8_t ipmc_ios_read_haddress(void)
 	if( HW_7_GET_STATE() == GPIO_PIN_SET )
 		HA_bit[7] = 1;
 
-	return 0x43; // THIS IS ONLY FOR TESTING (skips parity check, return hard coded addr)
 
 	/* Calculate parity */
 	parity_odd = 0; // initialize as EVEN
