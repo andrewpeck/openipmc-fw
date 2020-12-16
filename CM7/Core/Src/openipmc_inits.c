@@ -4,6 +4,8 @@
 /* FreeRTOS includes. */
 //#include "FreeRTOS.h"
 
+#include "dimm_gpios.h"
+
 //OpenIPMC includes
 #include "sdr_manager.h"
 #include "power_manager.h"
@@ -190,9 +192,10 @@ void ipmc_pwr_switch_power_level_on_payload(uint8_t new_power_level)
 	 * Do whatever is needed to set to the requested power level on the payload
 	 */
 
-	/*
-	 * TODO: improve example with 12V_enable and reading of current power level
-	 */
+	if(new_power_level != 0)
+		EN_12V_SET_STATE(SET);
+	else
+		EN_12V_SET_STATE(RESET);
 
 	return;
 }

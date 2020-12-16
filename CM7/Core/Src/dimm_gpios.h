@@ -1,7 +1,7 @@
 #ifndef GPIO_MAP_H
 #define GPIO_MAP_H
 
-
+#include "main.h"
 
 /*
  * Set the output state of a "named" GPIO in the board
