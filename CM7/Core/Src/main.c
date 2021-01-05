@@ -30,6 +30,7 @@
 #include "ipmc_ios.h"
 #include "fru_state_machine.h"
 #include "ipmb_0.h"
+#include "amc_gpios.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,8 @@
 
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
+
+SPI_HandleTypeDef hspi4;
 
 UART_HandleTypeDef huart4;
 
@@ -135,6 +138,7 @@ static void MX_GPIO_Init(void);
 static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_SPI4_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -207,6 +211,7 @@ Error_Handler();
   MX_UART4_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
+  MX_SPI4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -320,8 +325,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_I2C2
-                              |RCC_PERIPHCLK_I2C1;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_SPI4
+                              |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C1;
+  PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
@@ -423,6 +429,54 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief SPI4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI4_Init(void)
+{
+
+  /* USER CODE BEGIN SPI4_Init 0 */
+
+  /* USER CODE END SPI4_Init 0 */
+
+  /* USER CODE BEGIN SPI4_Init 1 */
+
+  /* USER CODE END SPI4_Init 1 */
+  /* SPI4 parameter configuration*/
+  hspi4.Instance = SPI4;
+  hspi4.Init.Mode = SPI_MODE_MASTER;
+  hspi4.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi4.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi4.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi4.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi4.Init.NSS = SPI_NSS_SOFT;
+  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi4.Init.CRCPolynomial = 0x0;
+  hspi4.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi4.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
+  hspi4.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+  hspi4.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi4.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
+  hspi4.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+  hspi4.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+  hspi4.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+  hspi4.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
+  hspi4.Init.IOSwap = SPI_IO_SWAP_DISABLE;
+  if (HAL_SPI_Init(&hspi4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI4_Init 2 */
+
+  /* USER CODE END SPI4_Init 2 */
+
+}
+
+/**
   * @brief UART4 Initialization Function
   * @param None
   * @retval None
@@ -493,7 +547,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(EXPANDER_RST_GPIO_Port, EXPANDER_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, EXPANDER_NSS_Pin|EXPANDER_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ETH_RST_N_GPIO_Port, ETH_RST_N_Pin, GPIO_PIN_SET);
@@ -543,12 +597,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EXPANDER_RST_Pin */
-  GPIO_InitStruct.Pin = EXPANDER_RST_Pin;
+  /*Configure GPIO pins : EXPANDER_NSS_Pin EXPANDER_RST_Pin */
+  GPIO_InitStruct.Pin = EXPANDER_NSS_Pin|EXPANDER_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(EXPANDER_RST_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IPM_14_Pin USR_IO_7_Pin IPM_7_Pin USR_IO_21_Pin
                            USR_IO_17_Pin */
@@ -738,6 +792,8 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   openipmc_hal_init();
+
+  amc_gpios_initialize_expanders();
 
   /* Infinite loop */
   for(;;)

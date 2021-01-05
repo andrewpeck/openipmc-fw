@@ -74,6 +74,8 @@ void Error_Handler(void);
 #define USR_IO_1_GPIO_Port GPIOE
 #define EXPANDER_INT_Pin GPIO_PIN_3
 #define EXPANDER_INT_GPIO_Port GPIOI
+#define EXPANDER_NSS_Pin GPIO_PIN_4
+#define EXPANDER_NSS_GPIO_Port GPIOE
 #define EXPANDER_RST_Pin GPIO_PIN_3
 #define EXPANDER_RST_GPIO_Port GPIOE
 #define IPM_14_Pin GPIO_PIN_14
