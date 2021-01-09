@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "stream_buffer.h"
 #include "dimm_gpios.h"
+#include "amc_gpios.h"
 #include "printf.h"
 #include "ipmc_tasks.h"
 #include "ipmc_ios.h"
@@ -58,6 +59,8 @@ I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 
 SPI_HandleTypeDef hspi4;
+DMA_HandleTypeDef hdma_spi4_tx;
+DMA_HandleTypeDef hdma_spi4_rx;
 
 UART_HandleTypeDef huart4;
 
@@ -135,6 +138,7 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
@@ -208,6 +212,7 @@ Error_Handler();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_UART4_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
@@ -525,6 +530,25 @@ static void MX_UART4_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -779,6 +803,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 }
 
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	if( hspi == &hspi4 )
+		amc_gpios_spi_interruption();
+}
+
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -793,7 +825,9 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   openipmc_hal_init();
 
-  amc_gpios_initialize_expanders();
+
+  amc_gpios_init();
+  //amc_gpios_set_pin_direction( 0, OUT );
 
   /* Infinite loop */
   for(;;)
@@ -806,6 +840,25 @@ void StartDefaultTask(void *argument)
 
     //ipmc_ios_printf("Blink\n\r");
 
+    int amc, pin, val;
+    for(pin=0; pin<90; pin++)
+    	amc_gpios_set_pin_pullup( pin, ON );
+    for(amc=0; amc<9; amc++)
+    {
+    	for(pin=0; pin<10; pin++)
+    	{
+    		val=amc_gpios_read_pin( 10*amc + pin);
+    		ipmc_ios_printf("%d", val);
+    	}
+    	ipmc_ios_printf(" ");
+
+    	if(amc==8)
+    		ipmc_ios_printf("\n\r");
+    }
+
+    //amc_gpios_set_pin_direction( 0, OUT );
+    //amc_gpios_write_pin( 0, 1 );
+    //amc_gpios_write_pin( 0, 0 );
   }
   /* USER CODE END 5 */
 }

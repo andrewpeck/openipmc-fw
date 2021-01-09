@@ -59,6 +59,39 @@ struct
 };
 
 
+/*
+ * SPI resources
+ */
+static uint8_t spi_data_out[4] __attribute__((section(".sram4")));
+static uint8_t spi_data_in[4]  __attribute__((section(".sram4")));
+static enum { IDLE, BUSY } spi_status = IDLE;
+
+// Writes ONE register into an Expander device
+#define WRITE_1_REG( DEVICE_ADDR, REG_ADDR, VAL)                              \
+	{                                                                         \
+		while(spi_status != IDLE) { asm("nop"); }                             \
+		spi_status = BUSY;                                                    \
+		spi_data_out[0] = 0x40 | (DEVICE_ADDR<<1);                            \
+		spi_data_out[1] = REG_ADDR;                                           \
+		spi_data_out[2] = VAL;                                                \
+		EXPANDER_NSS_set_low();                                               \
+		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
+	}
+
+// Reads ONE register from an Expander device
+#define READ_1_REG( DEVICE_ADDR, REG_ADDR, VAL )                              \
+	{                                                                         \
+		while(spi_status != IDLE) { asm("nop"); }                             \
+		spi_status = BUSY;                                                    \
+		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                            \
+		spi_data_out[1] = REG_ADDR;                                           \
+		spi_data_out[2] = 0  ;                                                \
+		EXPANDER_NSS_set_low();                                               \
+		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
+		while(spi_status != IDLE) { asm("nop"); }                             \
+		VAL = spi_data_in[2];                                                 \
+	}
+
 
 
 // SPI Handle
@@ -66,9 +99,9 @@ extern SPI_HandleTypeDef hspi4;
 #define hspi_amc hspi4
 
 
-void amc_gpios_initialize_expanders( void )
+void amc_gpios_init( void )
 {
-	uint8_t command[4];
+	//uint8_t command[4];
 
 	// Reset expanders
 	EXPANDER_RST_set_low();
@@ -78,92 +111,39 @@ void amc_gpios_initialize_expanders( void )
 	// Configure expanders in "Address Mode".
 	// (Since "Address Mode" is not enable after reset, this operation has
 	// a broadcast effect)
-	command[0] = 0x40;
-	command[1] = 0x0A; // IOCON register
-	command[2] = 0x08; // Set IOCON.HAEN bit
-	EXPANDER_NSS_set_low();
-	HAL_SPI_Transmit(&hspi_amc, command, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
+	// Writes 0x08 in register 0x0A of all devices (dev addr: 0x00)
+	WRITE_1_REG(0x00, 0x0A, 0x08);
 
 	// The previous command must be repeated with A2 set to '1'.
 	// Even if a device is not in "Address Mode", it is still sensitive to the pin A2.
 	// This is a BUG reported in the MCP23S17 Rev. A  Silicon Errata (DS80311A)
-	command[0] = 0x48; //Set A2 to '1'
-	EXPANDER_NSS_set_low();
-	HAL_SPI_Transmit(&hspi_amc, command, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
-}
+	WRITE_1_REG(0x04, 0x0A, 0x08);
 
-void amc_gpios_set_expander_register( uint8_t device_addr, uint8_t reg_addr, uint8_t value )
-{
-	uint8_t command[3];
-
-	command[0] = 0x40 | ((device_addr & 0x07) << 1);
-	command[1] = reg_addr & 0x0F;
-	command[2] = value;
-
-	EXPANDER_NSS_set_low();
-	HAL_SPI_Transmit(&hspi_amc, command, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
-}
-
-uint8_t amc_gpios_get_expander_register( uint8_t device_addr, uint8_t reg_addr )
-{
-	uint8_t command[3];
-	uint8_t data[3];
-
-	command[0] = 0x41 | ((device_addr & 0x07) << 1);
-	command[1] = reg_addr & 0x0F;
-	command[2] = 0;
-
-	EXPANDER_NSS_set_low();
-	HAL_SPI_TransmitReceive(&hspi_amc, command, data, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
-
-	return data[2];
 }
 
 void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value )
 {
-	uint8_t command[3];
-	uint8_t data[3];
-
-	command[0] = 0x41 | ( device_addr<<1 );
-	command[1] = reg_addr;
-	command[2] = 0;             // Transmit Zero while receive data from device
+	uint8_t val;
 
 	// Get current value
-	EXPANDER_NSS_set_low();
-	HAL_SPI_TransmitReceive(&hspi_amc, command, data, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
+	READ_1_REG( device_addr, reg_addr, val);
 
-	command[0] &=~0x01; // Clear R/W bit
-	command[2]  = data[2] &~(0x01<<bit_posic); // The target bit is cleared
+	val = val &~(0x01<<bit_posic); // The target bit is cleared
 	if( bit_value != 0 )
-		command[2] |= ( 0x01<<bit_posic );
+		val |= ( 0x01<<bit_posic );
 
 	// Write new value
-	EXPANDER_NSS_set_low();
-	HAL_SPI_Transmit(&hspi_amc, command, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
+	WRITE_1_REG( device_addr, reg_addr, val);
 }
 
 
 uint8_t get_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic )
 {
-	uint8_t command[3];
-	uint8_t data[3];
+	uint8_t val;
 
-	command[0] = 0x41 | ( device_addr<<1 );
-	command[1] = reg_addr;
-	command[2] = 0;             // Transmit Zero while receive data from device
+	READ_1_REG( device_addr, reg_addr, val);
 
-	// Get current value
-	EXPANDER_NSS_set_low();
-	HAL_SPI_TransmitReceive(&hspi_amc, command, data, 3, TIMEOUT);
-	EXPANDER_NSS_set_high();
-
-	if( ( data[2] & (1<<bit_posic) ) != 0 )
+	if( ( val & (1<<bit_posic) ) != 0 )
 		return 1;
 	else
 		return 0;
@@ -246,4 +226,11 @@ amc_pullup_t amc_gpios_get_pin_pullup( uint8_t amc_pin )
 	reg_addr = 0x0C + pin_map[amc_pin].port;
 
 	return get_expander_register_bit( pin_map[amc_pin].device, reg_addr, pin_map[amc_pin].pin );
+}
+
+void amc_gpios_spi_interruption( void )
+{
+	EXPANDER_NSS_set_high();
+	if( spi_status != IDLE )
+		spi_status = IDLE;
 }

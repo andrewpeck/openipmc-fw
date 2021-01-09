@@ -46,6 +46,7 @@ MEMORY
 FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 1024K
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
+SRAM4 (xrw)      : ORIGIN = 0x38000000, LENGTH = 64K
 }
 
 /* Define output sections */
@@ -169,6 +170,12 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+  .sram4 :
+  {
+    KEEP(*(.sram4))
+     
+  } >SRAM4
 }
 
 
