@@ -120,7 +120,7 @@ uint8_t      amc_gpios_read_pin( uint8_t amc_pin );
 void         amc_gpios_set_pin_pullup( uint8_t amc_pin, amc_pullup_t pullup_state );
 amc_pullup_t amc_gpios_get_pin_pullup( uint8_t amc_pin );
 
+// Interruption handler for SPI complete transaction event.
 void amc_gpios_spi_interruption( void );
-
 
 #endif

@@ -99,6 +99,10 @@ extern SPI_HandleTypeDef hspi4;
 #define hspi_amc hspi4
 
 
+static int auto_test(void);
+
+
+
 void amc_gpios_init( void )
 {
 	//uint8_t command[4];
@@ -119,9 +123,19 @@ void amc_gpios_init( void )
 	// This is a BUG reported in the MCP23S17 Rev. A  Silicon Errata (DS80311A)
 	WRITE_1_REG(0x04, 0x0A, 0x08);
 
+	// Execute Auto Test.
+	// This test ensures that all expanders are being properly addressed and
+	// responsive
+	if( auto_test() != 0)
+		asm("nop"); //OK
+	else
+	{
+		return; //FAIL
+	}
+
 }
 
-void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value )
+static void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value )
 {
 	uint8_t val;
 
@@ -137,7 +151,7 @@ void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t b
 }
 
 
-uint8_t get_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic )
+static uint8_t get_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic )
 {
 	uint8_t val;
 
@@ -234,3 +248,58 @@ void amc_gpios_spi_interruption( void )
 	if( spi_status != IDLE )
 		spi_status = IDLE;
 }
+
+static uint16_t random_word( void )
+{
+	static uint8_t reg= 0x55;
+
+	// Maximal LFSR
+	// Taps: 8 6 5 4; Polynomial: x^8 + x^6 + x^5 + x^4 + 1
+	// Length: 256
+	reg = (reg<<1) | ( ( (reg>>7)^(reg>>5)^(reg>>4)^(reg>>3) )&0x01 );
+
+	return reg;
+}
+
+static int auto_test( void )
+{
+	int test_ctr, dev_ctr;
+	uint8_t test_value[6][2];
+	uint8_t rd_value;
+
+	// Executes 32 tests in each device
+	for(test_ctr = 0; test_ctr<32; test_ctr++)
+	{
+		// Pick random numbers and write them into the devices (Uses OLAT registers)
+		for(dev_ctr = 0; dev_ctr<6; dev_ctr++)
+		{
+			test_value[dev_ctr][0] = random_word();
+			test_value[dev_ctr][1] = random_word();
+			WRITE_1_REG( dev_ctr, 0x14, test_value[dev_ctr][0]);
+			WRITE_1_REG( dev_ctr, 0x15, test_value[dev_ctr][1]);
+		}
+
+		// Check
+		for(dev_ctr = 0; dev_ctr<6; dev_ctr++)
+		{
+			READ_1_REG( dev_ctr, 0x14, rd_value );
+			if( rd_value != test_value[dev_ctr][0] ) return 0; // Test fail
+			READ_1_REG( dev_ctr, 0x15, rd_value );
+			if( rd_value != test_value[dev_ctr][1] ) return 0; // Test fail
+		}
+	}
+
+	// Set all values back to ZERO (Default)
+	for(dev_ctr = 0; dev_ctr<6; dev_ctr++)
+	{
+		WRITE_1_REG( dev_ctr, 0x14, 0x00 );
+		WRITE_1_REG( dev_ctr, 0x15, 0x00 );
+	}
+
+	return 1; // Auto Test OK
+}
+
+
+
+
+

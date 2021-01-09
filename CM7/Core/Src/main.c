@@ -832,14 +832,14 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(500);
+    osDelay(100);
     LED_2_SET_STATE(SET);
 
-    osDelay(500);
+    osDelay(100);
     LED_2_SET_STATE(RESET);
 
     //ipmc_ios_printf("Blink\n\r");
-
+/*
     int amc, pin, val;
     for(pin=0; pin<90; pin++)
     	amc_gpios_set_pin_pullup( pin, ON );
@@ -855,10 +855,12 @@ void StartDefaultTask(void *argument)
     	if(amc==8)
     		ipmc_ios_printf("\n\r");
     }
-
+*/
     //amc_gpios_set_pin_direction( 0, OUT );
     //amc_gpios_write_pin( 0, 1 );
     //amc_gpios_write_pin( 0, 0 );
+
+    //ipmc_ios_printf("%d\n\r", random_word());
   }
   /* USER CODE END 5 */
 }
