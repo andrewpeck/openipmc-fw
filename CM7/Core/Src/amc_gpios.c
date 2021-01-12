@@ -30,9 +30,6 @@
 
 #define get_AMC_SPI_INT() HAL_GPIO_ReadPin( EXPANDER_INT_GPIO_Port, EXPANDER_INT_Pin )
 
-#define TIMEOUT 100
-
-
 
 /*
  * Pin map.
@@ -44,7 +41,7 @@
  *   AMC0_IO_0, AMC0_IO_1, AMC0_IO_2 ...
  *                 ... AMC8_IO_7, AMC8_IO_8, AMC8_IO_9
  */
-const struct
+static const struct
 {
 	uint8_t device; // MCP23S17 hard wired address. From 0 to 5
 	uint8_t port;   // MCP23S17 port. 0 = PortA; 1 = PortB
@@ -67,9 +64,15 @@ const struct
 /*
  * SPI resources
  */
+
+// SPI buffers and global status
 static uint8_t spi_data_out[6] __attribute__((section(".sram4")));
 static uint8_t spi_data_in[6]  __attribute__((section(".sram4")));
 static enum { IDLE, BUSY } spi_status = IDLE;
+
+// SPI Handle
+extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
+#define hspi_amc hspi4
 
 // Writes ONE register into an Expander device
 #define WRITE_1_REG( DEVICE_ADDR, REG_ADDR, VAL)                              \
@@ -116,11 +119,9 @@ static enum { IDLE, BUSY } spi_status = IDLE;
 
 
 
-// SPI Handle
-extern SPI_HandleTypeDef hspi4;
-#define hspi_amc hspi4
 
-static amc_int_mode_t interrupt_status_buffer[90];
+
+static amc_int_status_t interrupt_status_buffer[90];
 
 osThreadId_t amc_gpios_pin_interrupt_task_handle;
 static osThreadAttr_t amc_gpios_pin_interrupt_task_attributes = {
@@ -131,8 +132,28 @@ static osThreadAttr_t amc_gpios_pin_interrupt_task_attributes = {
 
 SemaphoreHandle_t amc_spi_int_falling_edge_semphr = NULL;
 
-static void amc_gpios_pin_interrupt_task( void );
-static int auto_test(void);
+
+/*
+ * Concurrency protection resources (for multi-thread)
+ */
+static SemaphoreHandle_t amc_gpio_mutex = NULL;
+
+#define WAIT_FOR_MUTEX()                                \
+	{                                                   \
+		while (amc_gpio_mutex == NULL)  { asm("nop"); } \
+		xSemaphoreTake( amc_gpio_mutex, portMAX_DELAY );\
+	}
+
+#define GIVE_MUTEX() xSemaphoreGive( amc_gpio_mutex )
+
+
+/*
+ * Internal functions
+ */
+static void    set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value );
+static uint8_t get_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic );
+static void    amc_gpios_pin_interrupt_task( void );
+static int     auto_test(void);
 
 
 
@@ -180,24 +201,26 @@ void amc_gpios_init( void )
 			return; //FAIL
 	}
 
-	// TODO flag to declare periphrals ready
-	// TODO add mutex
-	// TODO task for interrupt callback: change to non-cmsis
-	// TODO interruption to interrupt
 
+
+	// Semaphore to trigger the pin interrupt task  TODO: can be chaged to task notification
 	amc_spi_int_falling_edge_semphr = xSemaphoreCreateBinary();
 
-	amc_gpios_pin_interrupt_task_handle = osThreadNew(amc_gpios_pin_interrupt_task, NULL, &amc_gpios_pin_interrupt_task_attributes);
+	// TODO: change to FreeRTOS API
+	amc_gpios_pin_interrupt_task_handle = osThreadNew((TaskFunction_t)amc_gpios_pin_interrupt_task, NULL, &amc_gpios_pin_interrupt_task_attributes);
 
-	//test
-	//HAL_Delay(10);
-	amc_gpios_set_pin_pullup( 0, ON );
-	amc_gpios_set_pin_interruption( 0, AMC_INT_FALLING_EDGE );
+
+	amc_gpio_mutex = xSemaphoreCreateMutex();
 }
 
+/*
+ * Set the value of one specific bit in one register
+ */
 static void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value )
 {
 	uint8_t val;
+
+	WAIT_FOR_MUTEX();
 
 	// Get current value
 	READ_1_REG( device_addr, reg_addr, val);
@@ -208,14 +231,22 @@ static void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, ui
 
 	// Write new value
 	WRITE_1_REG( device_addr, reg_addr, val);
+
+	GIVE_MUTEX();
 }
 
-
+/*
+ * get the value of one specific bit in one register
+ */
 static uint8_t get_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic )
 {
 	uint8_t val;
 
+	WAIT_FOR_MUTEX();
+
 	READ_1_REG( device_addr, reg_addr, val);
+
+	GIVE_MUTEX();
 
 	if( ( val & (1<<bit_posic) ) != 0 )
 		return 1;
@@ -302,7 +333,7 @@ amc_pullup_t amc_gpios_get_pin_pullup( uint8_t amc_pin )
 	return get_expander_register_bit( pin_map[amc_pin].device, reg_addr, pin_map[amc_pin].pin );
 }
 
-void amc_gpios_set_pin_interruption( uint8_t amc_pin, amc_int_mode_t mode )
+void amc_gpios_set_pin_interrupt( uint8_t amc_pin, amc_int_mode_t mode )
 {
 	uint8_t reg_addr;
 	uint8_t gpinten_value;
@@ -361,9 +392,7 @@ static void amc_gpios_pin_interrupt_task( void )
 	int ctr;
 	uint8_t intf_value[6][2];
 	uint8_t intcap_value[6][2];
-	//uint8_t compare_flipped[6][2];
 	uint8_t device, port, pin;
-	//uint8_t test;
 
 	for(;;)
 	{
@@ -373,10 +402,12 @@ static void amc_gpios_pin_interrupt_task( void )
 		do
 		{
 			// Read the "dafault" values and the captured values from all devices
+			WAIT_FOR_MUTEX();
 			for( ctr=0; ctr<6; ctr++ )
 			{
 				READ_4_REG( ctr, 0x0E, intf_value[ctr][0], intf_value[ctr][1], intcap_value[ctr][0], intcap_value[ctr][1] );
 			}
+			GIVE_MUTEX();
 
 			// Evaluate the interrupt status for all pins
 			for( ctr=0; ctr<90; ctr++ )
@@ -404,14 +435,21 @@ static void amc_gpios_pin_interrupt_task( void )
 }
 
 
-
-void amc_gpios_spi_interruption( void )
+/*
+ * SPI interrupt
+ *
+ * This functions must be called from the SPI ISR after transaction is
+ * completed.
+ */
+void amc_gpios_spi_interrupt( void )
 {
 	EXPANDER_NSS_set_high();
-	if( spi_status != IDLE )
-		spi_status = IDLE;
+	spi_status = IDLE;
 }
 
+/*
+ * A very nice pseudo random sequence generator
+ */
 static uint16_t random_word( void )
 {
 	static uint8_t reg= 0x55;
@@ -424,6 +462,12 @@ static uint16_t random_word( void )
 	return reg;
 }
 
+/*
+ * Autotest function.
+ *
+ * It writes random data across the devices and check them. It ensures correct
+ * communication between STM32 and MCP23S17 devices.
+ */
 static int auto_test( void )
 {
 	int test_ctr, dev_ctr;
