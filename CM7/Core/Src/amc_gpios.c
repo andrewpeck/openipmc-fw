@@ -67,8 +67,8 @@ const struct
 /*
  * SPI resources
  */
-static uint8_t spi_data_out[4] __attribute__((section(".sram4")));
-static uint8_t spi_data_in[4]  __attribute__((section(".sram4")));
+static uint8_t spi_data_out[6] __attribute__((section(".sram4")));
+static uint8_t spi_data_in[6]  __attribute__((section(".sram4")));
 static enum { IDLE, BUSY } spi_status = IDLE;
 
 // Writes ONE register into an Expander device
@@ -95,6 +95,23 @@ static enum { IDLE, BUSY } spi_status = IDLE;
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
 		while(spi_status != IDLE) { asm("nop"); }                             \
 		VAL = spi_data_in[2];                                                 \
+	}
+
+// Reads FOUR registers from an Expander device
+#define READ_4_REG( DEVICE_ADDR, REG_ADDR, VAL1, VAL2 , VAL3, VAL4 )              \
+	{                                                                             \
+		while(spi_status != IDLE) { asm("nop"); }                                 \
+		spi_status = BUSY;                                                        \
+		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                                \
+		spi_data_out[1] = REG_ADDR;                                               \
+		spi_data_out[2] = spi_data_out[3] = spi_data_out[4] = spi_data_out[5] = 0;\
+		EXPANDER_NSS_set_low();                                                   \
+		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 6);     \
+		while(spi_status != IDLE) { asm("nop"); }                                 \
+		VAL1 = spi_data_in[2];                                                    \
+		VAL2 = spi_data_in[3];                                                    \
+		VAL3 = spi_data_in[4];                                                    \
+		VAL4 = spi_data_in[5];                                                    \
 	}
 
 
@@ -175,7 +192,7 @@ void amc_gpios_init( void )
 	//test
 	//HAL_Delay(10);
 	amc_gpios_set_pin_pullup( 0, ON );
-	amc_gpios_set_pin_interruption( 0, AMC_INT_BOTH_EDGES );
+	amc_gpios_set_pin_interruption( 0, AMC_INT_FALLING_EDGE );
 }
 
 static void set_expander_register_bit( uint8_t device_addr, uint8_t reg_addr, uint8_t bit_posic, uint8_t bit_value )
@@ -304,17 +321,17 @@ void amc_gpios_set_pin_interruption( uint8_t amc_pin, amc_int_mode_t mode )
 		defval_value  = 0;
 		break;
 
-	case AMC_INT_RISING_EDGE:
-		gpinten_value = 1;
-		intcon_value  = 1;
-		defval_value  = 0;
-		break;
+	//case AMC_INT_RISING_EDGE:   To be developed
+	//	gpinten_value = 1;
+	//	intcon_value  = 1;
+	//	defval_value  = 0;
+	//	break;
 
-	case AMC_INT_FALLING_EDGE:
-		gpinten_value = 1;
-		intcon_value  = 1;
-		defval_value  = 1;
-		break;
+	//case AMC_INT_FALLING_EDGE:  To be developed
+	//	gpinten_value = 1;
+	//	intcon_value  = 1;
+	//	defval_value  = 1;
+	//	break;
 
 	case AMC_INT_OFF:
 	default:
@@ -342,10 +359,11 @@ void amc_gpios_set_pin_interruption( uint8_t amc_pin, amc_int_mode_t mode )
 static void amc_gpios_pin_interrupt_task( void )
 {
 	int ctr;
-	uint8_t defval_value[6][2];
+	uint8_t intf_value[6][2];
 	uint8_t intcap_value[6][2];
-	uint8_t compare_flipped[6][2];
+	//uint8_t compare_flipped[6][2];
 	uint8_t device, port, pin;
+	//uint8_t test;
 
 	for(;;)
 	{
@@ -357,17 +375,7 @@ static void amc_gpios_pin_interrupt_task( void )
 			// Read the "dafault" values and the captured values from all devices
 			for( ctr=0; ctr<6; ctr++ )
 			{
-				READ_1_REG( ctr, 0x06, defval_value[ctr][0] );
-				READ_1_REG( ctr, 0x07, defval_value[ctr][1] );
-				READ_1_REG( ctr, 0x10, intcap_value[ctr][0] );
-				READ_1_REG( ctr, 0x11, intcap_value[ctr][1] );
-			}
-
-			// Evaluate the flipping
-			for( ctr=0; ctr<6; ctr++ )  //TODO move this to the upper FOR
-			{
-				compare_flipped[ctr][0] = defval_value[ctr][0] ^ intcap_value[ctr][0];
-				compare_flipped[ctr][1] = defval_value[ctr][1] ^ intcap_value[ctr][1];
+				READ_4_REG( ctr, 0x0E, intf_value[ctr][0], intf_value[ctr][1], intcap_value[ctr][0], intcap_value[ctr][1] );
 			}
 
 			// Evaluate the interrupt status for all pins
@@ -376,7 +384,7 @@ static void amc_gpios_pin_interrupt_task( void )
 				device = pin_map[ctr].device;
 				port = pin_map[ctr].port;
 				pin = pin_map[ctr].pin;
-				if( compare_flipped[device][port] & (1<<pin) )
+				if( intf_value[device][port] & (1<<pin) )
 				{
 					if( intcap_value[device][port] & (1<<pin) )
 						interrupt_status_buffer[ctr] = AMC_INT_STATUS_RISED;

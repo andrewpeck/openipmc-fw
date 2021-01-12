@@ -114,8 +114,8 @@ typedef enum
 {
 	AMC_INT_OFF,
 	AMC_INT_BOTH_EDGES,
-	AMC_INT_RISING_EDGE,
-	AMC_INT_FALLING_EDGE
+	//AMC_INT_RISING_EDGE,  To be developed
+	//AMC_INT_FALLING_EDGE  To be developed
 } amc_int_mode_t;
 
 typedef enum
