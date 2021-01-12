@@ -1,6 +1,7 @@
 #ifndef AMC_GPIOS_H
 #define AMC_GPIOS_H
 
+#include "semphr.h"
 
 // AMC_IO pin labeling
 #define AMC0_IO_0   0
@@ -109,6 +110,23 @@ typedef enum
      ON = 1
 } amc_pullup_t;
 
+typedef enum
+{
+	AMC_INT_OFF,
+	AMC_INT_BOTH_EDGES,
+	AMC_INT_RISING_EDGE,
+	AMC_INT_FALLING_EDGE
+} amc_int_mode_t;
+
+typedef enum
+{
+	AMC_INT_STATUS_NONE,
+	AMC_INT_STATUS_FALLED,
+	AMC_INT_STATUS_RISED
+} amc_int_status_t;
+
+extern SemaphoreHandle_t amc_spi_int_falling_edge_semphr;
+
 // Initialization
 void amc_gpios_init( void );
 
@@ -119,6 +137,10 @@ void         amc_gpios_write_pin( uint8_t amc_pin, uint8_t pin_value );
 uint8_t      amc_gpios_read_pin( uint8_t amc_pin );
 void         amc_gpios_set_pin_pullup( uint8_t amc_pin, amc_pullup_t pullup_state );
 amc_pullup_t amc_gpios_get_pin_pullup( uint8_t amc_pin );
+void         amc_gpios_set_pin_interruption( uint8_t amc_pin, amc_int_mode_t mode );
+
+// Pin interrupt callback
+void amc_gpios_pin_interrupt_callback( amc_int_status_t* interrupt_status );
 
 // Interruption handler for SPI complete transaction event.
 void amc_gpios_spi_interruption( void );

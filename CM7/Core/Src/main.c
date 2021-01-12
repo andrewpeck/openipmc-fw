@@ -589,8 +589,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(PYLD_RESET_GPIO_Port, PYLD_RESET_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : I2C_BB_SCL_Pin I2C_BB_SDA_Pin EXPANDER_INT_Pin */
-  GPIO_InitStruct.Pin = I2C_BB_SCL_Pin|I2C_BB_SDA_Pin|EXPANDER_INT_Pin;
+  /*Configure GPIO pins : I2C_BB_SCL_Pin I2C_BB_SDA_Pin */
+  GPIO_InitStruct.Pin = I2C_BB_SCL_Pin|I2C_BB_SDA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
@@ -620,6 +620,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : EXPANDER_INT_Pin */
+  GPIO_InitStruct.Pin = EXPANDER_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(EXPANDER_INT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : EXPANDER_NSS_Pin EXPANDER_RST_Pin */
   GPIO_InitStruct.Pin = EXPANDER_NSS_Pin|EXPANDER_RST_Pin;
@@ -747,6 +753,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(PYLD_RESET_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -782,8 +792,6 @@ void KeyboardTask(void *argument)
 			break;
 	}
 
-	//echo test
-	//HAL_UART_Transmit(&huart4, &c, 1, 100);
   }
 }
 
@@ -803,11 +811,28 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 }
 
-
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if( hspi == &hspi4 )
 		amc_gpios_spi_interruption();
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	// Informs the AMC_GPIOs driver that a falling edge happened in AMC_SPI_INT signal
+	if( GPIO_Pin == GPIO_PIN_3)
+	{
+		if( amc_spi_int_falling_edge_semphr != NULL )
+			xSemaphoreGiveFromISR( amc_spi_int_falling_edge_semphr, xHigherPriorityTaskWoken );
+	}
+}
+
+void amc_gpios_pin_interrupt_callback( amc_int_status_t* interrupt_status )
+{
+	if(interrupt_status[0] != AMC_INT_STATUS_NONE)
+		asm("nop");
 }
 
 
@@ -832,10 +857,10 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(100);
+    osDelay(2000);
     LED_2_SET_STATE(SET);
 
-    osDelay(100);
+    osDelay(2000);
     LED_2_SET_STATE(RESET);
 
     //ipmc_ios_printf("Blink\n\r");
@@ -859,8 +884,8 @@ void StartDefaultTask(void *argument)
     //amc_gpios_set_pin_direction( 0, OUT );
     //amc_gpios_write_pin( 0, 1 );
     //amc_gpios_write_pin( 0, 0 );
+    //amc_gpios_pin_interrupt_task();
 
-    //ipmc_ios_printf("%d\n\r", random_word());
   }
   /* USER CODE END 5 */
 }
