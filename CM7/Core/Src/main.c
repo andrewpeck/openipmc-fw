@@ -453,9 +453,9 @@ static void MX_SPI4_Init(void)
   hspi4.Init.Mode = SPI_MODE_MASTER;
   hspi4.Init.Direction = SPI_DIRECTION_2LINES;
   hspi4.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi4.Init.CLKPolarity = SPI_POLARITY_HIGH;
-  hspi4.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi4.Init.NSS = SPI_NSS_SOFT;
+  hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi4.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi4.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -571,7 +571,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, EXPANDER_NSS_Pin|EXPANDER_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(EXPANDER_RST_GPIO_Port, EXPANDER_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ETH_RST_N_GPIO_Port, ETH_RST_N_Pin, GPIO_PIN_SET);
@@ -627,12 +627,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(EXPANDER_INT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EXPANDER_NSS_Pin EXPANDER_RST_Pin */
-  GPIO_InitStruct.Pin = EXPANDER_NSS_Pin|EXPANDER_RST_Pin;
+  /*Configure GPIO pin : EXPANDER_RST_Pin */
+  GPIO_InitStruct.Pin = EXPANDER_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  HAL_GPIO_Init(EXPANDER_RST_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IPM_14_Pin USR_IO_7_Pin IPM_7_Pin USR_IO_21_Pin
                            USR_IO_17_Pin */
@@ -867,7 +867,8 @@ void StartDefaultTask(void *argument)
 
 
   amc_gpios_init();
-  //amc_gpios_set_pin_direction( 0, OUT );
+  amc_gpios_set_pin_direction( 0, OUT );
+  /*
   amc_gpios_set_pin_pullup( AMC0_IO_0, ON );
   amc_gpios_set_pin_pullup( AMC0_IO_8, ON );
   amc_gpios_set_pin_pullup( AMC3_IO_5, ON );
@@ -893,6 +894,7 @@ void StartDefaultTask(void *argument)
   amc_gpios_set_pin_interrupt( AMC8_IO_0, AMC_INT_BOTH_EDGES );
   amc_gpios_set_pin_interrupt( AMC8_IO_9, AMC_INT_BOTH_EDGES );
   amc_gpios_set_pin_interrupt( AMC7_IO_9, AMC_INT_BOTH_EDGES );
+  */
 
   /* Infinite loop */
   for(;;)
@@ -900,7 +902,7 @@ void StartDefaultTask(void *argument)
     //osDelay(2000);
     //LED_2_SET_STATE(SET);
 
-    //osDelay(2000);
+    osDelay(2000);
     //LED_2_SET_STATE(RESET);
 
     //ipmc_ios_printf("Blink\n\r");
@@ -922,8 +924,8 @@ void StartDefaultTask(void *argument)
     }
 */
     //amc_gpios_set_pin_direction( 0, OUT );
-    //amc_gpios_write_pin( 0, 1 );
-    //amc_gpios_write_pin( 0, 0 );
+    amc_gpios_write_pin( 0, 1 );
+    amc_gpios_write_pin( 0, 0 );
     //amc_gpios_pin_interrupt_task();
 
   }

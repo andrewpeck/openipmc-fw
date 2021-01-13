@@ -11,6 +11,9 @@
  *
  */
 
+/*
+ * Details about SPI configuration
+ */
 
 
 #include "main.h"
@@ -21,10 +24,8 @@
 
 
 /*
- * Define how to control EXPANDER_NSS and EXPANDER_RST.
+ * Define how to control EXPANDER_RST signal.
  */
-#define EXPANDER_NSS_set_low()  HAL_GPIO_WritePin( EXPANDER_NSS_GPIO_Port, EXPANDER_NSS_Pin,  GPIO_PIN_RESET)
-#define EXPANDER_NSS_set_high() HAL_GPIO_WritePin( EXPANDER_NSS_GPIO_Port, EXPANDER_NSS_Pin,  GPIO_PIN_SET  )
 #define EXPANDER_RST_set_low()  HAL_GPIO_WritePin( EXPANDER_RST_GPIO_Port, EXPANDER_RST_Pin,  GPIO_PIN_RESET)
 #define EXPANDER_RST_set_high() HAL_GPIO_WritePin( EXPANDER_RST_GPIO_Port, EXPANDER_RST_Pin,  GPIO_PIN_SET  )
 
@@ -82,7 +83,6 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x40 | (DEVICE_ADDR<<1);                            \
 		spi_data_out[1] = REG_ADDR;                                           \
 		spi_data_out[2] = VAL;                                                \
-		EXPANDER_NSS_set_low();                                               \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
 	}
 
@@ -94,7 +94,6 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                            \
 		spi_data_out[1] = REG_ADDR;                                           \
 		spi_data_out[2] = 0  ;                                                \
-		EXPANDER_NSS_set_low();                                               \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
 		while(spi_status != IDLE) { asm("nop"); }                             \
 		VAL = spi_data_in[2];                                                 \
@@ -108,7 +107,6 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                                \
 		spi_data_out[1] = REG_ADDR;                                               \
 		spi_data_out[2] = spi_data_out[3] = spi_data_out[4] = spi_data_out[5] = 0;\
-		EXPANDER_NSS_set_low();                                                   \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 6);     \
 		while(spi_status != IDLE) { asm("nop"); }                                 \
 		VAL1 = spi_data_in[2];                                                    \
@@ -438,7 +436,6 @@ static void amc_gpios_pin_interrupt_task( void )
  */
 void amc_gpios_spi_interrupt( void )
 {
-	EXPANDER_NSS_set_high();
 	spi_status = IDLE;
 }
 
