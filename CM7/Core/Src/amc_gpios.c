@@ -12,7 +12,21 @@
  */
 
 /*
- * Details about SPI configuration
+ * Details about SPI configuration:
+ *
+ * SPI4 peripheral is being used.
+ * Slave Select controlled by hardware
+ * Data Size: 8bits
+ * MSB First
+ * Uses DMA for TX and RX (It allows "atomic" transactions. This driver needs up to 6 bytes at once.)
+ * Bit rate: 6.25Mbps
+ * Clock Polarity: Low (CPOL = 0)
+ * Clock Phase: 1Edge (CPHA = 0)
+ *
+ * The "GPIO Pull-up/Pull-down" configuration affects the pin behavior when SPI port is idle.
+ *    SCK must be set to Pull-down
+ *    NSS must be set to Pull-up
+ *
  */
 
 
