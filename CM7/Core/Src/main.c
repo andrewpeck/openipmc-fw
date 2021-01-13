@@ -823,10 +823,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 	// Informs the AMC_GPIOs driver that a falling edge happened in AMC_SPI_INT signal
 	if( GPIO_Pin == GPIO_PIN_3)
-	{
-		if( amc_spi_int_falling_edge_semphr != NULL ){}
-			xSemaphoreGiveFromISR( amc_spi_int_falling_edge_semphr, xHigherPriorityTaskWoken );
-	}
+		if( amc_gpios_pin_interrupt_task_handle != NULL )
+			vTaskNotifyGiveFromISR( amc_gpios_pin_interrupt_task_handle, &xHigherPriorityTaskWoken );
+
 }
 
 

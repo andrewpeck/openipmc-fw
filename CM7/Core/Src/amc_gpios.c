@@ -123,14 +123,12 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 
 static amc_int_status_t interrupt_status_buffer[90];
 
-osThreadId_t amc_gpios_pin_interrupt_task_handle;
+osThreadId_t amc_gpios_pin_interrupt_task_handle = NULL;
 static osThreadAttr_t amc_gpios_pin_interrupt_task_attributes = {
   .name = "AMC_GPIOS_PIN_INTERRUPT_TASK",
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
-
-SemaphoreHandle_t amc_spi_int_falling_edge_semphr = NULL;
 
 
 /*
@@ -200,11 +198,6 @@ void amc_gpios_init( void )
 		if (value != (0x08|0x04) )
 			return; //FAIL
 	}
-
-
-
-	// Semaphore to trigger the pin interrupt task  TODO: can be chaged to task notification
-	amc_spi_int_falling_edge_semphr = xSemaphoreCreateBinary();
 
 	// TODO: change to FreeRTOS API
 	amc_gpios_pin_interrupt_task_handle = osThreadNew((TaskFunction_t)amc_gpios_pin_interrupt_task, NULL, &amc_gpios_pin_interrupt_task_attributes);
@@ -397,7 +390,8 @@ static void amc_gpios_pin_interrupt_task( void )
 	for(;;)
 	{
 		// Wait for a falling edge on AMC_SPI_INT signal
-		xSemaphoreTake( amc_spi_int_falling_edge_semphr, portMAX_DELAY );
+		// It comes from a STM32 GPIO ISR via Notification
+		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
 
 		do
 		{
@@ -430,6 +424,7 @@ static void amc_gpios_pin_interrupt_task( void )
 			// Call the callback
 			amc_gpios_pin_interrupt_callback( interrupt_status_buffer );
 
+		// This recursion is useful to cover interrupts happening during the processing
 		} while(get_AMC_SPI_INT() == 0);
 	}
 }

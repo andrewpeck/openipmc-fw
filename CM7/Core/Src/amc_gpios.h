@@ -126,8 +126,7 @@ typedef enum
 } amc_int_status_t;
 
 
-
-extern SemaphoreHandle_t amc_spi_int_falling_edge_semphr;
+extern osThreadId_t amc_gpios_pin_interrupt_task_handle;
 
 
 /*
