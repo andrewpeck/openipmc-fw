@@ -865,68 +865,19 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   openipmc_hal_init();
 
-
   amc_gpios_init();
-  amc_gpios_set_pin_direction( 0, OUT );
-  /*
-  amc_gpios_set_pin_pullup( AMC0_IO_0, ON );
-  amc_gpios_set_pin_pullup( AMC0_IO_8, ON );
-  amc_gpios_set_pin_pullup( AMC3_IO_5, ON );
-  amc_gpios_set_pin_pullup( AMC1_IO_7, ON );
-  amc_gpios_set_pin_pullup( AMC2_IO_6, ON );
-  amc_gpios_set_pin_pullup( AMC4_IO_4, ON );
-  amc_gpios_set_pin_pullup( AMC7_IO_1, ON );
-  amc_gpios_set_pin_pullup( AMC5_IO_3, ON );
-  amc_gpios_set_pin_pullup( AMC6_IO_2, ON );
-  amc_gpios_set_pin_pullup( AMC8_IO_0, ON );
-  amc_gpios_set_pin_pullup( AMC8_IO_9, ON );
-  amc_gpios_set_pin_pullup( AMC7_IO_9, ON );
 
-  amc_gpios_set_pin_interrupt( AMC0_IO_0, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC0_IO_8, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC3_IO_5, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC1_IO_7, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC2_IO_6, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC4_IO_4, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC7_IO_1, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC5_IO_3, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC6_IO_2, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC8_IO_0, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC8_IO_9, AMC_INT_BOTH_EDGES );
-  amc_gpios_set_pin_interrupt( AMC7_IO_9, AMC_INT_BOTH_EDGES );
-  */
 
   /* Infinite loop */
   for(;;)
   {
-    //osDelay(2000);
-    //LED_2_SET_STATE(SET);
+    osDelay(500);
+    LED_2_SET_STATE(SET);
 
-    osDelay(2000);
-    //LED_2_SET_STATE(RESET);
+    osDelay(500);
+    LED_2_SET_STATE(RESET);
 
     //ipmc_ios_printf("Blink\n\r");
-/*
-    int amc, pin, val;
-    for(pin=0; pin<90; pin++)
-    	amc_gpios_set_pin_pullup( pin, ON );
-    for(amc=0; amc<9; amc++)
-    {
-    	for(pin=0; pin<10; pin++)
-    	{
-    		val=amc_gpios_read_pin( 10*amc + pin);
-    		ipmc_ios_printf("%d", val);
-    	}
-    	ipmc_ios_printf(" ");
-
-    	if(amc==8)
-    		ipmc_ios_printf("\n\r");
-    }
-*/
-    //amc_gpios_set_pin_direction( 0, OUT );
-    amc_gpios_write_pin( 0, 1 );
-    amc_gpios_write_pin( 0, 0 );
-    //amc_gpios_pin_interrupt_task();
 
   }
   /* USER CODE END 5 */
