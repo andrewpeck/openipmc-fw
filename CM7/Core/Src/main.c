@@ -32,6 +32,7 @@
 #include "fru_state_machine.h"
 #include "ipmb_0.h"
 #include "amc_gpios.h"
+#include "mgm_i2c.h"
 
 /* USER CODE END Includes */
 
@@ -914,9 +915,10 @@ void amc_gpios_pin_interrupt_callback( amc_int_status_t* interrupt_status )
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  openipmc_hal_init();
 
-  amc_gpios_init();
+	openipmc_hal_init();
+	amc_gpios_init();
+	mgm_i2c_init();
 
 
   /* Infinite loop */
@@ -931,8 +933,8 @@ void StartDefaultTask(void *argument)
     HAL_StatusTypeDef status;
     uint8_t data[6] = {0,0,0,0,0,0};
     data[0] = 0x22;
-    status = HAL_I2C_Master_Transmit(&hi2c4, (0x2F<<1), data, 1, 100);
-    status = HAL_I2C_Master_Receive(&hi2c4, (0x2F<<1), data, 1, 100);
+    status = mgm_i2c_transmit((0x2F<<1), data, 1, 100);
+    status = mgm_i2c_receive((0x2F<<1), data, 1, 100);
 
     int volt = ((int)data[0])*32;
     ipmc_ios_printf("output: %dV\n\r", volt);
