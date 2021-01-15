@@ -57,6 +57,7 @@
 
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
+I2C_HandleTypeDef hi2c4;
 
 SPI_HandleTypeDef hspi4;
 DMA_HandleTypeDef hdma_spi4_tx;
@@ -143,6 +144,7 @@ static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_SPI4_Init(void);
+static void MX_I2C4_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -174,7 +176,7 @@ int main(void)
   while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
   if ( timeout < 0 )
   {
-  //Error_Handler();  Unnecessary Error Handler. Just go ahead.
+  Error_Handler();
   }
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
@@ -217,6 +219,7 @@ Error_Handler();
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_SPI4_Init();
+  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -331,10 +334,12 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_SPI4
-                              |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C1;
+                              |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_I2C4;
   PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -430,6 +435,52 @@ static void MX_I2C2_Init(void)
   /* USER CODE BEGIN I2C2_Init 2 */
 
   /* USER CODE END I2C2_Init 2 */
+
+}
+
+/**
+  * @brief I2C4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C4_Init(void)
+{
+
+  /* USER CODE BEGIN I2C4_Init 0 */
+
+  /* USER CODE END I2C4_Init 0 */
+
+  /* USER CODE BEGIN I2C4_Init 1 */
+
+  /* USER CODE END I2C4_Init 1 */
+  hi2c4.Instance = I2C4;
+  hi2c4.Init.Timing = 0x10C0ECFF;
+  hi2c4.Init.OwnAddress1 = 0;
+  hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c4.Init.OwnAddress2 = 0;
+  hi2c4.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c4.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c4.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c4, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C4_Init 2 */
+
+  /* USER CODE END I2C4_Init 2 */
 
 }
 
@@ -561,9 +612,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOI_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOK_CLK_ENABLE();
@@ -876,6 +927,16 @@ void StartDefaultTask(void *argument)
 
     osDelay(500);
     LED_2_SET_STATE(RESET);
+
+    HAL_StatusTypeDef status;
+    uint8_t data[6] = {0,0,0,0,0,0};
+    data[0] = 0x22;
+    status = HAL_I2C_Master_Transmit(&hi2c4, (0x2F<<1), data, 1, 100);
+    status = HAL_I2C_Master_Receive(&hi2c4, (0x2F<<1), data, 1, 100);
+
+    int volt = ((int)data[0])*32;
+    ipmc_ios_printf("output: %dV\n\r", volt);
+
 
     //ipmc_ios_printf("Blink\n\r");
 
