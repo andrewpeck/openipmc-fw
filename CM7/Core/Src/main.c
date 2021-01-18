@@ -930,15 +930,6 @@ void StartDefaultTask(void *argument)
     osDelay(500);
     LED_2_SET_STATE(RESET);
 
-    HAL_StatusTypeDef status;
-    uint8_t data[6] = {0,0,0,0,0,0};
-    data[0] = 0x22;
-    status = mgm_i2c_transmit((0x2F<<1), data, 1, 100);
-    status = mgm_i2c_receive((0x2F<<1), data, 1, 100);
-
-    int volt = ((int)data[0])*32;
-    ipmc_ios_printf("output: %dV\n\r", volt);
-
 
     //ipmc_ios_printf("Blink\n\r");
 
