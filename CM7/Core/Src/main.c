@@ -134,6 +134,8 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
 //  .stack_size = 128 * 4
 //};
 
+void openipmc_hal_init( void );
+
 
 /* USER CODE END PV */
 
@@ -821,7 +823,7 @@ void KeyboardTask(void *argument)
 
   // Start receiving bytes from keyboard
   uart4_input_stram = xStreamBufferCreate(10, 1);
-  HAL_UART_Receive_IT(&huart4, &uart4_input_char, 1);
+  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
 
   for(;;)
   {
@@ -850,13 +852,13 @@ void KeyboardTask(void *argument)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  char c;
+
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
   if( UartHandle ==  &huart4 )
   {
 	xStreamBufferSendFromISR( uart4_input_stram, &uart4_input_char, 1, &xHigherPriorityTaskWoken);
-	HAL_UART_Receive_IT(&huart4, &uart4_input_char, 1);
+	HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
   }
 
 

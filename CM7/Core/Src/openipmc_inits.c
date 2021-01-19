@@ -1,23 +1,24 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* FreeRTOS includes. */
-//#include "FreeRTOS.h"
-
-#include "dimm_gpios.h"
+#include <FreeRTOS.h>
 
 //OpenIPMC includes
 #include "sdr_manager.h"
 #include "power_manager.h"
 #include "fru_inventory_manager.h"
 #include "sdr_definitions.h"
-//#include "ipmc_ios.h"
 #include "sensors_templates.h"
 
-void power_initialization(void);
+static void power_initialization(void);
 
-uint8_t test_temp_value = 50;
-
+/*
+ * Sensor reading functions
+ *
+ * These functions tell OpenIPMC how to get the sensor reading.
+ *
+ * Defined on openipmc_brd_ctrls.c file
+ */
 void sensor_reading_fpga_temp(sensor_reading_t* sensor_reading);
 void sensor_reading_air_temp(sensor_reading_t* sensor_reading);
 void sensor_reading_vcc_out(sensor_reading_t* sensor_reading);
@@ -101,42 +102,7 @@ void ipmc_custom_initialization()
 
 }
 
-void sensor_reading_fpga_temp(sensor_reading_t* sensor_reading)
-{
 
-	sensor_reading->raw_value = test_temp_value;
-
-	if((test_temp_value >= 65) && (test_temp_value < 75))
-		sensor_reading->present_state = (1<<3);
-	else if(test_temp_value >= 75)
-		sensor_reading->present_state = (1<<4);
-	else
-		sensor_reading->present_state = 0;
-}
-
-
-void sensor_reading_air_temp(sensor_reading_t* sensor_reading)
-{
-
-	sensor_reading->raw_value = 32;
-
-	sensor_reading->present_state = 0;
-
-}
-
-void sensor_reading_vcc_out(sensor_reading_t* sensor_reading)
-{
-	sensor_reading->raw_value = 22;
-
-	sensor_reading->present_state = 0;
-}
-
-void payload_cold_reset (void)
-{
-    // user defined for reseting the payload
-    ipmc_ios_printf("\nCOLD RESET SUCCESSFUL!\r\n");
-
-}
 
 uint8_t get_fru_control_capabilities (void)
 {
@@ -145,7 +111,7 @@ uint8_t get_fru_control_capabilities (void)
 }
 
 
-void power_initialization(void)
+static void power_initialization(void)
 {
 
 	power_envelope_t pwr_envelope;
@@ -180,22 +146,4 @@ void power_initialization(void)
 
 	// Here must be informed the Power Level desired by the payload. It must be a valid index of the power_draw array (1 up to num_of_levels).
 	ipmc_pwr_set_desired_power_level(2); // Power Level 2 means 100 Watts, following what is specified in the power_draw array above.
-}
-
-
-
-void ipmc_pwr_switch_power_level_on_payload(uint8_t new_power_level)
-{
-
-	ipmc_ios_printf("Change Power Level from %d to %d\r\n", ipc_pwr_get_current_power_level(), new_power_level);
-	/*
-	 * Do whatever is needed to set to the requested power level on the payload
-	 */
-
-	if(new_power_level != 0)
-		EN_12V_SET_STATE(SET);
-	else
-		EN_12V_SET_STATE(RESET);
-
-	return;
 }

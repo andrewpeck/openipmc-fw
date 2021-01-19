@@ -453,7 +453,8 @@ void ipmc_ios_printf(const char* format, ...)
 
 void _putchar(char character)
 {
-	HAL_UART_Transmit(&huart4_printout, &character, 1, 1000);
-	//outbyte(character);
+
+	HAL_UART_Transmit(&huart4_printout, (uint8_t*)(&character), 1, 1000);
+
 }
 
