@@ -12,7 +12,7 @@ void mgm_i2c_init( void );
 /*
  * This functions encapsulates the STM32 HAL I2C
  *
- * Internally, it uses the I2C4 port (peripheral handle is being omitted in this prototypes for the reason).
+ * Internally, it uses the I2C4 port (peripheral handle is being omitted in this prototypes for this reason).
  *
  * It also implements mutex for multithread compatibility.
  *
