@@ -46,6 +46,7 @@ MEMORY
 FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 1024K
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
+RAM_D2 (xrw)      : ORIGIN = 0x30000000, LENGTH = 288K
 SRAM4 (xrw)      : ORIGIN = 0x38000000, LENGTH = 64K
 }
 
@@ -159,6 +160,17 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
+  
+  .lwip_sec (NOLOAD) : {
+    . = ABSOLUTE(0x30040000);
+    *(.RxDecripSection) 
+    
+    . = ABSOLUTE(0x30040060);
+    *(.TxDecripSection)
+    
+    . = ABSOLUTE(0x30040200);
+    *(.RxArraySection) 
+  } >RAM_D2
 
 
   /* Remove information from the standard libraries */
@@ -171,6 +183,10 @@ SECTIONS
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
   
+  /* 
+   * This section is being used by:
+   *     - SPI4 DMA (AMC_IO Expanders)  
+   */
   .sram4 :
   {
     KEEP(*(.sram4))
