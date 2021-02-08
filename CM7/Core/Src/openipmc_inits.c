@@ -48,19 +48,19 @@ void ipmc_custom_initialization()
 	fru_inventory_field_t *board_info   = pvPortMalloc(sizeof(fru_inventory_field_t)); // Inventory Fields must be allocated and filled before FRU Inventory is created
 	board_info->field_ptr = pvPortMalloc(sizeof(uint8_t)*256);
 
-	board_info->field_area = create_board_info_field (board_info->field_ptr,// MAXIMUM SIZE OF EACH STRING IS 64 CHARACTERS / FIELD AREA IS MULTIPLE OF 8 BYTES
-														13017600, 			// Manufacturing Date/Time (in minutes from January 1th 1996)
-														"SPRACE-KIT", 		// Board Manufacturer,
-														"OpenIPMC-HW",		// Board Product Name,
-														"000000-0001",	    // Serial Number,
-														"XXXXXXX1",			// Part Number,
-														"01");// FRU File ID
+	board_info->field_area = create_board_info_field( board_info->field_ptr,// MAXIMUM SIZE OF EACH STRING IS 64 CHARACTERS / FIELD AREA IS MULTIPLE OF 8 BYTES
+	                                                  13017600,             // Manufacturing Date/Time (in minutes from January 1th 1996)
+	                                                  "SPRACE-KIT",         // Board Manufacturer,
+	                                                  "OpenIPMC-HW",        // Board Product Name,
+	                                                  "000000-0001",        // Serial Number,
+	                                                  "XXXXXXX1",           // Part Number,
+	                                                  "01");                // FRU File ID
 
-	create_fru_inventory (	NULL, // Internal Use Field NOT USED
-   							NULL, // Chassis Info Field NOT USED
-							board_info,
-							NULL, // Product Info Field NOT USED
-							NULL);// Multi Record Field NOT USED
+	create_fru_inventory ( NULL, // Internal Use Field NOT USED
+	                       NULL, // Chassis Info Field NOT USED
+	                       board_info,
+	                       NULL, // Product Info Field NOT USED
+	                       NULL);// Multi Record Field NOT USED
 
 	vPortFree (board_info->field_ptr);
 	vPortFree (board_info);
@@ -69,35 +69,72 @@ void ipmc_custom_initialization()
 	/*
 	 *  Create Sensors
 	 */
-    init_sdr_repository();
 
-    create_management_controller_sdr ("IPMC Zync US+");
+	uint8_t threshold_list[6];
 
-    create_hot_swap_carrier_sensor ("Hot Swap Carrier");
+	init_sdr_repository();
 
-    // PRARAMETERS for create_simple_temperature_sensor function:
-    // base_unit (°C, °F...),
-    // linearization (linear, log10...),
-    // m (Y = mX + b),
-    // b,
-    // accuracy,
-    // upper non recoverable threshold, INSERT RAW DATA
-    // upper critical threshold,        INSERT RAW DATA
-    // upper non critical threshold,    INSERT RAW DATA
-    // id string
-    create_simple_temperature_sensor (DEGREES_C, LINEAR, 1, 0, 1, 85, 75, 65, "FPGA TEMP", &sensor_reading_fpga_temp);
-    create_simple_temperature_sensor (DEGREES_C, LINEAR, 1, 0, 1, 65, 60, 55, "AIR TEMP", &sensor_reading_air_temp);
+	create_management_controller_sdr ("IPMC Zync US+");
 
-    // PRARAMETERS for create_voltage_out_sensor function:
-    // linearization (linear, log10...),
-    // m (Y = mX + b),
-    // b,
-    // accuracy,
-    // r_exp, R = Y*10^r_exp (result exponent - SIGNED 4 bits, MSB of field); C0h = -4
-    // upper non critical threshold, //  INSERT RAW DATA (must be converted using Y = mX +b and r_exp)
-    // lower non critical threshold, //  INSERT RAW DATA (must be converted using Y = mX +b and r_exp)
-    // id string
-    create_simple_voltage_out_sensor(LINEAR, 157, 0, 1, 0xc0, 0x46, 0x39, "VCC1V0 VOUT", &sensor_reading_vcc_out);
+	create_hot_swap_carrier_sensor ("Hot Swap Carrier");
+
+
+
+	// Dummy sensor for FPGA temperature.
+	threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
+	threshold_list[1] = 0;    // Lower Critical        NOT USED
+	threshold_list[2] = 0;    // Lower Non Critical    NOT USED
+	threshold_list[3] = 65;   // Upper Non Critical    65°C
+	threshold_list[4] = 75;   // Upper Critical        75°C
+	threshold_list[5] = 100;  // Upper Non Recoverable 100°C
+	create_generic_analog_sensor_1( TEMPERATURE,
+	                                DEGREES_C,
+	                                1,            // y = 1*x + 0  (temperature in °C is identical to it raw value)
+	                                0,
+	                                0,
+	                                0,
+	                                UPPER_NON_CRITICAL | UPPER_CRITICAL | UPPER_NON_RECOVERABLE,
+	                                threshold_list,
+	                                "FPGA TEMP",
+	                                &sensor_reading_fpga_temp );
+
+
+	// Dummy sensor for Air temperature.
+	threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
+	threshold_list[1] = 0;    // Lower Critical         NOT USED
+	threshold_list[2] = 0;    // Lower Non Critical     NOT USED
+	threshold_list[3] = 100;  // Upper Non Critical     30°C  (see conversion below)
+	threshold_list[4] = 120;  // Upper Critical         40°C
+	threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
+	create_generic_analog_sensor_1( TEMPERATURE,
+	                                DEGREES_C,
+	                                5,            // y = (0.5*x - 20) = (5*x - 200)*0.1
+	                                -200,
+	                                0,
+	                                -1,
+	                                UPPER_NON_CRITICAL | UPPER_CRITICAL,
+	                                threshold_list,
+	                                "AIR TEMP",
+	                                &sensor_reading_air_temp );
+
+
+	// Dummy sensor for Voltage.
+	threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
+	threshold_list[1] = 0;    // Lower Critical         NOT USED
+	threshold_list[2] = 0;    // Lower Non Critical     NOT USED
+	threshold_list[3] = 0;    // Upper Non Critical     NOT USED
+	threshold_list[4] = 0;    // Upper Critical         NOT USED
+	threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
+	create_generic_analog_sensor_1( VOLTAGE,
+	                                VOLTS,
+	                                1,            // y = 0.1*x = (1*x + 0)*0.1
+	                                0,
+	                                0,
+	                                -1,
+	                                NULL,
+	                                threshold_list,
+	                                "12V_RAIL",
+	                                &sensor_reading_vcc_out );
 
 
 }
@@ -106,8 +143,8 @@ void ipmc_custom_initialization()
 
 uint8_t get_fru_control_capabilities (void)
 {
-    uint8_t const capabilities = 0; // WARM_RESET_SUPPORTED | GRACEFUL_REBOOT_SUPPORTED | DIAGNOSTIC_INTERRUPT_SUPPORTED
-    return capabilities;
+	uint8_t const capabilities = 0; // WARM_RESET_SUPPORTED | GRACEFUL_REBOOT_SUPPORTED | DIAGNOSTIC_INTERRUPT_SUPPORTED
+	return capabilities;
 }
 
 
