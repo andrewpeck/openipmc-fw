@@ -65,7 +65,7 @@ extern I2C_HandleTypeDef hi2c2;
 
 // Re-map UART peripherals handlers for printing outputs
 extern UART_HandleTypeDef huart4;
-#define huart4_printout huart4
+#define huart_printout huart4
 
 
 /*
@@ -454,7 +454,7 @@ void ipmc_ios_printf(const char* format, ...)
 void _putchar(char character)
 {
 
-	HAL_UART_Transmit(&huart4_printout, (uint8_t*)(&character), 1, 1000);
+	HAL_UART_Transmit(&huart_printout, (uint8_t*)(&character), 1, 1000);
 
 }
 
