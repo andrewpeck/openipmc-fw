@@ -25,7 +25,9 @@
 #include "netif/etharp.h"
 #include "lwip/ethip6.h"
 #include "ethernetif.h"
-#include "lan8742.h"
+/* USER CODE BEGIN Include for User BSP */
+#include "ksz8091.h"
+/* USER CODE END Include for User BSP */
 #include <string.h>
 #include "cmsis_os.h"
 #include "lwip/tcpip.h"
@@ -114,18 +116,22 @@ ETH_TxPacketConfig TxConfig;
 LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF pool");
 
 /* Private function prototypes -----------------------------------------------*/
+/* USER CODE BEGIN Private function prototypes for User BSP */
+
 int32_t ETH_PHY_IO_Init(void);
 int32_t ETH_PHY_IO_DeInit (void);
 int32_t ETH_PHY_IO_ReadReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t *pRegVal);
 int32_t ETH_PHY_IO_WriteReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t RegVal);
 int32_t ETH_PHY_IO_GetTick(void);
 
-lan8742_Object_t LAN8742;
-lan8742_IOCtx_t  LAN8742_IOCtx = {ETH_PHY_IO_Init,
+ksz8091_Object_t KSZ8091;
+ksz8091_IOCtx_t  KSZ8091_IOCtx = {ETH_PHY_IO_Init,
                                   ETH_PHY_IO_DeInit,
                                   ETH_PHY_IO_WriteReg,
                                   ETH_PHY_IO_ReadReg,
                                   ETH_PHY_IO_GetTick};
+
+/* USER CODE END Private function prototypes for User BSP */
 
 /* USER CODE BEGIN 3 */
 
@@ -313,9 +319,13 @@ static void low_level_init(struct netif *netif)
   osThreadAttr_t attributes;
 /* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
   uint32_t idx = 0;
+/* USER CODE BEGIN low_level_init Variables Intialization for User BSP */
+
   ETH_MACConfigTypeDef MACConf;
   int32_t PHYLinkState;
   uint32_t duplex, speed = 0;
+
+/* USER CODE END low_level_init Variables Intialization for User BSP */
   /* Start ETH HAL Init */
 
    uint8_t MACAddr[6] ;
@@ -388,21 +398,24 @@ static void low_level_init(struct netif *netif)
   attributes.priority = osPriorityRealtime;
   osThreadNew(ethernetif_input, netif, &attributes);
 /* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
-/* USER CODE BEGIN PHY_PRE_CONFIG */
+/* USER CODE BEGIN low_level_init Code 1 for User BSP */
 
-/* USER CODE END PHY_PRE_CONFIG */
   /* Set PHY IO functions */
-  LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
+  KSZ8091_RegisterBusIO(&KSZ8091, &KSZ8091_IOCtx);
 
   /* Initialize the LAN8742 ETH PHY */
-  LAN8742_Init(&LAN8742);
+  KSZ8091_Init(&KSZ8091);
+
+/* USER CODE END low_level_init Code 1 for User BSP */
 
   if (hal_eth_init_status == HAL_OK)
   {
-    PHYLinkState = LAN8742_GetLinkState(&LAN8742);
+/* USER CODE BEGIN low_level_init Code 2 for User BSP */
+
+    PHYLinkState = KSZ8091_GetLinkState(&KSZ8091);
 
     /* Get link state */
-    if(PHYLinkState <= LAN8742_STATUS_LINK_DOWN)
+    if(PHYLinkState <= KSZ8091_STATUS_LINK_DOWN)
     {
       netif_set_link_down(netif);
       netif_set_down(netif);
@@ -411,19 +424,19 @@ static void low_level_init(struct netif *netif)
     {
       switch (PHYLinkState)
       {
-      case LAN8742_STATUS_100MBITS_FULLDUPLEX:
+      case KSZ8091_STATUS_100MBITS_FULLDUPLEX:
         duplex = ETH_FULLDUPLEX_MODE;
         speed = ETH_SPEED_100M;
         break;
-      case LAN8742_STATUS_100MBITS_HALFDUPLEX:
+      case KSZ8091_STATUS_100MBITS_HALFDUPLEX:
         duplex = ETH_HALFDUPLEX_MODE;
         speed = ETH_SPEED_100M;
         break;
-      case LAN8742_STATUS_10MBITS_FULLDUPLEX:
+      case KSZ8091_STATUS_10MBITS_FULLDUPLEX:
         duplex = ETH_FULLDUPLEX_MODE;
         speed = ETH_SPEED_10M;
         break;
-      case LAN8742_STATUS_10MBITS_HALFDUPLEX:
+      case KSZ8091_STATUS_10MBITS_HALFDUPLEX:
         duplex = ETH_HALFDUPLEX_MODE;
         speed = ETH_SPEED_10M;
         break;
@@ -447,6 +460,8 @@ static void low_level_init(struct netif *netif)
 
 /* USER CODE END PHY_POST_CONFIG */
     }
+
+/* USER CODE END low_level_init Code 2 for User BSP */
 
   }
   else
@@ -703,6 +718,8 @@ u32_t sys_now(void)
 
 /* USER CODE END 6 */
 
+/* USER CODE BEGIN PHI IO Functions for User BSP */
+
 /*******************************************************************************
                        PHI IO Functions
 *******************************************************************************/
@@ -776,6 +793,8 @@ int32_t ETH_PHY_IO_GetTick(void)
   return HAL_GetTick();
 }
 
+/* USER CODE END PHI IO Functions for User BSP */
+
 /**
   * @brief  Check the ETH link state then update ETH driver and netif link accordingly.
   * @param  argument: netif
@@ -783,45 +802,48 @@ int32_t ETH_PHY_IO_GetTick(void)
   */
 void ethernet_link_thread(void* argument)
 {
+
+/* USER CODE BEGIN ETH link init */
   ETH_MACConfigTypeDef MACConf;
   uint32_t PHYLinkState;
   uint32_t linkchanged = 0, speed = 0, duplex =0;
 
   struct netif *netif = (struct netif *) argument;
-/* USER CODE BEGIN ETH link init */
-
 /* USER CODE END ETH link init */
 
   for(;;)
   {
-  PHYLinkState = LAN8742_GetLinkState(&LAN8742);
 
-  if(netif_is_link_up(netif) && (PHYLinkState <= LAN8742_STATUS_LINK_DOWN))
+/* USER CODE BEGIN ETH link Thread core code for User BSP */
+
+  PHYLinkState = KSZ8091_GetLinkState(&KSZ8091);
+
+  if(netif_is_link_up(netif) && (PHYLinkState <= KSZ8091_STATUS_LINK_DOWN))
   {
     HAL_ETH_Stop_IT(&heth);
     netif_set_down(netif);
     netif_set_link_down(netif);
   }
-  else if(!netif_is_link_up(netif) && (PHYLinkState > LAN8742_STATUS_LINK_DOWN))
+  else if(!netif_is_link_up(netif) && (PHYLinkState > KSZ8091_STATUS_LINK_DOWN))
   {
     switch (PHYLinkState)
     {
-    case LAN8742_STATUS_100MBITS_FULLDUPLEX:
+    case KSZ8091_STATUS_100MBITS_FULLDUPLEX:
       duplex = ETH_FULLDUPLEX_MODE;
       speed = ETH_SPEED_100M;
       linkchanged = 1;
       break;
-    case LAN8742_STATUS_100MBITS_HALFDUPLEX:
+    case KSZ8091_STATUS_100MBITS_HALFDUPLEX:
       duplex = ETH_HALFDUPLEX_MODE;
       speed = ETH_SPEED_100M;
       linkchanged = 1;
       break;
-    case LAN8742_STATUS_10MBITS_FULLDUPLEX:
+    case KSZ8091_STATUS_10MBITS_FULLDUPLEX:
       duplex = ETH_FULLDUPLEX_MODE;
       speed = ETH_SPEED_10M;
       linkchanged = 1;
       break;
-    case LAN8742_STATUS_10MBITS_HALFDUPLEX:
+    case KSZ8091_STATUS_10MBITS_HALFDUPLEX:
       duplex = ETH_HALFDUPLEX_MODE;
       speed = ETH_SPEED_10M;
       linkchanged = 1;
@@ -843,8 +865,6 @@ void ethernet_link_thread(void* argument)
       netif_set_link_up(netif);
     }
   }
-
-/* USER CODE BEGIN ETH link Thread core code for User BSP */
 
 /* USER CODE END ETH link Thread core code for User BSP */
 
