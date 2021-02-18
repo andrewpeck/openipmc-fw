@@ -40,7 +40,7 @@
 #define TIME_WAITING_FOR_INPUT ( portMAX_DELAY )
 /* USER CODE BEGIN OS_THREAD_STACK_SIZE_WITH_RTOS */
 /* Stack size of the interface thread */
-#define INTERFACE_THREAD_STACK_SIZE ( 350 )
+#define INTERFACE_THREAD_STACK_SIZE ( 512 )
 /* USER CODE END OS_THREAD_STACK_SIZE_WITH_RTOS */
 /* Network interface name */
 #define IFNAME0 's'

@@ -78,12 +78,12 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE BEGIN PV */
 
 static char uart4_input_char;
-StreamBufferHandle_t uart4_input_stram;
+StreamBufferHandle_t uart4_input_stream;
 osThreadId_t keyboardTaskHandle;
 const osThreadAttr_t keyboardTask_attributes = {
   .name = "KeyboardTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+  .stack_size = 256 * 4
 };
 
 
@@ -882,12 +882,11 @@ void KeyboardTask(void *argument)
   fru_transition_t fru_trigg_val;
 
   // Start receiving bytes from keyboard
-  uart4_input_stram = xStreamBufferCreate(10, 1);
-  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
+  uart4_input_stream = xStreamBufferCreate(10, 1);
 
   for(;;)
   {
-	xStreamBufferReceive( uart4_input_stram, &c, 1, portMAX_DELAY);
+	xStreamBufferReceive( uart4_input_stream, &c, 1, portMAX_DELAY);
 
 	ipmc_ios_printf("Pressed Key: %c\r\n", c);
 	switch (c){
@@ -917,7 +916,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
   if( UartHandle ==  &huart4 )
   {
-	xStreamBufferSendFromISR( uart4_input_stram, &uart4_input_char, 1, &xHigherPriorityTaskWoken);
+    if( uart4_input_stream != NULL )
+	  xStreamBufferSendFromISR( uart4_input_stream, &uart4_input_char, 1, &xHigherPriorityTaskWoken);
+
 	HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
   }
 
