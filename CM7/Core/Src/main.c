@@ -78,7 +78,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE BEGIN PV */
 
 static char uart4_input_char;
-StreamBufferHandle_t uart4_input_stream;
+StreamBufferHandle_t uart4_input_stream = NULL;
 osThreadId_t keyboardTaskHandle;
 const osThreadAttr_t keyboardTask_attributes = {
   .name = "KeyboardTask",
@@ -883,21 +883,24 @@ void KeyboardTask(void *argument)
 
   // Start receiving bytes from keyboard
   uart4_input_stream = xStreamBufferCreate(10, 1);
+  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
 
   for(;;)
   {
 	xStreamBufferReceive( uart4_input_stream, &c, 1, portMAX_DELAY);
 
-	ipmc_ios_printf("Pressed Key: %c\r\n", c);
 	switch (c){
 		case 'a':
+			ipmc_ios_printf("Pressed Key: %c\r\n", c);
 			ipmc_ios_printf("ADDR: %x\r\n", ipmb_0_addr);
 			break;
 		case 'c':
+			ipmc_ios_printf("Pressed Key: %c\r\n", c);
 			fru_trigg_val = CLOSE_HANDLE;
 			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
 			break;
 		case 'o':
+			ipmc_ios_printf("Pressed Key: %c\r\n", c);
 			fru_trigg_val = OPEN_HANDLE;
 			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
 			break;
