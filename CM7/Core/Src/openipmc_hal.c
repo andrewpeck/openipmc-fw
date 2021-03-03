@@ -57,6 +57,9 @@ static SemaphoreHandle_t ipmbb_send_semphr = NULL;
 // Mutex to avoid printf overlapping.
 static SemaphoreHandle_t printf_mutex = NULL;
 
+// Mutex to protect GPIO readding.
+static SemaphoreHandle_t haddress_pins_mutex = NULL;
+
 // Re-map I2C peripherals handlers for IPMB channels
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c2;
@@ -84,6 +87,7 @@ int openipmc_hal_init(void)
 	ipmb_rec_semphr = xSemaphoreCreateBinary();
 	ipmba_send_semphr = xSemaphoreCreateBinary();
 	ipmbb_send_semphr = xSemaphoreCreateBinary();
+	haddress_pins_mutex = xSemaphoreCreateMutex();
 
 	// Enable the IPMB channels
 	GPIO_SET_STATE(SET, IPMB_A_EN);
@@ -140,7 +144,35 @@ int ipmc_ios_read_handle(void)
 		return 1;
 }
 
-
+uint8_t get_haddress_pins(void)
+{
+	uint8_t  HA_bits = 0;
+	
+	while (haddress_pins_mutex == NULL)  { asm("nop"); }
+	xSemaphoreTake( haddress_pins_mutex, portMAX_DELAY );
+	
+	// Get HA0 to HA7
+	if( HW_0_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x01;
+	if( HW_1_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x02;
+	if( HW_2_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x04;
+	if( HW_3_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x08;
+	if( HW_4_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x10;
+	if( HW_5_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x20;
+	if( HW_6_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x40;
+	if( HW_7_GET_STATE() == GPIO_PIN_SET )
+		HA_bits |= 0x80;
+	
+	xSemaphoreGive( haddress_pins_mutex );
+	
+	return HA_bits;
+}
 
 /*
  * The Hardware Address of the IPMC (slave addr) is read from the ATCA backplane pins
@@ -149,26 +181,29 @@ int ipmc_ios_read_handle(void)
 uint8_t ipmc_ios_read_haddress(void)
 {
 	int i;
+	uint8_t  HA_pins;
 	uint8_t  HA_bit[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	uint8_t  HA_num;
 	int parity_odd;
+	
+	HA_pins = get_haddress_pins();
 
 	// Get HA0 to HA7
-	if( HW_0_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x01 )
 		HA_bit[0] = 1;
-	if( HW_1_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x02 )
 		HA_bit[1] = 1;
-	if( HW_2_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x04 )
 		HA_bit[2] = 1;
-	if( HW_3_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x08 )
 		HA_bit[3] = 1;
-	if( HW_4_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x01 )
 		HA_bit[4] = 1;
-	if( HW_5_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x02 )
 		HA_bit[5] = 1;
-	if( HW_6_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x04 )
 		HA_bit[6] = 1;
-	if( HW_7_GET_STATE() == GPIO_PIN_SET )
+	if( HA_pins & 0x08 )
 		HA_bit[7] = 1;
 
 

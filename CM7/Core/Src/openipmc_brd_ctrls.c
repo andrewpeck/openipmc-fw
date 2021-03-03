@@ -4,6 +4,7 @@
  */
 
 #include "cmsis_os.h"
+#include <stdbool.h>
 
 //OpenIPMC includes
 #include "dimm_gpios.h"
@@ -12,7 +13,23 @@
 
 
 
-uint8_t test_temp_value = 50;
+struct
+{
+	
+	_Bool   status;
+	uint8_t current_power_level;
+	uint8_t new_power_level;
+	
+} benchtop_mode = {false, 0, 0};
+
+
+static void board_specific_activation_control( uint8_t current_power_level, uint8_t new_power_level );
+
+
+
+
+
+
 
 
 
@@ -24,19 +41,80 @@ uint8_t test_temp_value = 50;
  */
 void ipmc_pwr_switch_power_level_on_payload( uint8_t new_power_level )
 {
+	// Benchtop mode prevents actions from Shelf Manager
+	if( benchtop_mode.status == true )
+		return;
+	
+	uint8_t current_power_level = ipc_pwr_get_current_power_level();
+	board_specific_activation_control( current_power_level, new_power_level );
+}
 
+
+/*
+ * Board Specific routine for changing the Power Level
+ * 
+ * This function needs to be customized according to the board characteristic.
+ */
+void board_specific_activation_control( uint8_t current_power_level, uint8_t new_power_level )
+{
+	
 	/*
-	 * Do whatever is needed to set to the requested power level on the payload
+	 * For customization, 'current_power_level' and 'new_power_level' can be used to improve
+	 * any the transition between power levels.
 	 */
-
-	// Typical operation over 12V_EN signal on DIMM
-	if(new_power_level != 0)
-		EN_12V_SET_STATE(SET);
-	else
+	
+	
+	// DEACTIVATION
+	if( new_power_level == 0)
+	{
+		
+		// Customize DEACTIVATION process
+		
+		/*
+		 * Put here any code related to deactivation of the board.
+		 * E.g: Shut down Linux
+		 */
+		
+		// Switch off the 12V rail for payload
 		EN_12V_SET_STATE(RESET);
-
+		
+	}
+	// ACTIVATION
+	else 
+	{
+		
+		// Switch on the 12V rail for payload
+		EN_12V_SET_STATE(SET);
+		
+		// Customize ACTIVATION process
+		
+		/*
+		 * Put here any code related to activation of the board.
+		 * E.g: Boot Linux
+		 */
+		
+	}
+	
 	return;
 }
+
+
+
+/*
+ * Force a new power level in benchtop mode
+ * 
+ * In this mode, Shelf Manager looses the ability to change the Power Level
+ */
+void set_benchtop_payload_power_level( uint8_t new_power_level )
+{
+	benchtop_mode.status == true;
+	
+	board_specific_activation_control( benchtop_mode.current_power_level, new_power_level );
+	
+	benchtop_mode.current_power_level = new_power_level;
+}
+
+
 
 /*
  * Payload Cold Reset

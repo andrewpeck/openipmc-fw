@@ -136,7 +136,9 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
 //  .stack_size = 128 * 4
 //};
 
-void openipmc_hal_init( void );
+void    openipmc_hal_init( void );
+uint8_t get_haddress_pins( void );
+void    set_benchtop_payload_power_level( uint8_t new_power_level );
 
 
 /* USER CODE END PV */
@@ -989,6 +991,11 @@ void StartDefaultTask(void *argument)
   amc_gpios_init();
   mgm_i2c_init();
   sense_i2c_init();
+
+  // Check for Benchtop mode
+  if( get_haddress_pins() == 0x7F )
+	  set_benchtop_payload_power_level(2);
+
 
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";
