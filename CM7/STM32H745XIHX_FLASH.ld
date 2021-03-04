@@ -187,9 +187,9 @@ SECTIONS
    * This section is being used by:
    *     - SPI4 DMA (AMC_IO Expanders)  
    */
-  .sram4 :
+  .sram4 (NOLOAD):
   {
-    KEEP(*(.sram4))
+    *(.sram4)
      
   } >SRAM4
 }

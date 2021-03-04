@@ -97,6 +97,7 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x40 | (DEVICE_ADDR<<1);                            \
 		spi_data_out[1] = REG_ADDR;                                           \
 		spi_data_out[2] = VAL;                                                \
+		SCB_CleanDCache_by_Addr((uint32_t*)spi_data_out, 6*sizeof(uint8_t));  \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
 	}
 
@@ -108,8 +109,10 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                            \
 		spi_data_out[1] = REG_ADDR;                                           \
 		spi_data_out[2] = 0  ;                                                \
+		SCB_CleanDCache_by_Addr((uint32_t*)spi_data_out, 6*sizeof(uint8_t));  \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 3); \
 		while(spi_status != IDLE) { asm("nop"); }                             \
+		SCB_InvalidateDCache_by_Addr((uint32_t*)spi_data_in, 6*sizeof(uint8_t));  \
 		VAL = spi_data_in[2];                                                 \
 	}
 
@@ -121,8 +124,10 @@ extern SPI_HandleTypeDef hspi4;  //CubeIDE instantiates it in main.c
 		spi_data_out[0] = 0x41 | (DEVICE_ADDR<<1);                                \
 		spi_data_out[1] = REG_ADDR;                                               \
 		spi_data_out[2] = spi_data_out[3] = spi_data_out[4] = spi_data_out[5] = 0;\
+		SCB_CleanDCache_by_Addr((uint32_t*)spi_data_out, 6*sizeof(uint8_t));      \
 		HAL_SPI_TransmitReceive_DMA(&hspi_amc, spi_data_out, spi_data_in, 6);     \
 		while(spi_status != IDLE) { asm("nop"); }                                 \
+		SCB_InvalidateDCache_by_Addr((uint32_t*)spi_data_in, 6*sizeof(uint8_t));  \
 		VAL1 = spi_data_in[2];                                                    \
 		VAL2 = spi_data_in[3];                                                    \
 		VAL3 = spi_data_in[4];                                                    \
