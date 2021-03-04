@@ -34,6 +34,7 @@
 #include "ipmb_0.h"
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
+#include "st_bootloader.h"
 
 /* USER CODE END Includes */
 
@@ -177,6 +178,8 @@ int main(void)
   /* USER CODE END 1 */
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
+
+  st_bootloader_jump_if_scheduled();
 /* USER CODE END Boot_Mode_Sequence_0 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -895,6 +898,9 @@ void KeyboardTask(void *argument)
 		case 'a':
 			ipmc_ios_printf("Pressed Key: %c\r\n", c);
 			ipmc_ios_printf("ADDR: %x\r\n", ipmb_0_addr);
+			break;
+		case 'b':
+			st_bootloader_launch();
 			break;
 		case 'c':
 			ipmc_ios_printf("Pressed Key: %c\r\n", c);
