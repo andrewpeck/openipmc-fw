@@ -197,13 +197,13 @@ uint8_t ipmc_ios_read_haddress(void)
 		HA_bit[2] = 1;
 	if( HA_pins & 0x08 )
 		HA_bit[3] = 1;
-	if( HA_pins & 0x01 )
+	if( HA_pins & 0x10 )
 		HA_bit[4] = 1;
-	if( HA_pins & 0x02 )
+	if( HA_pins & 0x20 )
 		HA_bit[5] = 1;
-	if( HA_pins & 0x04 )
+	if( HA_pins & 0x40 )
 		HA_bit[6] = 1;
-	if( HA_pins & 0x08 )
+	if( HA_pins & 0x80 )
 		HA_bit[7] = 1;
 
 
