@@ -12,6 +12,7 @@
 #include "sdr_definitions.h"
 
 
+#include "apollo/apollo.h"
 
 struct
 {
@@ -62,7 +63,7 @@ void board_specific_activation_control( uint8_t current_power_level, uint8_t new
 	 * For customization, 'current_power_level' and 'new_power_level' can be used to improve
 	 * any the transition between power levels.
 	 */
-	
+
 	
 	// DEACTIVATION
 	if( new_power_level == 0)
@@ -76,7 +77,8 @@ void board_specific_activation_control( uint8_t current_power_level, uint8_t new
 		 */
 		
 		// Switch off the 12V rail for payload
-		EN_12V_SET_STATE(RESET);
+		//EN_12V_SET_STATE(RESET);
+		apollo_powerdown_sequence();
 		
 	}
 	// ACTIVATION
@@ -84,7 +86,8 @@ void board_specific_activation_control( uint8_t current_power_level, uint8_t new
 	{
 		
 		// Switch on the 12V rail for payload
-		EN_12V_SET_STATE(SET);
+		//EN_12V_SET_STATE(SET);
+		apollo_powerup_sequence();
 		
 		// Customize ACTIVATION process
 		

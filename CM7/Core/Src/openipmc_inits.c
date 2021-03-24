@@ -9,6 +9,7 @@
 #include "fru_inventory_manager.h"
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
+#include "apollo/pim400.h"
 
 static void power_initialization(void);
 
@@ -131,11 +132,12 @@ void ipmc_custom_initialization()
 	                                0,
 	                                0,
 	                                -1,
-	                                NULL,
+	                                0,
 	                                threshold_list,
 	                                "12V_RAIL",
 	                                &sensor_reading_vcc_out );
 
+	#include "apollo/sensor_inits.h"
 
 }
 
@@ -153,13 +155,13 @@ static void power_initialization(void)
 
 	power_envelope_t pwr_envelope;
 
-	pwr_envelope.num_of_levels =  2; // Max of 20 beyond the 0-th value
+	pwr_envelope.num_of_levels =  1; // Max of 20 beyond the 0-th value
 	pwr_envelope.multiplier    = 10; // Global multiplier in tenths of Watt
 
 	// REMINDER: PICMG spec **requires** the maximum power envelope values in this array to increase monotonically!
 	pwr_envelope.power_draw[ 0] = 0;   // Power Level 0: RESERVED and always means 0 Watt (payload off)
-	pwr_envelope.power_draw[ 1] = 20;  // Power Level 1: 20 Watts ( power_draw[1] * multiplier * 0.1W = 20 * 10 * 0.1 W = 20W )
-	pwr_envelope.power_draw[ 2] = 100; // Power Level 2: 100 Watts
+	pwr_envelope.power_draw[ 1] = 100;  // Power Level 1: 20 Watts ( power_draw[1] * multiplier * 0.1W = 20 * 10 * 0.1 W = 20W )
+	//pwr_envelope.power_draw[ 2] = 100; // Power Level 2: 100 Watts
 	//pwr_envelope.power_draw[ 3] = 110;
 	//pwr_envelope.power_draw[ 4] = 140;
 	//pwr_envelope.power_draw[ 5] = 150;
