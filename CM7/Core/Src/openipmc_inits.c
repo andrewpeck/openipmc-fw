@@ -50,47 +50,51 @@ void ipmc_custom_initialization()
 
 	// Create the Board Info Area
 	fru_inventory_field_t board_info;
-	board_info = create_board_info_field(13017600,            // Manufacturing Date/Time (in minutes from January 1th 1996)
-	                                    "SPRACE-KIT",         // Board Manufacturer,
-	                                    "OpenIPMC-HW",        // Board Product Name,
-	                                    "000000-0001",        // Serial Number,
-	                                    "XXXXXXX1",           // Part Number,
-	                                    "123");               // FRU File ID
-
+	board_info = create_board_info_field ( 13017600,            // Manufacturing Date/Time (in minutes from January 1th 1996)
+	                                       "SPRACE-KIT",        // Board Manufacturer       (string fields: max of 63 ASCII char)
+	                                       "OpenIPMC-HW",       // Board Product Name
+	                                       "000000-0001",       // Serial Number
+	                                       "XXXXXXX1",          // Part Number
+	                                       "file.xml"    );     // FRU File ID
+	// Create the Product Info Area
 	fru_inventory_field_t product_info;
-	product_info = create_product_info_field ("cachorro 1",
-			"cachorro 1",
-			"cachorro 1",
-			"cachorro 1",
-			"cachorro 1",
-			"cachorro 1",
-			"cachorro 1");
+	product_info = create_product_info_field ( "SPRACE-KIT",        // Manufacturer Name       (string fields: max of 63 ASCII char)
+	                                           "OpenIPMC-HW",       // Product Name 
+	                                           "123456AB",          // Product Part/Model Number
+	                                           "2.0",               // Product Version 
+	                                           "AB5555-01",         // Product Serial Number 
+	                                           "2021-1234",         // Asset Tag 
+	                                           "file.xml"      );   // FRU File ID
+
 
 	// Aggregates FRU Info areas to create the FRU Info inventory
 	create_fru_inventory ( NULL,             // Internal Use Field NOT USED
 	                       NULL,             // Chassis Info Field NOT USED
 	                       board_info,
-						   product_info,     // Product Info Field NOT USED
+	                       product_info,
 	                       NULL,             // Multi Record Field NOT USED
-						   0             );  // Multi Record Field NOT USED
+	                       0             );  // Multi Record Field NOT USED
 
 	// The individual areas now can be freed
-	vPortFree (board_info);
+	vPortFree( board_info   );
+	vPortFree( product_info );
+
+
 
 	/*
 	 * Define the device identification and capabilities (Device ID)
 	 * This information refers to the IPMC itself
 	 */
-	ipmc_device_id.firmware_major_revision    = 127;  // Integer 0 ~ 127
-	ipmc_device_id.firmware_minor_revision    = 0x19; // BCD from 00 to 99 (two digits) Example: Ver. x.2.3 -> 0x23
-	ipmc_device_id.device_revision            = 15;   // Integer 0 ~ 15
-	ipmc_device_id.auxiliar_firmware_rev_info = HEAD_COMMIT_SHA1; // Here it is being used to identify the commit, 8 first digits.
-	ipmc_device_id.device_id_string           = "CachorroIPMC";    // 16 characters maximum.
+	ipmc_device_id.firmware_major_revision    = 1;                    // Integer 0 ~ 127
+	ipmc_device_id.firmware_minor_revision    = 0x23;                 // BCD from 00 to 99 (two digits) Example: Ver. 1.2.3 -> 0x23
+	ipmc_device_id.device_revision            = 1;                    // Integer 0 ~ 15
+	ipmc_device_id.auxiliar_firmware_rev_info = 0x1a2b3c4d;           // 8 digits, hexadecimal
+	ipmc_device_id.device_id_string           = "some-ATCA-board";    // String, 16 characters maximum.
 	ipmc_device_id.device_support             = DEVICE_SUPPORT_IPMB_EVENT_GENERATOR  |
 	                                            DEVICE_SUPPORT_FRU_INVENTORY         |
 	                                            DEVICE_SUPPORT_SENSOR                ;
 
-	//ipmc_ios_printf("VAR %x\n\r",  HEAD_COMMIT_SHA1 );
+
 
 	/*
 	 *  Create Sensors
