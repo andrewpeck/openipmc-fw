@@ -27,6 +27,7 @@
 #include "ethernetif.h"
 /* USER CODE BEGIN Include for User BSP */
 #include "ksz8091.h"
+#include "network_ctrls.h"
 /* USER CODE END Include for User BSP */
 #include <string.h>
 #include "cmsis_os.h"
@@ -343,6 +344,9 @@ static void low_level_init(struct netif *netif)
   heth.Init.RxBuffLen = 1524;
 
   /* USER CODE BEGIN MACADDRESS */
+
+  // Replaces the default address defined in IOC file
+  load_user_defined_mac_addr( MACAddr );
 
   /* USER CODE END MACADDRESS */
 

@@ -35,6 +35,7 @@
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
 #include "st_bootloader.h"
+#include "network_ctrls.h"
 
 /* USER CODE END Includes */
 
@@ -1002,6 +1003,11 @@ void StartDefaultTask(void *argument)
   if( get_haddress_pins() == 0x7F )
 	  set_benchtop_payload_power_level(2);
 
+
+  // Set network interface static IP Address
+  eth_ctrls_change_ip_addr( 192, 168,   0, 12,    // IP Address
+                            255, 255, 255,  0,    // Network Mask
+                            192, 168,   0,  1  ); // Gateway
 
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";

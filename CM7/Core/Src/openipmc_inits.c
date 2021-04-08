@@ -161,7 +161,7 @@ void ipmc_custom_initialization()
 	                                0,
 	                                0,
 	                                -1,
-	                                NULL,
+	                                0, // No thresholds
 	                                threshold_list,
 	                                "12V_RAIL",
 	                                &sensor_reading_vcc_out );
