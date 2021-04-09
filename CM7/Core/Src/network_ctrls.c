@@ -1,7 +1,7 @@
 
 #include "lwip.h"
 
-#include "eth_ctrls.h"
+#include "network_ctrls.h"
 
 // These variables are globally defined in lwip.c file.
 extern struct netif gnetif;

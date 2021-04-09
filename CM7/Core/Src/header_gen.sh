@@ -3,14 +3,11 @@
 # This script is used to generate needed header files just before running the compiler.
 #
 # The suggested way to execute this script automatically by the STM32CubeIDE is adding 
-# "../Core/Src/header_gen.sh && " in the Command Line Pattern.
+# "../Core/Src/header_gen.sh" in the "Pre-build steps" configuration.
 #
 #    - Open CM7 project Properties Menu 
 #    - On the left tree, select "C/C++ Build" -> "Settings"
-#    - In Tool Settings tab, Select "MCU GCC Compiler"
-#    - Edit the "Command line pattern" adding "../Core/Src/header_gen.sh && " in the beginning. Ex:
-#
-#              ../Core/Src/header_gen.sh && ${COMMAND} ${INPUTS} ${FLAGS} .... etc ....
+#    - In Build Steps tab, add "../Core/Src/header_gen.sh" in "Pre-build steps"->"Command" field
 
 
 
