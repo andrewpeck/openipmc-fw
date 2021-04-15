@@ -23,6 +23,7 @@
 //#include "openipmc/src/ipmc_tasks.h"
 
 #include "dimm_gpios.h"
+#include "telnet_server.h"
 
 // printf lib include
 #include "printf.h"
@@ -69,6 +70,8 @@ extern I2C_HandleTypeDef hi2c2;
 // Re-map UART peripherals handlers for printing outputs
 extern UART_HandleTypeDef huart4;
 #define huart_printout huart4
+
+extern telnet_t telnet23;
 
 
 /*
@@ -489,7 +492,11 @@ void ipmc_ios_printf(const char* format, ...)
 void _putchar(char character)
 {
 
+	// Local CLI via UART
 	HAL_UART_Transmit(&huart_printout, (uint8_t*)(&character), 1, 1000);
+
+	// Remote CLI via telnet
+	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
 
 }
 
