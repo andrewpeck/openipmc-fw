@@ -4,6 +4,8 @@
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
 
+#define SECOND 0x155555 // ~1 seconds timeout
+
 void apollo_init_gpios () {
   // choices from stm32f4xx__hal__gpio_8h_source.html
   // GPIO_MODE_INPUT                        /*!< Input Floating Mode                   */
@@ -87,6 +89,11 @@ void apollo_init_gpios () {
   GPIO_CONFIGURE_PIN_EXPAND (APOLLO_ZYNQ_5           , GPIO_MODE_INPUT, GPIO_PULLDOWN);
 }
 
+uint8_t apollo_get_esm_pwr_good () {
+  uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_ETH_SW_PWR_GOOD);
+  return state;
+}
+
 uint8_t apollo_get_fpga_done () {
   uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_FPGA_DONE);
   return state;
@@ -167,7 +174,7 @@ void apollo_powerdown_sequence () {
 
   // wait for zynq to shut down
   ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
-  uint32_t timer=0x27fffff; // 0x27fffff ~= 30 seconds timeout
+  uint32_t timer=30*SECOND; // 30 seconds timeout
   while (apollo_get_zynq_up() == 1 && timer > 0 ) {
     timer = timer - 1;
     if (timer==0)
@@ -179,102 +186,151 @@ void apollo_powerdown_sequence () {
   EN_12V_SET_STATE(RESET);
 }
 
-
 void apollo_powerup_sequence () {
 
-  const uint32_t second=0x155555; // ~1 seconds timeout
+  uint8_t boot_mode=APOLLO_BOOT_SD;
 
-  // 3 = SD Card
-  // 2 = QSPI
-  // 1 = NAND
-  // 0 = JTAG
-  uint8_t boot_mode=0x3;
+  if (apollo_get_revision() == APOLLO_REV2 ||
+      apollo_get_revision() == APOLLO_REV2A) {
 
-  if (apollo_get_noshelf()) {
-    boot_mode = 0x0;  // JTAG / EMMC
+    // TODO: right now the noshelf is being used as a boot mode selection...
+    // this should be returned to the correct behavior eventually
+    if (apollo_get_noshelf()) {
+      boot_mode = APOLLO_BOOT_JTAG; // JTAG / EMMC
+    } else {
+      boot_mode = APOLLO_BOOT_SD;
+    }
   } else {
-    boot_mode = 0x3; // SD Card
+    boot_mode = APOLLO_BOOT_SD;
   }
 
-  uint8_t uart_adr =0x1; // 0x1 == disconnect
-  uint8_t chain_sel=0x0;
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
 
   // make sure everything is off
+  //------------------------------------------------------------------------------
   EN_12V_SET_STATE(RESET);
   apollo_set_zynq_en(0);
 
   ipmc_ios_printf("Powering Up Service Module:\r\n");
 
   // set boot bins
+  //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Setting boot mode to 0x%1X...\r\n", boot_mode);
   apollo_set_zynq_boot_mode (boot_mode);
 
   // set uart pins
+  //------------------------------------------------------------------------------
+  uint8_t uart_adr =0x1; // 0x1 == disconnect
   ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
   apollo_set_uart_adr (uart_adr);
 
-  // set uart pins
+  // set jtag chain select pins
+  //------------------------------------------------------------------------------
+  uint8_t chain_sel=0x0;
+  if (apollo_get_revision() == APOLLO_REV1) {
+    // chain sel has a different meaning in rev0
+    chain_sel = 0;
+  }
   ipmc_ios_printf(" > Setting jtag chain sel to 0x%1X...\r\n", chain_sel);
   apollo_set_jtag_chain_sel (chain_sel);
 
   // send esm reset
+  //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Resetting ESM...\r\n");
   apollo_esm_reset(25);
 
   // turn off we on eeprom
+  //------------------------------------------------------------------------------
   apollo_set_eeprom_we_n (1);
 
   // reset i2c sense mux
+  //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Resetting MGM I2C Mux...\r\n");
   apollo_sense_reset ();
 
   osDelay(10);
 
   // turn on power
+  //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Enabling 12V power...\r\n");
   EN_12V_SET_STATE(SET);
 
   osDelay(100);
 
   // set zynq enable
+  //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Enabling Zynq...\r\n");
   apollo_set_zynq_en(1);
   ipmc_ios_printf(" > Zynq Enabled...\r\n");
 
-  // for SMv1, wait for the ESM to come up
+  // for SMv1
+  //------------------------------------------------------------------------------
+  //if (apollo_get_revision() == APOLLO_REV1) {
+    //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
+    //    while (0==apollo_get_esm_pwr_good()) {;}
+    //    ipmc_ios_printf(" > ESM Power Good...\r\n");
+    //    LED_0_SET_STATE(SET);
+    // TODO: timeout
+    // turn off power  ?
+  //}
 
   // for SMv2 wait for the ZYNQ FPGA to configure
-  ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
-  while (0==apollo_get_fpga_done()) {;}
-  ipmc_ios_printf(" > ZYNQ FPGA DONE...\r\n");
-  LED_0_SET_STATE(SET);
+  //------------------------------------------------------------------------------
+  if (apollo_get_revision() == APOLLO_REV2 ||
+      apollo_get_revision() == APOLLO_REV2A) {
+
+    ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
+    while (0==apollo_get_fpga_done()) {;}
+
+    ipmc_ios_printf(" > ZYNQ FPGA DONE...\r\n");
+    LED_0_SET_STATE(SET);
+
+    // TODO: timeout
+    // turn off power  ?
+  }
 
   // set uart pins
-  ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
-  uart_adr = 0; // 0 == connect to Zynq
-  apollo_set_uart_adr (uart_adr);
+  //------------------------------------------------------------------------------
+  if (apollo_get_revision() == APOLLO_REV2 ||
+      apollo_get_revision() == APOLLO_REV2A) {
+    ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
+    uart_adr = 0; // 0 == connect to Zynq
+    apollo_set_uart_adr (uart_adr);
+  }
 
   ipmc_ios_printf(" > Powerup done\n", uart_adr);
 
   ipmc_ios_printf(" > Waiting for Zynq OS...\r\n");
-  //if (apollo_get_revision() == APOLLO_REV2 || apollo_get_revision() == APOLLO_REV2A) {
-  //  // Zynq up is from Linux
-  //  ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
-  //  uint32_t timer=30*second; // ~30 seconds timeout
-  //  while (apollo_get_zynq_up() == 0 && timer > 0 ) {
-  //    timer = timer - 1;
-  //    if (timer==0) {
-  //      ipmc_ios_printf("   > Timeout waiting for zynq good to go up...\r\n");
-  //      // turn off power after 2 minutes?
-  //      // or...
-  //      // if you don't hear back, change boot mode to qspi and try again
-  //    }
-  //  }
-  //} else {
-  //  ipmc_ios_printf(" > SMRev1: not waiting for Zynq Up..\r\n");
-  //}
+
+  // zynq timeout
+  //------------------------------------------------------------------------------
+
+  if (apollo_get_revision() == APOLLO_REV2 ||
+      apollo_get_revision() == APOLLO_REV2A) {
+
+    // Zynq up is from Linux
+    ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
+
+    uint32_t timer=60*SECOND; // timeout
+    while (apollo_get_zynq_up() == 0 && timer > 0 ) {
+
+      timer = timer - 1;
+
+      if (timer==0) {
+        ipmc_ios_printf("   > Timeout waiting for zynq good to go up...\r\n");
+
+        // TODO
+        // turn off power after 2 minutes?
+        // or...
+        // if you don't hear back, change boot mode to qspi and try again
+
+      }
+    }
+  } else {
+    ipmc_ios_printf(" > SMRev1: not waiting for Zynq Up..\r\n");
+  }
+
   LED_1_SET_STATE(SET);
 
 }

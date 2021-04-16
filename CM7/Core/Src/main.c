@@ -1036,25 +1036,34 @@ void StartDefaultTask(void *argument)
   udp_connect(my_udp, &PC_IPADDR, 55151);
   struct pbuf* udp_buffer = NULL;
 
-  //if (apollo_get_noshelf()) {
-    //if (apollo_get_noshelf() && 0x80 == ipmc_ios_read_haddress()) {
+  // if ((apollo_get_revision() == APOLLO_REV1 || apollo_get_noshelf()) &&
+  if (
+    0x80 == ipmc_ios_read_haddress()) {
     ipmc_ios_printf("No Shelf Detected, but SM jumper set to NoShelf mode... booting up\r\n");
     apollo_powerup_sequence();
-  //}
+  }
 
   /* Infinite loop */
   for(;;)
   {
   // Blink led
-    osDelay(200);
     LED_0_SET_STATE(SET);
-    LED_2_SET_STATE(RESET);
-    osDelay(200);
     LED_1_SET_STATE(SET);
-    LED_0_SET_STATE(RESET);
-    osDelay(200);
     LED_2_SET_STATE(SET);
+    osDelay(500);
+    LED_0_SET_STATE(RESET);
     LED_1_SET_STATE(RESET);
+    LED_2_SET_STATE(RESET);
+    osDelay(500);
+
+    //LED_0_SET_STATE(SET);
+    //LED_2_SET_STATE(RESET);
+    //osDelay(200);
+    //LED_1_SET_STATE(SET);
+    //LED_0_SET_STATE(RESET);
+    //osDelay(200);
+    //LED_2_SET_STATE(SET);
+    //LED_1_SET_STATE(RESET);
 
     // UDP packet output test
     udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
@@ -1076,6 +1085,7 @@ void StartDefaultTask(void *argument)
 void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct = {0};
+
 
   /* Disables the MPU */
   HAL_MPU_Disable();

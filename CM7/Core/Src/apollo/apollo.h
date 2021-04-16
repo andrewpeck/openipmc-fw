@@ -17,9 +17,14 @@
 #define GPIO_SET_STATE_VAL(val, NAME)                       \
   HAL_GPIO_WritePin( NAME ## _GPIO_Port, NAME ## _Pin, val)
 
-#define APOLLO_REV1P2 0x3
+#define APOLLO_REV1  0x3
 #define APOLLO_REV2  0x2
 #define APOLLO_REV2A 0x1
+
+#define APOLLO_BOOT_SD   3
+#define APOLLO_BOOT_QSPI 2
+#define APOLLO_BOOT_NAND 1
+#define APOLLO_BOOT_JTAG 0
 
 #define APOLLO_FPGA_DONE        USR_IO_2
 #define APOLLO_UART_ADR_0       USR_IO_5
@@ -55,21 +60,24 @@
 #define APOLLO_GPIO_6           USR_IO_29
 #define APOLLO_GPIO_7           USR_IO_31
 
-void apollo_init_gpios ();
-uint8_t apollo_get_revision ();
+uint8_t apollo_get_esm_pwr_good ();
 uint8_t apollo_get_fpga_done ();
+uint8_t apollo_get_noshelf ();
+uint8_t apollo_get_revision ();
+uint8_t apollo_get_zynq_up ();
+
+void apollo_set_cm_enable (uint8_t enable);
+void apollo_set_eeprom_we_n (uint8_t state);
+void apollo_set_esm_reset_n (uint8_t state);
+void apollo_set_jtag_chain_sel (uint8_t sel);
+void apollo_set_sense_reset_n (uint8_t state);
 void apollo_set_uart_adr (uint8_t adr);
 void apollo_set_zynq_boot_mode (uint8_t mode);
-void apollo_set_jtag_chain_sel (uint8_t sel) ;
-void apollo_set_cm_enable (uint8_t enable) ;
-void apollo_set_sense_reset_n (uint8_t state) ;
-void apollo_set_eeprom_we_n (uint8_t state) ;
-void apollo_set_esm_reset_n (uint8_t state) ;
-void apollo_set_zynq_en (uint8_t state) ;
-uint8_t apollo_get_zynq_up () ;
-uint8_t apollo_get_noshelf () ;
-void apollo_esm_reset() ;
-void apollo_powerdown_sequence () ;
-void apollo_powerup_sequence () ;
+void apollo_set_zynq_en (uint8_t state);
+
+void apollo_esm_reset();
+void apollo_init_gpios ();
+void apollo_powerdown_sequence ();
+void apollo_powerup_sequence ();
 
 #endif // __APOLLO_H_
