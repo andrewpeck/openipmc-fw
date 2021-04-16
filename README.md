@@ -58,3 +58,7 @@ A basic debugging configuration for Cortex-M7 is presented bellow. For better in
     ![DebugDebugger](images/debug_debugger.png)
 
 6. Click *Ok* to start debugging. Debugger will halt at the beginning of the `main()` function. Click ![ResumeArrow](images/ResumeArrow.png) (Resume) to start.
+
+## Licensing
+
+OpenIPMC-FW is Copyright 2020-2021 of Andre Cascadan, Luigi Calligaris. OpenIPMC-FW is released under GNU General Public License version 3. Please refer to the LICENSE document included in this repository.

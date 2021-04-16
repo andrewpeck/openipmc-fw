@@ -16,3 +16,7 @@ makefile
 
 # Autosaved files
 *~
+
+# Automatic generated headers via header_gen.sh
+CM7/Core/Inc/head_commit_sha1.h
+CM7/Core/Inc/compiling_epoch.h

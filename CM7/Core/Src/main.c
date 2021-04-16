@@ -36,8 +36,8 @@
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
 #include "st_bootloader.h"
-#include "sense_i2c.h"
-#include "udp.h"
+#include "network_ctrls.h"
+#include "telnet_server.h"
 #include "apollo/apollo.h"
 
 /* USER CODE END Includes */
@@ -140,6 +140,9 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
 //  .priority = (osPriority_t) osPriorityNormal,
 //  .stack_size = 128 * 4
 //};
+
+// Telnet instance handler for CLI
+telnet_t telnet23;
 
 void    openipmc_hal_init( void );
 uint8_t get_haddress_pins( void );
@@ -936,9 +939,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 	HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
   }
+}
 
+// Receiver callback from telnet. Port 23: IPMC CLI
+void telnet_receiver_callback_cli_23( uint8_t* buff, uint16_t len )
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-
+  if( uart4_input_stream != NULL )
+	xStreamBufferSendFromISR( uart4_input_stream, buff, 1, &xHigherPriorityTaskWoken);
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
@@ -1009,6 +1018,14 @@ void StartDefaultTask(void *argument)
   // Apollo Inits
   ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
   apollo_init_gpios();
+
+  // Set network interface static IP Address
+  eth_ctrls_change_ip_addr( 192, 168,   0, 12,    // IP Address
+                            255, 255, 255,  0,    // Network Mask
+                            192, 168,   0,  1  ); // Gateway
+
+  // Opens telnet port 23 for the remote IPMC CLI
+  telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23);
 
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";

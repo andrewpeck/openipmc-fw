@@ -4,3 +4,6 @@
 [submodule "CM7/Core/openipmc"]
 	path = CM7/Core/openipmc
 	url = https://gitlab.com/openipmc/openipmc.git
+[submodule "CM7/Core/mcu_telnet_server"]
+	path = CM7/Core/mcu_telnet_server
+	url = https://github.com/cascadan/mcu_telnet_server.git
