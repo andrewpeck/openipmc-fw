@@ -942,10 +942,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 // Receiver callback from telnet. Port 23: IPMC CLI
 void telnet_receiver_callback_cli_23( uint8_t* buff, uint16_t len )
 {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    if( uart4_input_stream != NULL )
+	  xStreamBufferSend( uart4_input_stream, buff, len, 0);
+}
 
-  if( uart4_input_stream != NULL )
-	xStreamBufferSendFromISR( uart4_input_stream, buff, 1, &xHigherPriorityTaskWoken);
+// Command callback from telnet. Port 23: IPMC CLI
+void telnet_command_callback_cli_23( uint8_t* buff, uint16_t len )
+{
+	// Incoming telnet commands are ignored
+
+
+	// When trying to negotiate, send the server conditions
+	// WILL ECHO is used here to prevent local echo in the client
+	uint8_t telnet_negotiation_commands[]={255, 251, 1, 255, 254, 34}; // WILL ECHO; DON'T LINEMODE
+	telnet_transmit(&telnet23, telnet_negotiation_commands, 6);
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
@@ -1019,8 +1029,11 @@ void StartDefaultTask(void *argument)
                             255, 255, 255,  0,    // Network Mask
                             192, 168,   0,  1  ); // Gateway
 
+
   // Opens telnet port 23 for the remote IPMC CLI
-  telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23);
+  telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
+
+
 
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";
