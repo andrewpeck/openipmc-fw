@@ -108,6 +108,7 @@ void ipmc_custom_initialization()
 	init_sdr_repository();
 
 	create_hot_swap_carrier_sensor ("Hot Swap Carrier");
+	create_ipmb0_sensor ("IPMB-0 Sensor");
 
 
 	// Dummy sensor for FPGA temperature.
