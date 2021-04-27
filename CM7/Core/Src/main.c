@@ -34,9 +34,11 @@
 #include "ipmb_0.h"
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
+#include "sense_i2c.h"
 #include "st_bootloader.h"
 #include "network_ctrls.h"
 #include "telnet_server.h"
+#include "printf.h"
 
 /* USER CODE END Includes */
 
@@ -80,15 +82,19 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-static char uart4_input_char;
-StreamBufferHandle_t uart4_input_stream = NULL;
-osThreadId_t keyboardTaskHandle;
-const osThreadAttr_t keyboardTask_attributes = {
-  .name = "KeyboardTask",
+osThreadId_t terminal_input_task_handle;
+const osThreadAttr_t terminal_input_task_attributes = {
+  .name = "TerminalInputTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 256* 4
+};
+
+osThreadId_t terminal_process_task_handle;
+const osThreadAttr_t terminal_process_task_attributes = {
+  .name = "TerminalProcessTask",
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 256 * 4
 };
-
 
 osThreadId_t ipmb_0_msg_receiver_task_handle;
 const osThreadAttr_t ipmb_0_msg_receiver_task_attributes = {
@@ -132,19 +138,15 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
   .stack_size = 128 * 4
 };
 
-//osThreadId_t keyboard_input_task_handle;
-//const osThreadAttr_t keyboard_input_task_attributes = {
-//  .name = "KEYBOARD",
-//  .priority = (osPriority_t) osPriorityNormal,
-//  .stack_size = 128 * 4
-//};
-
 // Telnet instance handler for CLI
 telnet_t telnet23;
 
-void    openipmc_hal_init( void );
-uint8_t get_haddress_pins( void );
-void    set_benchtop_payload_power_level( uint8_t new_power_level );
+// Text IO
+static char uart4_input_char;
+static SemaphoreHandle_t printf_mutex = NULL;
+static StaticSemaphore_t printf_mutex_buffer;
+extern StreamBufferHandle_t terminal_input_stream;
+
 
 
 /* USER CODE END PV */
@@ -163,7 +165,11 @@ static void MX_I2C3_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
-void KeyboardTask(void *argument);
+extern void    terminal_input_task(void *argument);
+extern void    terminal_process_task(void *argument);
+extern void    openipmc_hal_init( void );
+extern uint8_t get_haddress_pins( void );
+extern void    set_benchtop_payload_power_level( uint8_t new_power_level );
 
 /* USER CODE END PFP */
 
@@ -255,7 +261,7 @@ Error_Handler();
   osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
+  printf_mutex = xSemaphoreCreateMutexStatic( &printf_mutex_buffer );
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -275,15 +281,14 @@ Error_Handler();
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  keyboardTaskHandle = osThreadNew(KeyboardTask, NULL, &keyboardTask_attributes);
-
+  terminal_input_task_handle = osThreadNew(terminal_input_task, NULL, &terminal_input_task_attributes);
+  terminal_process_task_handle = osThreadNew(terminal_process_task, NULL, &terminal_process_task_attributes);
   ipmb_0_msg_receiver_task_handle = osThreadNew(ipmb_0_msg_receiver_task, NULL, &ipmb_0_msg_receiver_task_attributes);
   ipmb_0_msg_sender_task_handle = osThreadNew(ipmb_0_msg_sender_task, NULL, &ipmb_0_msg_sender_task_attributes);
   fru_state_machine_task_handle = osThreadNew(fru_state_machine_task, NULL, &fru_state_machine_task_attributes);
   ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
-  //keyboard_input_task_handle = osThreadNew(KeyboardInput_task, NULL, &keyboard_input_task_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -649,6 +654,9 @@ static void MX_UART4_Init(void)
   }
   /* USER CODE BEGIN UART4_Init 2 */
 
+  // Immediately starts the reception
+  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
+
   /* USER CODE END UART4_Init 2 */
 
 }
@@ -886,44 +894,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
-void KeyboardTask(void *argument)
-{
-  char c;
-  fru_transition_t fru_trigg_val;
-
-  // Start receiving bytes from keyboard
-  uart4_input_stream = xStreamBufferCreate(10, 1);
-  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
-
-  for(;;)
-  {
-	xStreamBufferReceive( uart4_input_stream, &c, 1, portMAX_DELAY);
-
-	switch (c){
-		case 'a':
-			ipmc_ios_printf("Pressed Key: %c\r\n", c);
-			ipmc_ios_printf("ADDR: %x\r\n", ipmb_0_addr);
-			break;
-		case 'b':
-			st_bootloader_launch();
-			break;
-		case 'c':
-			ipmc_ios_printf("Pressed Key: %c\r\n", c);
-			fru_trigg_val = CLOSE_HANDLE;
-			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
-			break;
-		case 'o':
-			ipmc_ios_printf("Pressed Key: %c\r\n", c);
-			fru_trigg_val = OPEN_HANDLE;
-			xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
-			break;
-		default:
-			break;
-	}
-
-  }
-}
-
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
@@ -932,8 +902,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
   if( UartHandle ==  &huart4 )
   {
-    if( uart4_input_stream != NULL )
-	  xStreamBufferSendFromISR( uart4_input_stream, &uart4_input_char, 1, &xHigherPriorityTaskWoken);
+    if( terminal_input_stream != NULL )
+	  xStreamBufferSendFromISR( terminal_input_stream, &uart4_input_char, 1, &xHigherPriorityTaskWoken);
 
 	HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
   }
@@ -942,8 +912,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 // Receiver callback from telnet. Port 23: IPMC CLI
 void telnet_receiver_callback_cli_23( uint8_t* buff, uint16_t len )
 {
-    if( uart4_input_stream != NULL )
-	  xStreamBufferSend( uart4_input_stream, buff, len, 0);
+    if( terminal_input_stream != NULL )
+	  xStreamBufferSend( terminal_input_stream, buff, len, 0);
 }
 
 // Command callback from telnet. Port 23: IPMC CLI
@@ -976,6 +946,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 
+
+
+
 /*
  * Callback to attend interrupts generated by the the AMC_IOs
  *
@@ -995,6 +968,45 @@ void amc_gpios_pin_interrupt_callback( amc_int_status_t* interrupt_status )
 	{
 		asm("nop");
 	}
+}
+
+
+
+/*
+ * Multithread printf.
+ */
+int mt_printf(const char* format, ...)
+{
+	va_list args;
+
+	va_start( args, format );
+	mt_vprintf( format, args );
+	va_end( args );
+}
+
+int mt_vprintf(const char* format, va_list va)
+{
+	if( printf_mutex == NULL)
+		return;
+
+	// vprintf guarded by a mutex to prevent output conflict and string interleaving.
+	xSemaphoreTake(printf_mutex, portMAX_DELAY);
+	vprintf( format, va );
+	xSemaphoreGive(printf_mutex);
+}
+
+/*
+ * Implements the putchar for printf and vprintf
+ */
+void _putchar(char character)
+{
+
+	// Local CLI via UART
+	HAL_UART_Transmit(&huart4, (uint8_t*)(&character), 1, 1000);
+
+	// Remote CLI via telnet
+	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
+
 }
 
 
@@ -1062,8 +1074,6 @@ void StartDefaultTask(void *argument)
       pbuf_free(udp_buffer);
     }
 
-
-    //ipmc_ios_printf("Blink\n\r");
 
   }
   /* USER CODE END 5 */
