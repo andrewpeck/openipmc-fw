@@ -55,9 +55,6 @@ static SemaphoreHandle_t ipmb_rec_semphr = NULL;
 static SemaphoreHandle_t ipmba_send_semphr = NULL;
 static SemaphoreHandle_t ipmbb_send_semphr = NULL;
 
-// Mutex to avoid printf overlapping.
-static SemaphoreHandle_t printf_mutex = NULL;
-
 // Mutex to protect GPIO readding.
 static SemaphoreHandle_t haddress_pins_mutex = NULL;
 
@@ -67,11 +64,11 @@ extern I2C_HandleTypeDef hi2c2;
 #define hi2c_ipmba hi2c1
 #define hi2c_ipmbb hi2c2
 
-// Re-map UART peripherals handlers for printing outputs
-extern UART_HandleTypeDef huart4;
-#define huart_printout huart4
+// Flag used to enable the IPMI messaging printout
+int enable_ipmi_printouts = 0;
 
-extern telnet_t telnet23;
+int mt_vprintf(const char* format, va_list va);
+
 
 
 /*
@@ -86,7 +83,6 @@ int openipmc_hal_init(void)
 {
 
 	// Create the semaphores and mutexes
-	printf_mutex = xSemaphoreCreateMutex();
 	ipmb_rec_semphr = xSemaphoreCreateBinary();
 	ipmba_send_semphr = xSemaphoreCreateBinary();
 	ipmbb_send_semphr = xSemaphoreCreateBinary();
@@ -472,31 +468,17 @@ void ipmc_ios_blue_led(int blue_led_state)
 
 
 /*
- * Implementation of printf. It uses library developed by Marco Paland (info@paland.com)
- * under MIT license available at github.com/mpaland/printf
+ * Implementation of printf used by OpenIPMC
  */
 void ipmc_ios_printf(const char* format, ...)
 {
 	va_list args;
 
-	xSemaphoreTake(printf_mutex, portMAX_DELAY);
-
-	va_start( args, format );
-	vprintf_( format, args );
-	va_end( args );
-
-	xSemaphoreGive(printf_mutex);
-}
-
-
-void _putchar(char character)
-{
-
-	// Local CLI via UART
-	HAL_UART_Transmit(&huart_printout, (uint8_t*)(&character), 1, 1000);
-
-	// Remote CLI via telnet
-	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
-
+	if( enable_ipmi_printouts )
+	{
+		va_start( args, format );
+		mt_vprintf( format, args );
+		va_end( args );
+	}
 }
 
