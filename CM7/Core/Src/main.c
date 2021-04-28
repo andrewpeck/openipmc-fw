@@ -86,7 +86,7 @@ osThreadId_t terminal_input_task_handle;
 const osThreadAttr_t terminal_input_task_attributes = {
   .name = "TerminalInputTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256* 4
+  .stack_size = 160* 4
 };
 
 osThreadId_t terminal_process_task_handle;
@@ -913,7 +913,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void telnet_receiver_callback_cli_23( uint8_t* buff, uint16_t len )
 {
     if( terminal_input_stream != NULL )
-	  xStreamBufferSend( terminal_input_stream, buff, len, 0);
+    {
+    	for( int i=0; i<len; ++i) if(buff[i] == 127) buff[i] = 8; //Convert DEL into BACK SPACE
+    	xStreamBufferSend( terminal_input_stream, buff, len, 0);
+    }
 }
 
 // Command callback from telnet. Port 23: IPMC CLI

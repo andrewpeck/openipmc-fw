@@ -39,6 +39,11 @@ SemaphoreHandle_t    terminal_semphr       = NULL;
 	CLI_CheckAbort();                                 \
 }
 
+static int esc_translator( char* c, _Bool esc_timeout );
+
+
+
+
 
 // Command configuration
 #define CMD_INFO_NAME "info"
@@ -113,6 +118,21 @@ static uint8_t st_boot_cb()
 	return TE_OK;
 }
 
+
+/*
+ * Callback for "~"
+ *
+ * Reboots the MCU. Command defined natively by terminal
+ */
+void _reset_fcn( void )
+{
+	NVIC_SystemReset();
+}
+
+
+
+
+
 /*
  * Task for feeding characters to the terminal
  *
@@ -122,7 +142,9 @@ static uint8_t st_boot_cb()
  */
 void terminal_input_task(void *argument)
 {
-	char c;
+	char c[3];     // Size 3 is required by the ESC translator
+	int rcvd_ctr;
+	int trans_ctr;
 
 	// Wait for resources
 	while( ( terminal_input_stream == NULL ) ||
@@ -131,12 +153,24 @@ void terminal_input_task(void *argument)
 
 	while(1)
 	{
-		if( xStreamBufferReceive( terminal_input_stream, &c, 1, portMAX_DELAY ) != 0 )
-		{
-			xSemaphoreTake( terminal_semphr, 0 );
-			CLI_EnterChar(c);
-			xSemaphoreGive( terminal_semphr );
-		}
+		rcvd_ctr = xStreamBufferReceive( terminal_input_stream, &c[0], 1, pdMS_TO_TICKS( 500 ) );
+
+		if( rcvd_ctr != 0 )
+			// Character was received normally. Send it to the translator.
+			trans_ctr = esc_translator( c, false );
+		else
+			// On Timeout occurred. Just inform the translator
+			trans_ctr = esc_translator( c, true );
+
+		// Send the translated characters to the terminal
+		xSemaphoreTake( terminal_semphr, 0 );
+
+		for( int i=0; i<trans_ctr; ++i )
+			CLI_EnterChar( c[i] );
+
+		xSemaphoreGive( terminal_semphr );
+
+
 	}
 }
 
@@ -171,11 +205,73 @@ void terminal_process_task(void *argument)
 
 
 /*
- * Callback for "~"
- *
- * Reboots the MCU. Command defined natively by terminal
+ * Translator. It analyzes input sequences an translate the expected non ascii keys
  */
-void _reset_fcn( void )
+int esc_translator( char* c, _Bool esc_timeout )
 {
-	NVIC_SystemReset();
+	static char buff[2];
+	static int  ctr = 0;
+	int ret;
+	if( !esc_timeout )
+	{
+		if( (ctr == 0) && (c[0] != '\e') ) // Normal case: common character
+			return 1;
+
+		else if( (ctr == 0) && (c[0] == '\e') ) //received ESC: stores it
+		{
+			buff[ctr++] = '\e';
+			return 0;
+		}
+		else if( ctr == 1 ) // Second char: just store
+		{
+			buff[ctr++] = c[0];
+			return 0;
+		}
+		else if( ctr == 2 ) // Third char: analyze key
+		{
+			if( (buff[1] == '[') && ( c[0] == 'A') )// Arrow Up
+			{
+				c[0] = TERM_KEY_UP;
+				ctr = 0;
+				return 1;
+			}
+			if( (buff[1] == '[') && ( c[0] == 'B') )// Arrow Down
+			{
+				c[0] = TERM_KEY_DOWN;
+				ctr = 0;
+				return 1;
+			}
+			if( (buff[1] == '[') && ( c[0] == 'C') )// Arrow Right
+			{
+				c[0] = TERM_KEY_RIGHT;
+				ctr = 0;
+				return 1;
+			}
+			if( (buff[1] == '[') && ( c[0] == 'D') )// Arrow Left
+			{
+				c[0] = TERM_KEY_LEFT;
+				ctr = 0;
+				return 1;
+			}
+
+			else // No pattern found: just dump
+			{
+				c[2] = c[0];
+				c[0] = buff[0];
+				c[1] = buff[1];
+				ctr = 0;
+				return 3;
+			}
+		}
+	}
+	else // If timeout with 2 or less chars, just dump the buffer and restarts.
+	{
+		c[0] = buff[0];
+		c[1] = buff[1];
+		ret = ctr;
+		ctr = 0;
+		return ret;
+	}
+
+	return 0;
 }
