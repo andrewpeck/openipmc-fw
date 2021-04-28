@@ -61,6 +61,11 @@ Force a state change for ATCA Face Plate Handle.\r\n\
 Reboot and jump to STMicroelectronics bootloader"
 #define CMD_ST_BOOT_CALLBACK st_boot_cb
 
+#define CMD_DEBUG_IPMI_NAME "debug-ipmi"
+#define CMD_DEBUG_IPMI_DESCRIPTION "\
+Enable to show the IPMI messaging from OpenIPMC"
+#define CMD_DEBUG_IPMI_CALLBACK debug_ipmi_cb
+
 
 
 /*
@@ -116,6 +121,30 @@ static uint8_t st_boot_cb()
 	st_bootloader_launch();
 
 	return TE_OK;
+}
+
+/*
+ * Callback for "debug-ipmi"
+ *
+ * Enable to show the IPMI messaging from OpenIPMC
+ */
+extern int enable_ipmi_printouts;
+static uint8_t debug_ipmi_cb()
+{
+	enable_ipmi_printouts = 1; // Enable Debug
+
+	while(1)
+	{
+		// Wait for ESC
+		vTaskDelay( pdMS_TO_TICKS( 500 ) );
+		xSemaphoreTake( terminal_semphr, portMAX_DELAY );
+		if( CLI_GetIntState() ){
+			enable_ipmi_printouts = 0; // Disable debug
+			break;
+		}
+	}
+
+	return TE_WorkInt;
 }
 
 
@@ -194,6 +223,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_INFO_NAME,        CMD_INFO_CALLBACK,        0, 0, CMD_INFO_DESCRIPTION        );
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
 	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
+	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 
 
 	while(1)
@@ -207,7 +237,7 @@ void terminal_process_task(void *argument)
 /*
  * Translator. It analyzes input sequences an translate the expected non ascii keys
  */
-int esc_translator( char* c, _Bool esc_timeout )
+static int esc_translator( char* c, _Bool esc_timeout )
 {
 	static char buff[2];
 	static int  ctr = 0;
