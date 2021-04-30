@@ -6,6 +6,8 @@
 
 #define SECOND 0x155555 // ~1 seconds timeout
 
+uint8_t APOLLO_STARTUP_DONE = 0;
+
 void apollo_init_gpios () {
   // choices from stm32f4xx__hal__gpio_8h_source.html
   // GPIO_MODE_INPUT                        /*!< Input Floating Mode                   */
@@ -92,6 +94,10 @@ void apollo_init_gpios () {
 uint8_t apollo_get_esm_pwr_good () {
   uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_ETH_SW_PWR_GOOD);
   return state;
+}
+
+uint8_t apollo_get_ipmc_startup_done () {
+  return APOLLO_STARTUP_DONE;
 }
 
 uint8_t apollo_get_fpga_done () {
@@ -184,14 +190,18 @@ void apollo_powerdown_sequence () {
   // turn off power
   ipmc_ios_printf(" > Disabling 12V Power...\r\n");
   EN_12V_SET_STATE(RESET);
+
+  APOLLO_STARTUP_DONE = 0;
 }
 
 void apollo_powerup_sequence () {
 
+  osDelay(500);
+
+  uint8_t revision=apollo_get_revision();
   uint8_t boot_mode=APOLLO_BOOT_SD;
 
-  if (apollo_get_revision() == APOLLO_REV2 ||
-      apollo_get_revision() == APOLLO_REV2A) {
+  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
     // TODO: right now the noshelf is being used as a boot mode selection...
     // this should be returned to the correct behavior eventually
@@ -221,14 +231,14 @@ void apollo_powerup_sequence () {
 
   // set uart pins
   //------------------------------------------------------------------------------
-  uint8_t uart_adr =0x1; // 0x1 == disconnect
+  uint8_t uart_adr = APOLLO_UART_DISCONNECT;
   ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
   apollo_set_uart_adr (uart_adr);
 
   // set jtag chain select pins
   //------------------------------------------------------------------------------
   uint8_t chain_sel=0x0;
-  if (apollo_get_revision() == APOLLO_REV1) {
+  if (revision == APOLLO_REV1) {
     // chain sel has a different meaning in rev0
     chain_sel = 0;
   }
@@ -266,7 +276,7 @@ void apollo_powerup_sequence () {
 
   // for SMv1
   //------------------------------------------------------------------------------
-  //if (apollo_get_revision() == APOLLO_REV1) {
+  //if (revision == APOLLO_REV1) {
     //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
     //    while (0==apollo_get_esm_pwr_good()) {;}
     //    ipmc_ios_printf(" > ESM Power Good...\r\n");
@@ -277,8 +287,7 @@ void apollo_powerup_sequence () {
 
   // for SMv2 wait for the ZYNQ FPGA to configure
   //------------------------------------------------------------------------------
-  if (apollo_get_revision() == APOLLO_REV2 ||
-      apollo_get_revision() == APOLLO_REV2A) {
+  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
     ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
     while (0==apollo_get_fpga_done()) {;}
@@ -288,26 +297,28 @@ void apollo_powerup_sequence () {
 
     // TODO: timeout
     // turn off power  ?
+  } else if (revision == APOLLO_REV1) {
+    osDelay(300);
   }
 
   // set uart pins
   //------------------------------------------------------------------------------
-  if (apollo_get_revision() == APOLLO_REV2 ||
-      apollo_get_revision() == APOLLO_REV2A) {
-    ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
-    uart_adr = 0; // 0 == connect to Zynq
-    apollo_set_uart_adr (uart_adr);
-  }
+
+  uart_adr = APOLLO_UART_ZYNQ;
+  ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
+  uart_adr = 0; // 0 == connect to Zynq
+  apollo_set_uart_adr (uart_adr);
 
   ipmc_ios_printf(" > Powerup done\n", uart_adr);
 
-  ipmc_ios_printf(" > Waiting for Zynq OS...\r\n");
+  APOLLO_STARTUP_DONE = 1;
 
   // zynq timeout
   //------------------------------------------------------------------------------
 
-  if (apollo_get_revision() == APOLLO_REV2 ||
-      apollo_get_revision() == APOLLO_REV2A) {
+  ipmc_ios_printf(" > Waiting for Zynq OS...\r\n");
+
+  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
     // Zynq up is from Linux
     ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");

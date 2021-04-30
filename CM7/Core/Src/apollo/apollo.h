@@ -26,6 +26,11 @@
 #define APOLLO_BOOT_NAND 1
 #define APOLLO_BOOT_JTAG 0
 
+#define APOLLO_UART_ZYNQ 0
+#define APOLLO_UART_DISCONNECT 1
+#define APOLLO_UART_MEZZ1 2
+#define APOLLO_UART_MEZZ2 3
+
 #define APOLLO_FPGA_DONE        USR_IO_2
 #define APOLLO_UART_ADR_0       USR_IO_5
 #define APOLLO_UART_ADR_1       USR_IO_6
@@ -59,6 +64,8 @@
 #define APOLLO_GPIO_5           USR_IO_27
 #define APOLLO_GPIO_6           USR_IO_29
 #define APOLLO_GPIO_7           USR_IO_31
+
+uint8_t apollo_get_ipmc_startup_done ();
 
 uint8_t apollo_get_esm_pwr_good ();
 uint8_t apollo_get_fpga_done ();
