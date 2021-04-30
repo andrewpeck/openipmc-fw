@@ -53,8 +53,7 @@ SRC_FREE_RTOS = $(wildcard Middlewares/Third_Party/FreeRTOS/Source/*.c) \
 
 SRC_HAL = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
 
-SRC_OPENIPMC = $(wildcard CM7/Core/openipmc/src/*.c) \
-				       CM7/Core/openipmc/examples/ipmc_custom_initialization.c
+SRC_OPENIPMC = $(wildcard CM7/Core/openipmc/src/*.c)
 
 SRC_APOLLO = CM7/Core/Src/apollo/apollo.c \
 				     CM7/Core/Src/apollo/pim400.c
@@ -92,7 +91,10 @@ COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: build elf
+all: headers build elf
+
+headers:
+	cd CM7/Core && sh Src/header_gen.sh && cd -
 
 build: $(COBJS) assembly
 
