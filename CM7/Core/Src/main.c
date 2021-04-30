@@ -1078,14 +1078,22 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
   // Blink led
+
     LED_0_SET_STATE(SET);
-    LED_1_SET_STATE(SET);
-    LED_2_SET_STATE(SET);
-    osDelay(500);
+    if (apollo_get_ipmc_startup_done()) {
+      osDelay(100);
+    } else {
+      osDelay(1000);
+    }
     LED_0_SET_STATE(RESET);
+    if (apollo_get_ipmc_startup_done()) {
+    osDelay(100);
+    } else {
+      osDelay(1000);
+    }
+
     LED_1_SET_STATE(RESET);
     LED_2_SET_STATE(RESET);
-    osDelay(500);
 
     //LED_0_SET_STATE(SET);
     //LED_2_SET_STATE(RESET);
