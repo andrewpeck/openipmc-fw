@@ -1065,9 +1065,12 @@ void StartDefaultTask(void *argument)
   struct pbuf* udp_buffer = NULL;
 
   // if ((apollo_get_revision() == APOLLO_REV1 || apollo_get_noshelf()) &&
-  if (
-    0x80 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("No Shelf Detected, but SM jumper set to NoShelf mode... booting up\r\n");
+  if (0x41 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    apollo_powerup_sequence();
+  }
+  if (0x80 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("No Shelf Detected... booting up in no shelf mode\r\n");
     apollo_powerup_sequence();
   }
 
