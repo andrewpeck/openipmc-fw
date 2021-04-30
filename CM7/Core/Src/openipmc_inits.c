@@ -93,7 +93,7 @@ void ipmc_custom_initialization()
 	ipmc_device_id.firmware_minor_revision    = 0x23;                 // BCD from 00 to 99 (two digits) Example: Ver. 1.2.3 -> 0x23
 	ipmc_device_id.device_revision            = 1;                    // Integer 0 ~ 15
 	ipmc_device_id.auxiliar_firmware_rev_info = HEAD_COMMIT_SHA1;     // 8 digits, hexadecimal (Here is being inserted the hash of the HEAD commit)
-	ipmc_device_id.device_id_string           = "some-ATCA-board";    // String, 16 characters maximum.
+	ipmc_device_id.device_id_string           = "APOLLO-OPENIPMC";    // String, 16 characters maximum.
 	ipmc_device_id.device_support             = DEVICE_SUPPORT_IPMB_EVENT_GENERATOR  |
 	                                            DEVICE_SUPPORT_FRU_INVENTORY         |
 	                                            DEVICE_SUPPORT_SENSOR                ;
@@ -169,7 +169,7 @@ void ipmc_custom_initialization()
 	                                &sensor_reading_vcc_out );
 
 
-	#include "apollo/sensor_inits.h"
+	//#include "apollo/sensor_inits.h"
 }
 
 
@@ -186,13 +186,13 @@ static void power_initialization(void)
 
 	power_envelope_t pwr_envelope;
 
-	pwr_envelope.num_of_levels =  1; // Max of 20 beyond the 0-th value
+	pwr_envelope.num_of_levels =  2; // Max of 20 beyond the 0-th value
 	pwr_envelope.multiplier    = 10; // Global multiplier in tenths of Watt
 
 	// REMINDER: PICMG spec **requires** the maximum power envelope values in this array to increase monotonically!
 	pwr_envelope.power_draw[ 0] = 0;   // Power Level 0: RESERVED and always means 0 Watt (payload off)
-	pwr_envelope.power_draw[ 1] = 100;  // Power Level 1: 20 Watts ( power_draw[1] * multiplier * 0.1W = 20 * 10 * 0.1 W = 20W )
-	//pwr_envelope.power_draw[ 2] = 100; // Power Level 2: 100 Watts
+	pwr_envelope.power_draw[ 1] = 20;  // Power Level 1: 20 Watts ( power_draw[1] * multiplier * 0.1W = 20 * 10 * 0.1 W = 20W )
+	pwr_envelope.power_draw[ 2] = 100; // Power Level 2: 100 Watts
 	//pwr_envelope.power_draw[ 3] = 110;
 	//pwr_envelope.power_draw[ 4] = 140;
 	//pwr_envelope.power_draw[ 5] = 150;
