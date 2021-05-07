@@ -178,6 +178,8 @@ void apollo_powerdown_sequence () {
   ipmc_ios_printf(" > Disabling Zynq...\r\n");
   apollo_set_zynq_en(0);
 
+  uint8_t revision=apollo_get_revision();
+
   // wait for zynq to shut down
   if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
     ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
