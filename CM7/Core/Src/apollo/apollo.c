@@ -179,12 +179,14 @@ void apollo_powerdown_sequence () {
   apollo_set_zynq_en(0);
 
   // wait for zynq to shut down
-  ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
-  uint32_t timer=30*SECOND; // 30 seconds timeout
-  while (apollo_get_zynq_up() == 1 && timer > 0 ) {
-    timer = timer - 1;
-    if (timer==0)
-      ipmc_ios_printf("   > Timeout waiting for zynq good...\r\n");
+  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
+    ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
+    uint32_t timer=30*SECOND; // 30 seconds timeout
+    while (apollo_get_zynq_up() == 1 && timer > 0 ) {
+      timer = timer - 1;
+      if (timer==0)
+        ipmc_ios_printf("   > Timeout waiting for zynq good...\r\n");
+    }
   }
 
   // turn off power
@@ -196,7 +198,9 @@ void apollo_powerdown_sequence () {
 
 void apollo_powerup_sequence () {
 
-  osDelay(500);
+  apollo_init_gpios ();
+
+  osDelay(100);
 
   uint8_t revision=apollo_get_revision();
   uint8_t boot_mode=APOLLO_BOOT_SD;
