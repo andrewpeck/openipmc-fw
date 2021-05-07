@@ -187,6 +187,10 @@ void apollo_powerdown_sequence () {
       if (timer==0)
         ipmc_ios_printf("   > Timeout waiting for zynq good...\r\n");
     }
+  } else {
+    // for rev 1 we should be polling the i2c bus
+    // for now just wait for a few seconds
+    osDelay(5000);
   }
 
   // turn off power
