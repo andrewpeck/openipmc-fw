@@ -127,12 +127,11 @@ void set_benchtop_payload_power_level( uint8_t new_power_level )
  */
 void payload_cold_reset (void)
 {
-
-	// Typical operation over PAYLOAD_RESET signal on DIMM
 	PAYLOAD_RESET_SET_STATE(RESET);
-	osDelay(10); // Holds PAYLOAD_RESET Low for 10ms
-	PAYLOAD_RESET_SET_STATE(SET);
+	apollo_powerdown_sequence();
 
+	PAYLOAD_RESET_SET_STATE(SET);
+	apollo_powerup_sequence();
 }
 
 
