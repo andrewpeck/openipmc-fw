@@ -70,34 +70,13 @@ void board_specific_activation_control( uint8_t current_power_level, uint8_t new
 	{
 		
 		// Customize DEACTIVATION process
-		
-		/*
-		 * Put here any code related to deactivation of the board.
-		 * E.g: Shut down Linux
-		 */
-		
-		// Switch off the 12V rail for payload
-		//EN_12V_SET_STATE(RESET);
 		apollo_powerdown_sequence();
-		
 	}
 	// ACTIVATION
-	else 
-	{
-		
-		// Switch on the 12V rail for payload
-		//EN_12V_SET_STATE(SET);
-		apollo_powerup_sequence();
-		
+	else {
 		// Customize ACTIVATION process
-		
-		/*
-		 * Put here any code related to activation of the board.
-		 * E.g: Boot Linux
-		 */
-		
+		apollo_powerup_sequence();
 	}
-	
 	return;
 }
 
