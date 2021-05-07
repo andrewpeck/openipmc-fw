@@ -181,7 +181,7 @@ void apollo_powerdown_sequence () {
   // wait for zynq to shut down
   if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
     ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
-    uint32_t timer=30*SECOND; // 30 seconds timeout
+    uint32_t timer=15*SECOND; // timeout
     while (apollo_get_zynq_up() == 1 && timer > 0 ) {
       timer = timer - 1;
       if (timer==0)
