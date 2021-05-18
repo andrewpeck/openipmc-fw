@@ -35,7 +35,7 @@
 #ifndef LWIP_HDR_APPS_TFTP_SERVER_H
 #define LWIP_HDR_APPS_TFTP_SERVER_H
 
-#include "lwip/apps/tftp_common.h"
+#include "tftp_common.h"
 
 err_t tftp_init_server(const struct tftp_context* ctx);
 

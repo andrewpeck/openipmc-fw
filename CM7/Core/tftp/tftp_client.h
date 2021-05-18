@@ -35,7 +35,7 @@
 #ifndef LWIP_HDR_APPS_TFTP_CLIENT_H
 #define LWIP_HDR_APPS_TFTP_CLIENT_H
 
-#include "lwip/apps/tftp_common.h"
+#include "tftp_common.h"
 
 enum tftp_transfer_mode {
   TFTP_MODE_OCTET,

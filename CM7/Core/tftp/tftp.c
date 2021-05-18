@@ -48,8 +48,8 @@
  * You need to increase MEMP_NUM_SYS_TIMEOUT by one if you use TFTP!
  */
 
-#include "lwip/apps/tftp_client.h"
-#include "lwip/apps/tftp_server.h"
+#include "tftp_client.h"
+#include "tftp_server.h"
 
 #if LWIP_UDP
 
