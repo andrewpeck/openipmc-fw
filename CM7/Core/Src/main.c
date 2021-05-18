@@ -1037,8 +1037,14 @@ void StartDefaultTask(void *argument)
   sense_i2c_init();
 
   // Check for Benchtop mode
-  //if( get_haddress_pins() == 0x7F )
-	//  set_benchtop_payload_power_level(2);
+  if (0x41 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    set_benchtop_payload_power_level(1);
+  }
+  if (0x80 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("No Shelf Detected... booting up in no shelf mode\r\n");
+    set_benchtop_payload_power_level(1);
+  }
 
   // Apollo Inits
   ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
@@ -1054,7 +1060,6 @@ void StartDefaultTask(void *argument)
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
 
 
-
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";
   osDelay(1000);
@@ -1063,16 +1068,6 @@ void StartDefaultTask(void *argument)
   struct udp_pcb* my_udp = udp_new();
   udp_connect(my_udp, &PC_IPADDR, 55151);
   struct pbuf* udp_buffer = NULL;
-
-  // if ((apollo_get_revision() == APOLLO_REV1 || apollo_get_noshelf()) &&
-  if (0x41 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
-    apollo_powerup_sequence();
-  }
-  if (0x80 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("No Shelf Detected... booting up in no shelf mode\r\n");
-    apollo_powerup_sequence();
-  }
 
   /* Infinite loop */
   for(;;)
