@@ -23,7 +23,7 @@
 #include "st_bootloader.h"
 #include "device_id.h"
 
-
+#include "apollo.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -85,7 +85,6 @@ static uint8_t info_cb()
 	mt_printf( "\r\n" );
 	mt_printf( "Target Board: %s\r\n", ipmc_device_id.device_id_string );
 	mt_printf( "IPMB-0 Addr: 0x%x\r\n", ipmb_0_addr );
-
 	return TE_OK;
 }
 
@@ -109,6 +108,33 @@ static uint8_t atca_handle_cb()
 	}
 
 	return TE_OK;
+}
+
+static uint8_t apollo_read_io_cb()
+{
+	mt_printf( "\r\n\n" );
+	mt_printf("Startup Done   = %d\r\n", apollo_get_ipmc_startup_done ());
+	mt_printf("SM FPGA DONE   = %d\r\n", apollo_get_fpga_done ());
+	mt_printf("SM CPU Up      = %d\r\n", apollo_get_zynq_up ());
+	mt_printf("ESM Power Good = %d\r\n", apollo_get_esm_pwr_good ());
+	mt_printf("Noshelf Jumper = %d\r\n", apollo_get_noshelf ());
+	mt_printf("SM Revision    = %d\r\n", apollo_get_revision ());
+	return TE_OK;
+}
+
+static uint8_t apollo_boot_mode_cb()
+{
+	mt_printf( "\r\n\n" );
+	uint8_t boot_mode = CLI_GetArgDec(0);
+	if (boot_mode >= 0 && boot_mode <= 3) {
+		mt_printf("Setting boot mode to %d\r\n", boot_mode);
+		apollo_set_zynq_boot_mode(boot_mode);
+	}
+	else {
+		mt_printf("Invalid boot mode %d!\r\n", boot_mode);
+		return TE_ArgErr;
+	}
+		return TE_OK;
 }
 
 /*
@@ -225,7 +251,14 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 
+	// dashes and underscores don't seem to work as expected here :(
+	CLI_AddCmd("bootmode",  apollo_boot_mode_cb,  1, 0, "Set the apollo boot mode pin");
+	CLI_AddCmd("powerdown",  apollo_powerdown_sequence,  0, 0, "Power down Apollo");
+	CLI_AddCmd("powerup",  apollo_powerup_sequence,  0, 0, "Power up Apollo");
+	CLI_AddCmd("readio",  apollo_read_io_cb,  0, 0, "Read IPMC status IOs");
 
+	info_cb();
+	
 	while(1)
 	{
 		xSemaphoreTake( terminal_semphr, portMAX_DELAY );
