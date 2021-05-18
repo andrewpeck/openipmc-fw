@@ -84,6 +84,7 @@ void apollo_set_zynq_en (uint8_t state);
 
 void apollo_esm_reset();
 void apollo_init_gpios ();
+void apollo_init_bootmode ();
 void apollo_powerdown_sequence ();
 void apollo_powerup_sequence ();
 

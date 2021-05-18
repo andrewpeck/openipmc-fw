@@ -1049,6 +1049,7 @@ void StartDefaultTask(void *argument)
   // Apollo Inits
   ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
   apollo_init_gpios();
+  apollo_init_bootmode();
 
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();

@@ -204,6 +204,23 @@ void apollo_powerdown_sequence () {
   APOLLO_STARTUP_DONE = 0;
 }
 
+void apollo_init_bootmode () {
+
+  uint8_t boot_mode = APOLLO_BOOT_SD;
+
+  const uint8_t revision=apollo_get_revision();
+  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
+    if (apollo_get_noshelf()) {
+      boot_mode = APOLLO_BOOT_JTAG; // JTAG / EMMC
+    } else {
+      boot_mode = APOLLO_BOOT_SD;
+    }
+  }
+
+  apollo_set_zynq_boot_mode (boot_mode);
+
+}
+
 void apollo_powerup_sequence () {
 
   apollo_init_gpios ();
@@ -212,17 +229,6 @@ void apollo_powerup_sequence () {
 
   const uint8_t revision=apollo_get_revision();
   uint8_t boot_mode=APOLLO_BOOT_MODE;
-
-  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
-
-    // TODO: right now the noshelf is being used as a boot mode selection...
-    // this should be returned to the correct behavior eventually
-    if (apollo_get_noshelf()) {
-      boot_mode = APOLLO_BOOT_JTAG; // JTAG / EMMC
-    } else {
-      boot_mode = APOLLO_BOOT_MODE;
-    }
-  }
 
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
@@ -287,12 +293,12 @@ void apollo_powerup_sequence () {
   // for SMv1
   //------------------------------------------------------------------------------
   //if (revision == APOLLO_REV1) {
-    //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
-    //    while (0==apollo_get_esm_pwr_good()) {;}
-    //    ipmc_ios_printf(" > ESM Power Good...\r\n");
-    //    LED_0_SET_STATE(SET);
-    // TODO: timeout
-    // turn off power  ?
+  //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
+  //    while (0==apollo_get_esm_pwr_good()) {;}
+  //    ipmc_ios_printf(" > ESM Power Good...\r\n");
+  //    LED_0_SET_STATE(SET);
+  // TODO: timeout
+  // turn off power  ?
   //}
 
   // for SMv2 wait for the ZYNQ FPGA to configure
