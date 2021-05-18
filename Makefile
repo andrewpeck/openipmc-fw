@@ -7,7 +7,8 @@ CFLAGS = -mcpu=cortex-m7 -std=gnu11 -g3 -DDATA_IN_D2_SRAM \
 				 -ffunction-sections -fdata-sections -Wall -fstack-usage \
 				 -MMD -MP --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb
 
-INC = -I CM7/Core/Inc \
+INC = -I CM7/Core/Src/apollo \
+			-I CM7/Core/Inc \
       -I CM7/Core/mcu_telnet_server \
 			-I CM7/Core/printf \
 			-I CM7/Core/terminal \
