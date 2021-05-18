@@ -7,6 +7,7 @@
 #define SECOND 0x155555 // ~1 seconds timeout
 
 uint8_t APOLLO_STARTUP_DONE = 0;
+uint8_t APOLLO_BOOT_MODE    = APOLLO_BOOT_SD;
 
 void apollo_init_gpios () {
   // choices from stm32f4xx__hal__gpio_8h_source.html
@@ -117,6 +118,7 @@ void apollo_set_uart_adr (uint8_t adr) {
 }
 
 void apollo_set_zynq_boot_mode (uint8_t mode) {
+  APOLLO_BOOT_MODE = mode;
   GPIO_SET_STATE_EXPAND ((mode>>0) & 1, APOLLO_BOOT_MODE_0);
   GPIO_SET_STATE_EXPAND ((mode>>1) & 1, APOLLO_BOOT_MODE_1);
 }
@@ -208,8 +210,8 @@ void apollo_powerup_sequence () {
 
   osDelay(100);
 
-  uint8_t revision=apollo_get_revision();
-  uint8_t boot_mode=APOLLO_BOOT_SD;
+  const uint8_t revision=apollo_get_revision();
+  uint8_t boot_mode=APOLLO_BOOT_MODE;
 
   if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
@@ -218,10 +220,8 @@ void apollo_powerup_sequence () {
     if (apollo_get_noshelf()) {
       boot_mode = APOLLO_BOOT_JTAG; // JTAG / EMMC
     } else {
-      boot_mode = APOLLO_BOOT_SD;
+      boot_mode = APOLLO_BOOT_MODE;
     }
-  } else {
-    boot_mode = APOLLO_BOOT_SD;
   }
 
   LED_0_SET_STATE(RESET);
