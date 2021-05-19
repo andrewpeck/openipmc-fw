@@ -4,8 +4,40 @@
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
 
-uint8_t APOLLO_STARTUP_DONE = 0;
-uint8_t APOLLO_BOOT_MODE    = APOLLO_BOOT_SD;
+uint8_t APOLLO_ABNORMAL_SHUTDOWN = 0;
+uint8_t APOLLO_STARTUP_STARTED   = 0;
+uint8_t APOLLO_STARTUP_DONE      = 0;
+uint8_t APOLLO_BOOT_MODE         = APOLLO_BOOT_SD;
+
+uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
+                            const uint8_t seconds,
+                            const uint16_t interval) {
+
+  const uint16_t max = seconds * (1000 / interval);
+
+  for (uint16_t i = 0; i < max; i++) {
+    // just poll periodically, to allow the os to do other things
+    osDelay(interval);
+
+    // returned successfully
+    if ((*check_function)() == 1) {
+      return 0;
+    }
+
+    // somebody opened the handle
+    if (ipmc_ios_read_handle() == 0) {
+      apollo_powerdown_sequence();
+      return 1;
+    }
+  }
+
+  // timeout, shutdown!
+  APOLLO_STARTUP_STARTED=0;
+  APOLLO_ABNORMAL_SHUTDOWN=1;
+  apollo_powerdown_sequence();
+  return 1;
+
+}
 
 void apollo_init_gpios () {
   // choices from stm32f4xx__hal__gpio_8h_source.html
@@ -99,6 +131,14 @@ uint8_t apollo_get_ipmc_startup_done () {
   return APOLLO_STARTUP_DONE;
 }
 
+uint8_t apollo_get_ipmc_startup_started () {
+  return APOLLO_STARTUP_STARTED;
+}
+
+uint8_t apollo_get_ipmc_abnormal_shutdown () {
+  return APOLLO_ABNORMAL_SHUTDOWN;
+}
+
 uint8_t apollo_get_fpga_done () {
   uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_FPGA_DONE);
   return state;
@@ -170,40 +210,40 @@ void apollo_esm_reset(const int delay) {
   apollo_set_esm_reset_n(1);
 }
 
-void apollo_powerdown_sequence () {
+void apollo_powerdown_sequence() {
 
-  ipmc_ios_printf("Powering Down Service Module:\r\n");
+    APOLLO_STARTUP_DONE = 0;
+    APOLLO_STARTUP_STARTED = 0;
 
-  // disable zynq
-  ipmc_ios_printf(" > Disabling Zynq...\r\n");
-  apollo_set_zynq_en(0);
+    ipmc_ios_printf("Powering Down Service Module:\r\n");
 
-  uint8_t revision=apollo_get_revision();
+    // disable zynq
+    ipmc_ios_printf(" > Disabling Zynq...\r\n");
+    apollo_set_zynq_en(0);
 
-  // wait for zynq to shut down
-  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
-    ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
+    uint8_t revision = apollo_get_revision();
 
-    const uint8_t seconds=15;
-    for (int8_t i=0; i<seconds*10; i++) {
-      if (apollo_get_zynq_up() == 1) {
-        break;
+    // wait for zynq to shut down
+    if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
+      ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
+
+      const uint8_t seconds = 20;
+      for (int8_t i = 0; i < seconds * 10; i++) {
+        if (apollo_get_zynq_up() == 0) {
+          break;
+        }
+        osDelay(100);
       }
-      osDelay(100);
+
+    } else {
+      // for rev 1 we should be polling the i2c bus
+      // for now just wait for a few seconds
+      osDelay(5000);
     }
 
-
-  } else {
-    // for rev 1 we should be polling the i2c bus
-    // for now just wait for a few seconds
-    osDelay(5000);
-  }
-
-  // turn off power
-  ipmc_ios_printf(" > Disabling 12V Power...\r\n");
-  EN_12V_SET_STATE(RESET);
-
-  APOLLO_STARTUP_DONE = 0;
+    // turn off power
+    ipmc_ios_printf(" > Disabling 12V Power...\r\n");
+    EN_12V_SET_STATE(RESET);
 }
 
 void apollo_init_bootmode () {
@@ -225,6 +265,10 @@ void apollo_init_bootmode () {
 
 void apollo_powerup_sequence () {
 
+  APOLLO_STARTUP_STARTED = 1;
+  APOLLO_ABNORMAL_SHUTDOWN=0;
+
+  // re-init to their default states
   apollo_init_gpios ();
 
   osDelay(100);
@@ -294,6 +338,7 @@ void apollo_powerup_sequence () {
 
   // for SMv1
   //------------------------------------------------------------------------------
+
   //if (revision == APOLLO_REV1) {
   //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
   //    while (0==apollo_get_esm_pwr_good()) {;}
@@ -309,12 +354,9 @@ void apollo_powerup_sequence () {
 
     ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
 
-    const uint8_t seconds=10;
-    for (int8_t i=0; i<seconds*10; i++) {
-      if (apollo_get_zynq_up()) {
-        break;
-      }
-      osDelay(100);
+    // wait for fpga to go up, if it doesn't then shut back down
+    if (apollo_timeout_counter (apollo_get_fpga_done, 20, 100)) {
+      return;
     }
 
     ipmc_ios_printf(" > ZYNQ FPGA DONE...\r\n");
@@ -336,8 +378,6 @@ void apollo_powerup_sequence () {
 
   ipmc_ios_printf(" > Powerup done\n", uart_adr);
 
-  APOLLO_STARTUP_DONE = 1;
-
   // zynq timeout
   //------------------------------------------------------------------------------
 
@@ -348,18 +388,15 @@ void apollo_powerup_sequence () {
     // Zynq up is from Linux
     ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
 
-    const uint8_t seconds=30;
-    for (int8_t i=0; i<seconds*10; i++) {
-      if (apollo_get_zynq_up()) {
-        break;
-      }
-      osDelay(100);
+    // wait for zynq to go up, if it doesn't then shut back down
+    if (apollo_timeout_counter (apollo_get_zynq_up, 20, 100)) {
+      return;
     }
 
   } else {
     ipmc_ios_printf(" > SMRev1: not waiting for Zynq Up..\r\n");
   }
 
-  LED_1_SET_STATE(SET);
+  APOLLO_STARTUP_DONE = 1;
 
 }

@@ -66,6 +66,8 @@
 #define APOLLO_GPIO_7           USR_IO_31
 
 uint8_t apollo_get_ipmc_startup_done ();
+uint8_t apollo_get_ipmc_startup_started ();
+uint8_t apollo_get_ipmc_abnormal_shutdown ();
 
 uint8_t apollo_get_esm_pwr_good ();
 uint8_t apollo_get_fpga_done ();
