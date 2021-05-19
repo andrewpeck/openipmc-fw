@@ -1036,12 +1036,6 @@ void StartDefaultTask(void *argument)
   mgm_i2c_init();
   sense_i2c_init();
 
-  // Check for Benchtop mode
-  if (0x41 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
-    set_benchtop_payload_power_level(1);
-  }
-
   // Apollo Inits
   ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
   apollo_init_gpios();
@@ -1068,6 +1062,12 @@ void StartDefaultTask(void *argument)
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
   LED_2_SET_STATE(RESET);
+
+  // Check for Benchtop mode
+  if (0x41 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    set_benchtop_payload_power_level(1);
+  }
 
   /* Infinite loop */
   for(;;)
