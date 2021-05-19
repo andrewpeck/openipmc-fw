@@ -4,8 +4,6 @@
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
 
-#define SECOND 0x155555 // ~1 seconds timeout
-
 uint8_t APOLLO_STARTUP_DONE = 0;
 uint8_t APOLLO_BOOT_MODE    = APOLLO_BOOT_SD;
 
@@ -185,12 +183,16 @@ void apollo_powerdown_sequence () {
   // wait for zynq to shut down
   if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
     ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
-    uint32_t timer=15*SECOND; // timeout
-    while (apollo_get_zynq_up() == 1 && timer > 0 ) {
-      timer = timer - 1;
-      if (timer==0)
-        ipmc_ios_printf("   > Timeout waiting for zynq good...\r\n");
+
+    const uint8_t seconds=15;
+    for (int8_t i=0; i<seconds*10; i++) {
+      if (apollo_get_zynq_up() == 1) {
+        break;
+      }
+      osDelay(100);
     }
+
+
   } else {
     // for rev 1 we should be polling the i2c bus
     // for now just wait for a few seconds
@@ -306,7 +308,14 @@ void apollo_powerup_sequence () {
   if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
     ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
-    while (0==apollo_get_fpga_done()) {;}
+
+    const uint8_t seconds=10;
+    for (int8_t i=0; i<seconds*10; i++) {
+      if (apollo_get_zynq_up()) {
+        break;
+      }
+      osDelay(100);
+    }
 
     ipmc_ios_printf(" > ZYNQ FPGA DONE...\r\n");
     LED_0_SET_STATE(SET);
@@ -339,21 +348,14 @@ void apollo_powerup_sequence () {
     // Zynq up is from Linux
     ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
 
-    uint32_t timer=60*SECOND; // timeout
-    while (apollo_get_zynq_up() == 0 && timer > 0 ) {
-
-      timer = timer - 1;
-
-      if (timer==0) {
-        ipmc_ios_printf("   > Timeout waiting for zynq good to go up...\r\n");
-
-        // TODO
-        // turn off power after 2 minutes?
-        // or...
-        // if you don't hear back, change boot mode to qspi and try again
-
+    const uint8_t seconds=30;
+    for (int8_t i=0; i<seconds*10; i++) {
+      if (apollo_get_zynq_up()) {
+        break;
       }
+      osDelay(100);
     }
+
   } else {
     ipmc_ios_printf(" > SMRev1: not waiting for Zynq Up..\r\n");
   }
