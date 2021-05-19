@@ -7,9 +7,10 @@ CFLAGS = -mcpu=cortex-m7 -std=gnu11 -g3 -DDATA_IN_D2_SRAM \
 				 -ffunction-sections -fdata-sections -Wall -fstack-usage \
 				 -MMD -MP --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb
 
-INC = -I CM7/Core/Src/apollo \
+INC = -I CM7/Core/Src/ \
+			-I CM7/Core/Src/apollo \
 			-I CM7/Core/Inc \
-      -I CM7/Core/mcu_telnet_server \
+			-I CM7/Core/mcu_telnet_server \
 			-I CM7/Core/printf \
 			-I CM7/Core/terminal \
 			-I CM7/Core/openipmc/src \
@@ -38,61 +39,64 @@ INC = -I CM7/Core/Src/apollo \
 			-I Middlewares/Third_Party/LwIP/system/arch \
 			-I Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
 
-SRC_LWIP = $(wildcard Middlewares/Third_Party/LwIP/src/api/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/apps/mqtt/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/core/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/core/ipv4/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/core/ipv6/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/netif/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/src/netif/ppp/*.c) \
-			     $(wildcard Middlewares/Third_Party/LwIP/system/OS/*.c )
+SRC_LWIP =	$(wildcard Middlewares/Third_Party/LwIP/src/api/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/apps/mqtt/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/core/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/core/ipv4/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/core/ipv6/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/netif/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/src/netif/ppp/*.c) \
+						$(wildcard Middlewares/Third_Party/LwIP/system/OS/*.c )
 
 SRC_FREE_RTOS = $(wildcard Middlewares/Third_Party/FreeRTOS/Source/*.c) \
 								Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
-					      Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-					      Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+								Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
+								Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 
 SRC_HAL = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
 
 SRC_OPENIPMC = $(wildcard CM7/Core/openipmc/src/*.c)
 
-SRC_APOLLO = CM7/Core/Src/apollo/apollo.c \
-				     CM7/Core/Src/apollo/pim400.c
+SRC_APOLLO =	CM7/Core/Src/apollo/apollo.c \
+							CM7/Core/Src/apollo/pim400.c \
+							CM7/Core/Src/apollo/apollo_i2c.c \
+							CM7/Core/Src/apollo/tca9546.c
 
 SRC_TERMINAL = $(wildcard CM7/Core/terminal/module/*.c) \
 							 $(wildcard CM7/Core/terminal/lib/*.c) \
 							 CM7/Core/terminal/terminal.c
 
-CFILES = $(SRC_LWIP) $(SRC_FREE_RTOS) $(SRC_HAL) $(SRC_OPENIPMC) $(SRC_APOLLO) $(SRC_TERMINAL) \
-				 CM7/Core/Src/terminal_impl.c \
-				 CM7/LWIP/Target/ethernetif.c \
-				 CM7/LWIP/App/lwip.c \
-				 CM7/Core/openipmc/src/device_id.c \
-			   CM7/Drivers/ksz8091/ksz8091.c \
-			   CM7/Core/printf/printf.c \
-			   CM7/Core/Src/amc_gpios.c \
-			   CM7/Core/Src/freertos.c \
-			   CM7/Core/Src/main.c \
-			   CM7/Core/Src/mgm_i2c.c \
-			   CM7/Core/mcu_telnet_server/telnet_server.c \
-				 CM7/Core/Src/network_ctrls.c \
-			   CM7/Core/Src/openipmc_brd_ctrls.c \
-			   CM7/Core/Src/openipmc_hal.c \
-			   CM7/Core/Src/openipmc_inits.c \
-			   CM7/Core/Src/sense_i2c.c \
-			   CM7/Core/Src/st_bootloader.c \
-			   CM7/Core/Src/stm32h7xx_hal_msp.c \
-			   CM7/Core/Src/stm32h7xx_hal_timebase_tim.c \
-			   CM7/Core/Src/stm32h7xx_it.c \
-			   CM7/Core/Src/syscalls.c \
-			   CM7/Core/Src/sysmem.c \
-			   Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c
+CFILES = 	$(SRC_LWIP) $(SRC_FREE_RTOS) $(SRC_HAL) $(SRC_OPENIPMC) $(SRC_APOLLO) $(SRC_TERMINAL) \
+				 	CM7/Core/Src/terminal_impl.c \
+				 	CM7/LWIP/Target/ethernetif.c \
+				 	CM7/LWIP/App/lwip.c \
+				 	CM7/Core/openipmc/src/device_id.c \
+					CM7/Drivers/ksz8091/ksz8091.c \
+					CM7/Core/printf/printf.c \
+					CM7/Core/Src/amc_gpios.c \
+					CM7/Core/Src/freertos.c \
+					CM7/Core/Src/main.c \
+					CM7/Core/Src/mgm_i2c.c \
+					CM7/Core/mcu_telnet_server/telnet_server.c \
+					CM7/Core/Src/network_ctrls.c \
+					CM7/Core/Src/openipmc_brd_ctrls.c \
+					CM7/Core/Src/openipmc_hal.c \
+					CM7/Core/Src/openipmc_inits.c \
+					CM7/Core/Src/sense_i2c.c \
+					CM7/Core/Src/st_bootloader.c \
+					CM7/Core/Src/stm32h7xx_hal_msp.c \
+					CM7/Core/Src/stm32h7xx_hal_timebase_tim.c \
+					CM7/Core/Src/stm32h7xx_it.c \
+					CM7/Core/Src/syscalls.c \
+					CM7/Core/Src/sysmem.c \
+					Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c
 
 COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: headers build elf
+all: headers build
+#elf
 
 headers:
 	cd CM7/Core && sh Src/header_gen.sh && cd -
