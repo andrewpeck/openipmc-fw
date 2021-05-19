@@ -1041,10 +1041,6 @@ void StartDefaultTask(void *argument)
     ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
     set_benchtop_payload_power_level(1);
   }
-  if (0x80 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("No Shelf Detected... booting up in no shelf mode\r\n");
-    set_benchtop_payload_power_level(1);
-  }
 
   // Apollo Inits
   ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
