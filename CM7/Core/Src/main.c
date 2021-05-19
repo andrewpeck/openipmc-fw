@@ -140,6 +140,14 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
   .stack_size = 128 * 4
 };
 
+void ipmc_fp_led_blink_task( void );
+osThreadId_t ipmc_fp_led_blink_task_handle;
+const osThreadAttr_t ipmc_fp_led_blink_task_attributes = {
+  .name = "FP_LED",
+  .priority = (osPriority_t) osPriorityNormal2,
+  .stack_size = 128 * 4
+};
+
 // Telnet instance handler for CLI
 telnet_t telnet23;
 
@@ -291,6 +299,7 @@ Error_Handler();
   ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
+  ipmc_fp_led_blink_task_handle = osThreadNew(ipmc_fp_led_blink_task, NULL, &ipmc_fp_led_blink_task_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -1072,39 +1081,6 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // Blink led
-
-    if (apollo_get_ipmc_startup_done()==0) {
-      LED_1_SET_STATE(RESET);
-      LED_2_SET_STATE(RESET);
-      LED_0_SET_STATE(SET);
-      osDelay(1000);
-      LED_0_SET_STATE(RESET);
-      osDelay(1000);
-    }
-    else if (apollo_get_fpga_done() == 0) {
-      osDelay(500);
-      LED_1_SET_STATE(SET);
-      LED_0_SET_STATE(RESET);
-      osDelay(500);
-      LED_1_SET_STATE(RESET);
-      LED_0_SET_STATE(SET);
-    }
-    else if (apollo_get_zynq_up() == 0) {
-      osDelay(200);
-      LED_1_SET_STATE(SET);
-      LED_0_SET_STATE(RESET);
-      osDelay(200);
-      LED_1_SET_STATE(RESET);
-      LED_0_SET_STATE(SET);
-    }
-    else {
-      LED_0_SET_STATE(SET);
-      osDelay(100);
-      LED_0_SET_STATE(RESET);
-      osDelay(100);
-    }
-
     // UDP packet output test
     udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
     if (udp_buffer != NULL) {
@@ -1114,6 +1090,102 @@ void StartDefaultTask(void *argument)
     }
   }
   /* USER CODE END 5 */
+}
+
+
+void ipmc_fp_led_blink_task( void )
+{
+
+    for (;;) {
+
+      if (ipmc_ios_read_handle() == 0) {
+
+        // front panel opened
+        LED_0_SET_STATE(SET);
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+        osDelay(300);
+        LED_0_SET_STATE(RESET);
+        LED_1_SET_STATE(SET);
+        LED_2_SET_STATE(RESET);
+        osDelay(300);
+        LED_0_SET_STATE(RESET);
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(SET);
+        osDelay(300);
+
+      } else if (apollo_get_ipmc_abnormal_shutdown() == 1) {
+
+        // bad shutdown
+
+        LED_0_SET_STATE(SET);
+        LED_1_SET_STATE(SET);
+        LED_2_SET_STATE(SET);
+        osDelay(500);
+        LED_0_SET_STATE(RESET);
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+        osDelay(500);
+
+      } else if (apollo_get_ipmc_startup_started() == 0) {
+
+        // haven't started powerup... power level is off or something
+
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+
+        LED_0_SET_STATE(SET);
+        osDelay(1000);
+        LED_0_SET_STATE(RESET);
+        osDelay(1000);
+
+      } else if (apollo_get_ipmc_startup_done() == 1) {
+
+        // startup is done
+
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+
+        LED_0_SET_STATE(SET);
+        osDelay(100);
+        LED_0_SET_STATE(RESET);
+        osDelay(100);
+
+      } else if (apollo_get_fpga_done() == 0) {
+
+        // fpga not up
+
+        LED_2_SET_STATE(RESET);
+
+        LED_1_SET_STATE(SET);
+        LED_0_SET_STATE(RESET);
+        osDelay(1000);
+        LED_1_SET_STATE(RESET);
+        LED_0_SET_STATE(SET);
+        osDelay(1000);
+
+      } else if (apollo_get_zynq_up() == 0) {
+
+        // zynq not up
+
+        LED_2_SET_STATE(RESET);
+
+        LED_1_SET_STATE(SET);
+        LED_0_SET_STATE(RESET);
+        osDelay(500);
+        LED_1_SET_STATE(RESET);
+        LED_0_SET_STATE(SET);
+        osDelay(500);
+      } else {
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+
+        LED_0_SET_STATE(SET);
+        osDelay(3000);
+        LED_0_SET_STATE(RESET);
+        osDelay(3000);
+      }
+    }
 }
 
 /* MPU Configuration */
