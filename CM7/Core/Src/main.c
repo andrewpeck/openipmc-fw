@@ -1060,7 +1060,6 @@ void StartDefaultTask(void *argument)
   // Opens telnet port 23 for the remote IPMC CLI
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
 
-
   // UDP packet output test
   const char* message = "Hello UDP message!\n\r";
   osDelay(1000);
@@ -1070,35 +1069,45 @@ void StartDefaultTask(void *argument)
   udp_connect(my_udp, &PC_IPADDR, 55151);
   struct pbuf* udp_buffer = NULL;
 
+  LED_0_SET_STATE(RESET);
+  LED_1_SET_STATE(RESET);
+  LED_2_SET_STATE(RESET);
+
   /* Infinite loop */
   for(;;)
   {
-  // Blink led
+    // Blink led
 
-    LED_0_SET_STATE(SET);
-    if (apollo_get_ipmc_startup_done()) {
+    if (apollo_get_ipmc_startup_done()==0) {
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
+      LED_0_SET_STATE(SET);
+      osDelay(1000);
+      LED_0_SET_STATE(RESET);
+      osDelay(1000);
+    }
+    else if (apollo_get_fpga_done() == 0) {
+      osDelay(500);
+      LED_1_SET_STATE(SET);
+      LED_0_SET_STATE(RESET);
+      osDelay(500);
+      LED_1_SET_STATE(RESET);
+      LED_0_SET_STATE(SET);
+    }
+    else if (apollo_get_zynq_up() == 0) {
+      osDelay(200);
+      LED_1_SET_STATE(SET);
+      LED_0_SET_STATE(RESET);
+      osDelay(200);
+      LED_1_SET_STATE(RESET);
+      LED_0_SET_STATE(SET);
+    }
+    else {
+      LED_0_SET_STATE(SET);
       osDelay(100);
-    } else {
-      osDelay(1000);
+      LED_0_SET_STATE(RESET);
+      osDelay(100);
     }
-    LED_0_SET_STATE(RESET);
-    if (apollo_get_ipmc_startup_done()) {
-    osDelay(100);
-    } else {
-      osDelay(1000);
-    }
-
-    LED_1_SET_STATE(RESET);
-    LED_2_SET_STATE(RESET);
-
-    //LED_0_SET_STATE(SET);
-    //LED_2_SET_STATE(RESET);
-    //osDelay(200);
-    //LED_1_SET_STATE(SET);
-    //LED_0_SET_STATE(RESET);
-    //osDelay(200);
-    //LED_2_SET_STATE(SET);
-    //LED_1_SET_STATE(RESET);
 
     // UDP packet output test
     udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
@@ -1107,8 +1116,6 @@ void StartDefaultTask(void *argument)
       udp_send(my_udp, udp_buffer);
       pbuf_free(udp_buffer);
     }
-
-
   }
   /* USER CODE END 5 */
 }
