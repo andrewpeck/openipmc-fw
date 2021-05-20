@@ -21,6 +21,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "lwip.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -39,6 +40,7 @@
 #include "network_ctrls.h"
 #include "telnet_server.h"
 #include "printf.h"
+#include "usbd_cdc_if.h"
 
 /* USER CODE END Includes */
 
@@ -138,6 +140,13 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
   .stack_size = 128 * 4
 };
 
+osThreadId_t vcp_output_task_handle;
+const osThreadAttr_t vcp_output_task_attributes = {
+  .name = "VcpOutputTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 64 * 4
+};
+
 // Telnet instance handler for CLI
 telnet_t telnet23;
 
@@ -146,7 +155,7 @@ static char uart4_input_char;
 static SemaphoreHandle_t printf_mutex = NULL;
 static StaticSemaphore_t printf_mutex_buffer;
 extern StreamBufferHandle_t terminal_input_stream;
-
+static StreamBufferHandle_t vcp_output_stream = NULL;
 
 
 /* USER CODE END PV */
@@ -170,6 +179,7 @@ extern void    terminal_process_task(void *argument);
 extern void    openipmc_hal_init( void );
 extern uint8_t get_haddress_pins( void );
 extern void    set_benchtop_payload_power_level( uint8_t new_power_level );
+static void    vcp_output_task(void *argument);
 
 /* USER CODE END PFP */
 
@@ -289,6 +299,8 @@ Error_Handler();
   ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
+  vcp_output_task_handle = osThreadNew(vcp_output_task, NULL, &vcp_output_task_attributes);
+
 
   /* USER CODE END RTOS_THREADS */
 
@@ -332,8 +344,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 2;
@@ -367,15 +380,20 @@ void SystemClock_Config(void)
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_SPI4
                               |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C3
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C4;
+                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C4
+                              |RCC_PERIPHCLK_USB;
   PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
   PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
+  /** Enable USB Voltage detector
+  */
+  HAL_PWREx_EnableUSBVoltageDetector();
 }
 
 /**
@@ -931,6 +949,26 @@ void telnet_command_callback_cli_23( uint8_t* buff, uint16_t len )
 	telnet_transmit(&telnet23, telnet_negotiation_commands, 6);
 }
 
+/*
+ * Task to manage character output via VCP
+ *
+ * This task takes care of accumulating bytes in a stream while VCP is busy.
+ * In case it is busy, it takes care of retry while stream keeps accumulating
+ */
+static void vcp_output_task(void *argument)
+{
+	vcp_output_stream = xStreamBufferCreate(10, 1);
+	uint8_t buff[10];
+
+	while(1)
+	{
+		int rcvd = xStreamBufferReceive( vcp_output_stream, buff, 10, portMAX_DELAY );
+		while( CDC_Transmit_FS(buff, rcvd) == USBD_BUSY )
+			osDelay(50);
+	}
+}
+
+
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if( hspi == &hspi4 )
@@ -1003,13 +1041,15 @@ int mt_vprintf(const char* format, va_list va)
  */
 void _putchar(char character)
 {
-
 	// Local CLI via UART
 	HAL_UART_Transmit(&huart4, (uint8_t*)(&character), 1, 1000);
 
 	// Remote CLI via telnet
 	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
 
+	// CLI on VCP
+	if( vcp_output_stream != NULL )
+		xStreamBufferSend( vcp_output_stream, (uint8_t*)(&character), 1, 0);
 }
 
 
@@ -1026,6 +1066,9 @@ void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
+
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
 
   // Initializations for DIMM peripherals and OpenIPMC
