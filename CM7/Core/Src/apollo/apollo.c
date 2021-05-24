@@ -1,5 +1,4 @@
 #include "apollo.h"
-
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
@@ -18,6 +17,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
   const uint16_t max = seconds * (1000 / interval);
 
   for (uint16_t i = 0; i < max; i++) {
+
     // just poll periodically, to allow the os to do other things
     osDelay(interval);
 
@@ -27,8 +27,10 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     }
 
     // somebody opened the handle
-    if (ipmc_ios_read_handle() == 0) {
+    if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
       apollo_powerdown_sequence();
+      APOLLO_STARTUP_STARTED = 0;
+      APOLLO_ABNORMAL_SHUTDOWN=0;
       return 1;
     }
   }

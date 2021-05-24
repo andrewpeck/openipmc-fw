@@ -21,6 +21,8 @@
 #define APOLLO_REV2  0x2
 #define APOLLO_REV2A 0x1
 
+#define APOLLO_HANDLE_OPEN 1
+
 #define APOLLO_BOOT_SD   3
 #define APOLLO_BOOT_QSPI 2
 #define APOLLO_BOOT_NAND 1

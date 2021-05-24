@@ -1098,7 +1098,7 @@ void ipmc_fp_led_blink_task( void )
 
     for (;;) {
 
-      if (ipmc_ios_read_handle() == 0) {
+      if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
 
         // front panel opened
         LED_0_SET_STATE(SET);
