@@ -3,6 +3,8 @@
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
+//#include "tca9546.h"
+//#include "apollo_i2c.h"
 
 uint8_t APOLLO_ABNORMAL_SHUTDOWN = 0;
 uint8_t APOLLO_STARTUP_STARTED   = 0;

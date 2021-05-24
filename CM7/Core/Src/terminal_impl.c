@@ -24,6 +24,7 @@
 #include "device_id.h"
 
 #include "apollo.h"
+#include "apollo_i2c.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -135,6 +136,26 @@ static uint8_t apollo_boot_mode_cb()
 		return TE_ArgErr;
 	}
 		return TE_OK;
+}
+
+static uint8_t apollo_zynq_i2c_tx_cb()
+{
+	mt_printf( "\r\n\n" );
+	const uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = CLI_GetArgHex(1);
+	const HAL_StatusTypeDef status = zynq_i2c_tx (&data, adr);
+	mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
+	return status;
+}
+
+static uint8_t apollo_zynq_i2c_rx_cb()
+{
+	mt_printf( "\r\n\n" );
+	const uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = 0xFF;
+	const HAL_StatusTypeDef status = zynq_i2c_rx (&data, adr);
+	mt_printf("Zynq I2C RX adr=0x%02X data=0x%02X\r\n", adr, data);
+	return status;
 }
 
 /*
@@ -252,10 +273,12 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 
 	// dashes and underscores don't seem to work as expected here :(
-	CLI_AddCmd("bootmode",  apollo_boot_mode_cb,  1, 0, "Set the apollo boot mode pin");
-	CLI_AddCmd("powerdown",  apollo_powerdown_sequence,  0, 0, "Power down Apollo");
-	CLI_AddCmd("powerup",  apollo_powerup_sequence,  0, 0, "Power up Apollo");
-	CLI_AddCmd("readio",  apollo_read_io_cb,  0, 0, "Read IPMC status IOs");
+	CLI_AddCmd("bootmode",  apollo_boot_mode_cb,       1, 0, "Set the apollo boot mode pin");
+	CLI_AddCmd("powerdown", apollo_powerdown_sequence, 0, 0, "Power down Apollo");
+	CLI_AddCmd("powerup",   apollo_powerup_sequence,   0, 0, "Power up Apollo");
+	CLI_AddCmd("readio",    apollo_read_io_cb,         0, 0, "Read IPMC status IOs");
+	CLI_AddCmd("zynqwr",    apollo_zynq_i2c_tx_cb,     1, 0, "Write Apollo Zynq I2C");
+	CLI_AddCmd("zynqrd",    apollo_zynq_i2c_rx_cb,     1, 0, "Read Apollo Zynq I2C");
 
 	info_cb();
 	
