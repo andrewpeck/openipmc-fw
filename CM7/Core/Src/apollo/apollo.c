@@ -451,9 +451,9 @@ void board_specific_sensor_inits() {
     .lower_nonrecoverable=0,
     .lower_noncritical=0,
     .lower_critical=0,
-    .upper_noncritical=80,
-    .upper_critical=100,
-    .upper_nonrecoverable=110,
+    .upper_noncritical=38,
+    .upper_critical=40,
+    .upper_nonrecoverable=50,
     .m=1,
     .b=0,
     .e=1
