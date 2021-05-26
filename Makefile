@@ -99,7 +99,8 @@ all: headers build
 #elf
 
 headers:
-	cd CM7/Core && sh Src/header_gen.sh && cd -
+	@echo "Generating headers..."
+	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
 
 build: $(COBJS) assembly
 
@@ -115,7 +116,8 @@ assembly:
 		"CM7/Core/Startup/startup_stm32h745xihx.s"
 
 %.o: %.c
-	arm-none-eabi-gcc $< $(CFLAGS) \
+	@echo "Building $<"
+	@arm-none-eabi-gcc $< $(CFLAGS) \
 		-c $(INC) \
 		-MF $(patsubst %.c,%.d,$<) \
 		-MT "$@" \
