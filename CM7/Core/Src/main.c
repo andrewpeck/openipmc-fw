@@ -141,7 +141,7 @@ const osThreadAttr_t ipmc_blue_led_blink_task_attributes = {
   .stack_size = 128 * 4
 };
 
-void ipmc_fp_led_blink_task( void );
+void ipmc_fp_led_blink_task( void *argument );
 osThreadId_t ipmc_fp_led_blink_task_handle;
 const osThreadAttr_t ipmc_fp_led_blink_task_attributes = {
   .name = "FP_LED",
@@ -181,6 +181,7 @@ extern void    terminal_process_task(void *argument);
 extern void    openipmc_hal_init( void );
 extern uint8_t get_haddress_pins( void );
 extern void    set_benchtop_payload_power_level( uint8_t new_power_level );
+void mt_vprintf(const char* format, va_list va);
 
 /* USER CODE END PFP */
 
@@ -990,7 +991,7 @@ void amc_gpios_pin_interrupt_callback( amc_int_status_t* interrupt_status )
 /*
  * Multithread printf.
  */
-int mt_printf(const char* format, ...)
+void mt_printf(const char* format, ...)
 {
 	va_list args;
 
@@ -999,7 +1000,7 @@ int mt_printf(const char* format, ...)
 	va_end( args );
 }
 
-int mt_vprintf(const char* format, va_list va)
+void mt_vprintf(const char* format, va_list va)
 {
 	if( printf_mutex == NULL)
 		return;
@@ -1094,7 +1095,7 @@ void StartDefaultTask(void *argument)
 }
 
 
-void ipmc_fp_led_blink_task( void )
+void ipmc_fp_led_blink_task( void *argument )
 {
 
     for (;;) {
