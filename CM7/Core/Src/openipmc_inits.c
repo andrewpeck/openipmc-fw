@@ -20,6 +20,7 @@
 #include "sensor_helper.h"
 #include "apollo_i2c.h"
 #include "cm_sensors.h"
+#include "sm_sensors.h"
 
 
 static void power_initialization(void);
@@ -174,12 +175,32 @@ void ipmc_custom_initialization()
 	                                "12V_RAIL",
 	                                &sensor_reading_vcc_out );
 
+	//------------------------------------------------------------------------------
+	// SM
+	//------------------------------------------------------------------------------
+
+	const linear_sensor_constants_t sm_tcn_temp =
+	{
+		.sensor_type=TEMPERATURE,
+		.unit_type=DEGREES_C,
+		.lower_nonrecoverable=0,
+		.lower_noncritical=0,
+		.lower_critical=0,
+		.upper_noncritical=80,
+		.upper_critical=100,
+		.upper_nonrecoverable=110,
+		.m=1,
+		.b=0,
+		.e=1
+	};
+
+	create_linear_sensor (sm_tcn_temp, "CM Top Temperature", &sensor_reading_sm_tcn_top);
+	create_linear_sensor (sm_tcn_temp, "CM Mid Temperature", &sensor_reading_sm_tcn_mid);
+	create_linear_sensor (sm_tcn_temp, "CM Bot Temperature", &sensor_reading_sm_tcn_bot);
 
 	//------------------------------------------------------------------------------
 	// CM
 	//------------------------------------------------------------------------------
-
-	//temperature -----------------------------------------------------------------
 
 	const linear_sensor_constants_t cm_fpga_temp =
 	{
