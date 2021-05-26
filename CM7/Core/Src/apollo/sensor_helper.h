@@ -19,7 +19,9 @@ typedef struct  {
   uint8_t e;
 } linear_sensor_constants_t;
 
-void create_linear_sensor (linear_sensor_constants_t params, char* id_string, void (*get_sensor_reading_func)(sensor_reading_t*)) {
+void create_linear_sensor (const linear_sensor_constants_t params,
+                           char* id_string,
+                           void (*get_sensor_reading_func)(sensor_reading_t*)) {
 
   const uint8_t threshold_mask =
     (params.upper_nonrecoverable > 0 ? UPPER_NON_RECOVERABLE  : 0x00) |
@@ -37,8 +39,9 @@ void create_linear_sensor (linear_sensor_constants_t params, char* id_string, vo
   params.upper_critical,
   params.upper_nonrecoverable};
 
-// y = [ M*x + (B * 10^Be ) ] * 10^Re
-  create_generic_analog_sensor_1(params.sensor_type, params.unit_type,
+  // y = [ M*x + (B * 10^Be ) ] * 10^Re
+  create_generic_analog_sensor_1(params.sensor_type,
+                                 params.unit_type,
                                  params.m,  // m
                                  params.b,  // b
                                  params.e,  // be
@@ -46,7 +49,7 @@ void create_linear_sensor (linear_sensor_constants_t params, char* id_string, vo
                                  threshold_mask,
                                  threshold_list,
                                  id_string,
-                                 &sensor_reading_voltage_a_pim400 );
+                                 get_sensor_reading_func );
 
 }
 

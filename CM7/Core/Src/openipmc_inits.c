@@ -16,6 +16,12 @@
 #include "head_commit_sha1.h"
 #include "compiling_epoch.h"
 
+
+#include "sensor_helper.h"
+#include "apollo_i2c.h"
+#include "cm_sensors.h"
+
+
 static void power_initialization(void);
 
 /*
@@ -169,7 +175,62 @@ void ipmc_custom_initialization()
 	                                &sensor_reading_vcc_out );
 
 
-	//#include "apollo/sensor_inits.h"
+	//------------------------------------------------------------------------------
+	// CM
+	//------------------------------------------------------------------------------
+
+	//temperature -----------------------------------------------------------------
+
+	const linear_sensor_constants_t cm_fpga_temp =
+	{
+		.sensor_type=TEMPERATURE,
+		.unit_type=DEGREES_C,
+		.lower_nonrecoverable=0,
+		.lower_noncritical=0,
+		.lower_critical=0,
+		.upper_noncritical=80,
+		.upper_critical=100,
+		.upper_nonrecoverable=110,
+		.m=1,
+		.b=0,
+		.e=1
+	};
+
+	const linear_sensor_constants_t cm_firefly_temp =
+	{
+		.sensor_type=TEMPERATURE,
+		.unit_type=DEGREES_C,
+		.lower_nonrecoverable=0,
+		.lower_noncritical=0,
+		.lower_critical=0,
+		.upper_noncritical=80,
+		.upper_critical=100,
+		.upper_nonrecoverable=110,
+		.m=1,
+		.b=0,
+		.e=1
+	};
+
+	const linear_sensor_constants_t cm_regulator_temp =
+	{
+		.sensor_type=TEMPERATURE,
+		.unit_type=DEGREES_C,
+		.lower_nonrecoverable=0,
+		.lower_noncritical=0,
+		.lower_critical=0,
+		.upper_noncritical=80,
+		.upper_critical=100,
+		.upper_nonrecoverable=110,
+		.m=1,
+		.b=0,
+		.e=1
+	};
+
+	create_linear_sensor (cm_fpga_temp, "CM FPGA1 Temperature", &sensor_reading_cm1_temp);
+	create_linear_sensor (cm_fpga_temp, "CM FPGA2 Temperature", &sensor_reading_cm2_temp);
+	create_linear_sensor (cm_firefly_temp, "CM Firefly Max Temperature", &sensor_reading_cm_firefly_temp);
+	create_linear_sensor (cm_regulator_temp, "CM Regulator Max Temperature", &sensor_reading_cm_regulator_temp);
+
 }
 
 
