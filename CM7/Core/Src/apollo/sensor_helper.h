@@ -2,6 +2,7 @@
 #define __SENSOR_HELPER_H_
 
 #include "sdr_definitions.h"
+#include "sensors_templates.h"
 
 typedef struct  {
   uint8_t sensor_type; // TEMPERATURE, VOLTAGE, CURRENT
@@ -50,9 +51,6 @@ void create_linear_sensor (const linear_sensor_constants_t params,
                                  threshold_list,
                                  id_string,
                                  get_sensor_reading_func );
-
 }
-
-
 
 #endif // __SENSOR_HELPER_H_

@@ -11,9 +11,6 @@
 #include "power_manager.h"
 #include "sdr_definitions.h"
 
-
-#include "apollo/apollo.h"
-
 struct
 {
 	
@@ -24,15 +21,7 @@ struct
 } benchtop_mode = {false, 0, 0};
 
 
-static void board_specific_activation_control( uint8_t current_power_level, uint8_t new_power_level );
-
-
-
-
-
-
-
-
+extern void board_specific_activation_control( uint8_t current_power_level, uint8_t new_power_level );
 
 /*
  * Switch Power Level
@@ -49,38 +38,6 @@ void ipmc_pwr_switch_power_level_on_payload( uint8_t new_power_level )
 	uint8_t current_power_level = ipc_pwr_get_current_power_level();
 	board_specific_activation_control( current_power_level, new_power_level );
 }
-
-
-/*
- * Board Specific routine for changing the Power Level
- * 
- * This function needs to be customized according to the board characteristic.
- */
-void board_specific_activation_control( uint8_t current_power_level, uint8_t new_power_level )
-{
-	
-	/*
-	 * For customization, 'current_power_level' and 'new_power_level' can be used to improve
-	 * any the transition between power levels.
-	 */
-
-	
-	// DEACTIVATION
-	if( new_power_level == 0)
-	{
-		
-		// Customize DEACTIVATION process
-		apollo_powerdown_sequence();
-	}
-	// ACTIVATION
-	else {
-		// Customize ACTIVATION process
-		apollo_powerup_sequence();
-	}
-	return;
-}
-
-
 
 /*
  * Force a new power level in benchtop mode
@@ -104,14 +61,7 @@ void set_benchtop_payload_power_level( uint8_t new_power_level )
  * This functions is called by OpenIPMC when a Cold Reset command is received
  * from Shelf Manager
  */
-void payload_cold_reset (void)
-{
-	PAYLOAD_RESET_SET_STATE(RESET);
-	apollo_powerdown_sequence();
-
-	PAYLOAD_RESET_SET_STATE(SET);
-	apollo_powerup_sequence();
-}
+extern void payload_cold_reset (void);
 
 
 /*
