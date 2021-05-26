@@ -89,7 +89,7 @@ void board_specific_activation_control( uint8_t current_power_level, uint8_t new
  */
 void set_benchtop_payload_power_level( uint8_t new_power_level )
 {
-	benchtop_mode.status == true;
+	benchtop_mode.status = true;
 	
 	board_specific_activation_control( benchtop_mode.current_power_level, new_power_level );
 	
