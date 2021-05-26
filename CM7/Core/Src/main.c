@@ -30,6 +30,7 @@
 #include "amc_gpios.h"
 #include "printf.h"
 #include "ipmc_tasks.h"
+#include "udp.h"
 #include "ipmc_ios.h"
 #include "fru_state_machine.h"
 #include "ipmb_0.h"
