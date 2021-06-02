@@ -105,7 +105,7 @@ headers:
 build: $(COBJS) assembly
 
 clean:
-	rm -f $(COBJS) $(AOBJS)
+	rm -f $(COBJS) $(CFILES:.c=.su) $(CFILES:.c=.d) $(AOBJS)
 
 assembly:
 	arm-none-eabi-gcc -mcpu=cortex-m7 -g3 -c -x assembler-with-cpp -MMD -MP \
