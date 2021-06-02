@@ -1052,6 +1052,12 @@ void StartDefaultTask(void *argument)
   apollo_init_gpios();
   apollo_init_bootmode();
 
+  // send esm reset
+  //------------------------------------------------------------------------------
+  ipmc_ios_printf(" > Resetting ESM...\r\n");
+  apollo_esm_reset(25);
+  osDelay(100);
+
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();
   eth_ctrls_change_ip_addr( 192, 168,  21, ip_octet,  // IP Address

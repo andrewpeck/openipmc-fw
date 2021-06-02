@@ -314,11 +314,6 @@ void apollo_powerup_sequence () {
   ipmc_ios_printf(" > Setting jtag chain sel to 0x%1X...\r\n", chain_sel);
   apollo_set_jtag_chain_sel (chain_sel);
 
-  // send esm reset
-  //------------------------------------------------------------------------------
-  ipmc_ios_printf(" > Resetting ESM...\r\n");
-  apollo_esm_reset(25);
-
   // turn off we on eeprom
   //------------------------------------------------------------------------------
   apollo_set_eeprom_we_n (1);
