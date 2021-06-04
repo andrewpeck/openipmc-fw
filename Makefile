@@ -100,16 +100,18 @@ all: headers build elf
 #elf
 
 headers:
-	@echo "Generating headers..."
+	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
 
 build: $(COBJS) assembly
 
 clean:
 	rm -f $(COBJS) $(CFILES:.c=.su) $(CFILES:.c=.d) $(AOBJS)
+	rm openipmc-fw_CM7.bin
 
 assembly:
-	arm-none-eabi-gcc -mcpu=cortex-m7 -g3 -c -x assembler-with-cpp -MMD -MP \
+	@echo "Building startup_stm32h745xihx.s"
+	@arm-none-eabi-gcc -mcpu=cortex-m7 -g3 -c -x assembler-with-cpp -MMD -MP \
 		-MF"CM7/Core/Startup/startup_stm32h745xihx.d" \
 		-MT"CM7/Core/Startup/startup_stm32h745xihx.o" \
 		--specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb \
@@ -125,6 +127,7 @@ assembly:
 		-o "$@"
 
 elf:
+	@echo "Building final binary"
 	@arm-none-eabi-gcc -o "openipmc-fw_CM7.elf" $(COBJS) $(AOBJS) \
 		-T "CM7/STM32H745XIHX_FLASH.ld" \
 		-mcpu=cortex-m7 --specs=nosys.specs -Wl,-Map="openipmc-fw_CM7.map" \
@@ -134,8 +137,14 @@ elf:
 	@arm-none-eabi-objdump -h -S  openipmc-fw_CM7.elf  > "openipmc-fw_CM7.list"
 	@arm-none-eabi-objcopy  -O binary  openipmc-fw_CM7.elf  "openipmc-fw_CM7.bin"
 
-load:
+load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw_CM7.bin
+
+load_st:
+	st-flash --reset write ./openipmc-fw_CM7.bin 0x08000000
+
+gitlab:
+	gitlab-runner exec shell build-job
 
 #CM7:
 #/opt/st/stm32cubeide_1.5.1/headless-build.sh  -build CM7 -data $(PWD)
