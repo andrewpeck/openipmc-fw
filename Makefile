@@ -53,43 +53,24 @@ SRC_FREE_RTOS = $(wildcard Middlewares/Third_Party/FreeRTOS/Source/*.c) \
 								Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 								Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 
-SRC_HAL = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
+SRC_HAL       = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
 
-SRC_OPENIPMC = $(wildcard CM7/Core/openipmc/src/*.c)
+SRC_OPENIPMC  = $(wildcard CM7/Core/openipmc/src/*.c)
 
-SRC_APOLLO =	CM7/Core/Src/apollo/apollo.c \
-							CM7/Core/Src/apollo/sensor_helper.c \
-							CM7/Core/Src/apollo/pim400.c \
-							CM7/Core/Src/apollo/apollo_i2c.c \
-							CM7/Core/Src/apollo/tca9546.c
+SRC_APOLLO    = $(wildcard CM7/Core/Src/apollo/*.c)
 
-SRC_TERMINAL = $(wildcard CM7/Core/terminal/module/*.c) \
-							 $(wildcard CM7/Core/terminal/lib/*.c) \
-							 CM7/Core/terminal/terminal.c
+SRC_TERMINAL  = $(wildcard CM7/Core/terminal/module/*.c) \
+						 	  $(wildcard CM7/Core/terminal/lib/*.c) \
+						 	  CM7/Core/terminal/terminal.c
 
 CFILES = 	$(SRC_LWIP) $(SRC_FREE_RTOS) $(SRC_HAL) $(SRC_OPENIPMC) $(SRC_APOLLO) $(SRC_TERMINAL) \
-				 	CM7/Core/Src/terminal_impl.c \
-				 	CM7/LWIP/Target/ethernetif.c \
-				 	CM7/LWIP/App/lwip.c \
-				 	CM7/Core/openipmc/src/device_id.c \
-					CM7/Drivers/ksz8091/ksz8091.c \
-					CM7/Core/printf/printf.c \
-					CM7/Core/Src/amc_gpios.c \
-					CM7/Core/Src/freertos.c \
-					CM7/Core/Src/main.c \
-					CM7/Core/Src/mgm_i2c.c \
+					$(wildcard CM7/Core/Src/*.c) \
 					CM7/Core/mcu_telnet_server/telnet_server.c \
-					CM7/Core/Src/network_ctrls.c \
-					CM7/Core/Src/openipmc_brd_ctrls.c \
-					CM7/Core/Src/openipmc_hal.c \
-					CM7/Core/Src/openipmc_inits.c \
-					CM7/Core/Src/sense_i2c.c \
-					CM7/Core/Src/st_bootloader.c \
-					CM7/Core/Src/stm32h7xx_hal_msp.c \
-					CM7/Core/Src/stm32h7xx_hal_timebase_tim.c \
-					CM7/Core/Src/stm32h7xx_it.c \
-					CM7/Core/Src/syscalls.c \
-					CM7/Core/Src/sysmem.c \
+					CM7/Core/printf/printf.c \
+					CM7/Drivers/ksz8091/ksz8091.c \
+				 	CM7/Core/openipmc/src/device_id.c \
+				 	CM7/LWIP/App/lwip.c \
+				 	CM7/LWIP/Target/ethernetif.c \
 					Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c
 
 COBJS = $(CFILES:.c=.o)
