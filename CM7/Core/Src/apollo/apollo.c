@@ -7,6 +7,8 @@
 #include "apollo_i2c.h"
 #include "cm_sensors.h"
 #include "sm_sensors.h"
+#include "pim400.h"
+#include "stdint.h"
 
 uint8_t APOLLO_ABNORMAL_SHUTDOWN = 0;
 uint8_t APOLLO_STARTUP_STARTED   = 0;
@@ -439,77 +441,26 @@ void board_specific_sensor_inits() {
   // SM
   //------------------------------------------------------------------------------
 
-  const linear_sensor_constants_t sm_tcn_temp =
-  {
-    .sensor_type=TEMPERATURE,
-    .unit_type=DEGREES_C,
-    .lower_nonrecoverable=0,
-    .lower_noncritical=0,
-    .lower_critical=0,
-    .upper_noncritical=38,
-    .upper_critical=40,
-    .upper_nonrecoverable=50,
-    .m=1,
-    .b=0,
-    .e=1
-  };
-
-  create_linear_sensor (sm_tcn_temp, "CM Top Temperature", &sensor_reading_sm_tcn_top);
-  create_linear_sensor (sm_tcn_temp, "CM Mid Temperature", &sensor_reading_sm_tcn_mid);
-  create_linear_sensor (sm_tcn_temp, "CM Bot Temperature", &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_tcn_temp_consts, "CM Top Temperature", &sensor_reading_sm_tcn_top);
+  create_linear_sensor (sm_tcn_temp_consts, "CM Mid Temperature", &sensor_reading_sm_tcn_mid);
+  create_linear_sensor (sm_tcn_temp_consts, "CM Bot Temperature", &sensor_reading_sm_tcn_bot);
 
   //------------------------------------------------------------------------------
   // CM
   //------------------------------------------------------------------------------
 
-  const linear_sensor_constants_t cm_fpga_temp =
-  {
-    .sensor_type=TEMPERATURE,
-    .unit_type=DEGREES_C,
-    .lower_nonrecoverable=0,
-    .lower_noncritical=0,
-    .lower_critical=0,
-    .upper_noncritical=80,
-    .upper_critical=100,
-    .upper_nonrecoverable=110,
-    .m=1,
-    .b=0,
-    .e=1
-  };
+  create_linear_sensor (cm_fpga_temp_consts, "CM FPGA1 Temperature", &sensor_reading_cm1_temp);
+  create_linear_sensor (cm_fpga_temp_consts, "CM FPGA2 Temperature", &sensor_reading_cm2_temp);
+  create_linear_sensor (cm_firefly_temp_consts, "CM Firefly Max Temperature", &sensor_reading_cm_firefly_temp);
+  create_linear_sensor (cm_regulator_temp_consts, "CM Regulator Max Temperature", &sensor_reading_cm_regulator_temp);
 
-  const linear_sensor_constants_t cm_firefly_temp =
-  {
-    .sensor_type=TEMPERATURE,
-    .unit_type=DEGREES_C,
-    .lower_nonrecoverable=0,
-    .lower_noncritical=0,
-    .lower_critical=0,
-    .upper_noncritical=80,
-    .upper_critical=100,
-    .upper_nonrecoverable=110,
-    .m=1,
-    .b=0,
-    .e=1
-  };
+  //------------------------------------------------------------------------------
+  // PIM400
+  //------------------------------------------------------------------------------
 
-  const linear_sensor_constants_t cm_regulator_temp =
-  {
-    .sensor_type=TEMPERATURE,
-    .unit_type=DEGREES_C,
-    .lower_nonrecoverable=0,
-    .lower_noncritical=0,
-    .lower_critical=0,
-    .upper_noncritical=80,
-    .upper_critical=100,
-    .upper_nonrecoverable=110,
-    .m=1,
-    .b=0,
-    .e=1
-  };
-
-  create_linear_sensor (cm_fpga_temp, "CM FPGA1 Temperature", &sensor_reading_cm1_temp);
-  create_linear_sensor (cm_fpga_temp, "CM FPGA2 Temperature", &sensor_reading_cm2_temp);
-  create_linear_sensor (cm_firefly_temp, "CM Firefly Max Temperature", &sensor_reading_cm_firefly_temp);
-  create_linear_sensor (cm_regulator_temp, "CM Regulator Max Temperature", &sensor_reading_cm_regulator_temp);
+  create_linear_sensor (pim400_temp_consts, "PIM400 Temperature", &sensor_reading_temp_pim400);
+  create_linear_sensor (pim400_iout_consts, "PIM400 Current", &sensor_reading_iout_pim400);
+  create_linear_sensor (pim400_voltage_consts, "PIM400 -48V_A", &sensor_reading_voltage_a_pim400);
+  create_linear_sensor (pim400_voltage_consts, "PIM400 -48V_B", &sensor_reading_voltage_b_pim400);
 
 }

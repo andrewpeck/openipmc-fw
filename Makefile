@@ -58,6 +58,7 @@ SRC_HAL = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
 SRC_OPENIPMC = $(wildcard CM7/Core/openipmc/src/*.c)
 
 SRC_APOLLO =	CM7/Core/Src/apollo/apollo.c \
+							CM7/Core/Src/apollo/sensor_helper.c \
 							CM7/Core/Src/apollo/pim400.c \
 							CM7/Core/Src/apollo/apollo_i2c.c \
 							CM7/Core/Src/apollo/tca9546.c

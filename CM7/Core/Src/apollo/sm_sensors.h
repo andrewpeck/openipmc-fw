@@ -9,8 +9,6 @@
 // | Bit |   15 |  14 |  13 |  12 |  11 |  10 |   9 |   8 |    7 |    6 |    5 |    4 | 3 | 2 | 1 | 0 |
 // | °C  | Sign | 2^6 | 2^5 | 2^4 | 2^3 | 2^2 | 2^1 | 2^0 | 2^-1 | 2^-2 | 2^-3 | 2^-4 | 0 | 0 | 0 | 0 |
 
-
-
 #define TCN_TOP 0
 #define TCN_MID 1
 #define TCN_BOT 2
@@ -56,3 +54,19 @@ void sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading) {
 void sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading) {
   sensor_reading_sm_tcn(TCN_BOT, sensor_reading);
 }
+
+
+const linear_sensor_constants_t sm_tcn_temp_consts =
+{
+  .sensor_type=TEMPERATURE,
+  .unit_type=DEGREES_C,
+  .lower_nonrecoverable=0,
+  .lower_noncritical=0,
+  .lower_critical=0,
+  .upper_noncritical=38,
+  .upper_critical=40,
+  .upper_nonrecoverable=50,
+  .m=1,
+  .b=0,
+  .e=1
+};

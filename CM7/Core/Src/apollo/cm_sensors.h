@@ -54,3 +54,49 @@ void sensor_reading_cm_firefly_temp(sensor_reading_t *sensor_reading) {
 void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
   sensor_reading_cm_temp(REGULATOR, sensor_reading);
 }
+
+
+  const linear_sensor_constants_t cm_fpga_temp_consts =
+  {
+    .sensor_type=TEMPERATURE,
+    .unit_type=DEGREES_C,
+    .lower_nonrecoverable=0,
+    .lower_noncritical=0,
+    .lower_critical=0,
+    .upper_noncritical=80,
+    .upper_critical=100,
+    .upper_nonrecoverable=110,
+    .m=1,
+    .b=0,
+    .e=1
+  };
+
+  const linear_sensor_constants_t cm_firefly_temp_consts =
+  {
+    .sensor_type=TEMPERATURE,
+    .unit_type=DEGREES_C,
+    .lower_nonrecoverable=0,
+    .lower_noncritical=0,
+    .lower_critical=0,
+    .upper_noncritical=80,
+    .upper_critical=100,
+    .upper_nonrecoverable=110,
+    .m=1,
+    .b=0,
+    .e=1
+  };
+
+  const linear_sensor_constants_t cm_regulator_temp_consts =
+  {
+    .sensor_type=TEMPERATURE,
+    .unit_type=DEGREES_C,
+    .lower_nonrecoverable=0,
+    .lower_noncritical=0,
+    .lower_critical=0,
+    .upper_noncritical=80,
+    .upper_critical=100,
+    .upper_nonrecoverable=110,
+    .m=1,
+    .b=0,
+    .e=1
+  };

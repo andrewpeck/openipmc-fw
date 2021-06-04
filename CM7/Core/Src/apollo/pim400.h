@@ -3,66 +3,166 @@
 
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
-
-void sensor_reading_temp_pim400(sensor_reading_t* sensor_reading);
-void sensor_reading_iout_pim400(sensor_reading_t* sensor_reading);
-void sensor_reading_voltage_a_pim400(sensor_reading_t* sensor_reading);
-void sensor_reading_voltage_b_pim400(sensor_reading_t* sensor_reading);
+#include "sensor_helper.h"
+ 
+void sensor_reading_temp_pim400(sensor_reading_t *sensor_reading);
+void sensor_reading_iout_pim400(sensor_reading_t *sensor_reading);
+void sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading);
+void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 
 #define PIM400_I2C_ADR 0x5E
 
 //------------------------------------------------------------------------------
-// Status register
+// Registers
 //------------------------------------------------------------------------------
 
 #define PIM400_STATUS_REG 0x1E
-
-//------------------------------------------------------------------------------
-// VHoldup measurement
-//------------------------------------------------------------------------------
 #define PIM400_VHOLDUP_REG 0x1F
-
-//------------------------------------------------------------------------------
-// Current measurement
-//------------------------------------------------------------------------------
 #define PIM400_IOUT_REG 0x21
-
-// thresholds in Amps
-#define PIM400_IOUT_NONCRITICAL 8.0
-#define PIM400_IOUT_CRITICAL 9.0
-#define PIM400_IOUT_CONV 0.094
-
-#define PIM400_IOUT_M 0.094
-#define PIM400_IOUT_B 0
-#define PIM400_IOUT_BE 0
-#define PIM400_IOUT_RE 1000
-
-//------------------------------------------------------------------------------
-// Voltage measurement
-//------------------------------------------------------------------------------
 #define PIM400_VAF_REG 0x22
 #define PIM400_VBF_REG 0x23
-
-// thresholds in volts
-#define PIM400_V_CONV 0.325
-#define PIM400_VLO_NONCRITICAL 40.0
-#define PIM400_VLO_CRITICAL 36.0
-#define PIM400_VHI_NONCRITICAL 64.0
-#define PIM400_VHI_CRITICAL 70.0
-
-//------------------------------------------------------------------------------
-// Temperature measurement
-//------------------------------------------------------------------------------
-// thresholds in degrees C
 #define PIM400_TEMP_REG 0x28
-#define PIM400_TEMP_NONCRITICAL 70
-#define PIM400_TEMP_CRITICAL 80
 
-#define PIM400_TEMP_M 1.961
-#define PIM400_TEMP_B -50
-#define PIM400_TEMP_BE 3
-#define PIM400_TEMP_RE 3
+#define PIM400_IOUT_CONV 0.094
+#define PIM400_V_CONV 0.325
 
+
+  //------------------------------------------------------------------------------
+  // Temperature
+  // thresholds in degrees C
+  //------------------------------------------------------------------------------
+
+#define PIM400_TEMP_UPPER_NONCRITICAL 0
+#define PIM400_TEMP_UPPER_CRITICAL 8
+#define PIM400_TEMP_UPPER_NONRECOVERABLE 9
+#define PIM400_TEMP_LOWER_NONCRITICAL 0
+#define PIM400_TEMP_LOWER_CRITICAL 0
+#define PIM400_TEMP_LOWER_NONRECOVERABLE 0
+#define PIM400_TEMP_M 1
+#define PIM400_TEMP_B 0
+#define PIM400_TEMP_E 3
+
+  static const linear_sensor_constants_t pim400_temp_consts =
+  {
+    .sensor_type=TEMPERATURE,
+    .unit_type=DEGREES_C,
+    .lower_nonrecoverable = PIM400_TEMP_LOWER_NONRECOVERABLE,
+    .lower_critical       = PIM400_TEMP_LOWER_CRITICAL,
+    .lower_noncritical    = PIM400_TEMP_LOWER_NONCRITICAL,
+    .upper_noncritical    = PIM400_TEMP_UPPER_NONCRITICAL,
+    .upper_critical       = PIM400_TEMP_UPPER_CRITICAL,
+    .upper_nonrecoverable = PIM400_TEMP_UPPER_NONRECOVERABLE,
+    .m                    = PIM400_TEMP_M,
+    .b                    = PIM400_TEMP_B,
+    .e                    = PIM400_TEMP_E
+  };
+
+  static const uint8_t pim400_temp_upper_noncritical_raw =
+    (PIM400_TEMP_UPPER_NONCRITICAL - PIM400_TEMP_B
+           / PIM400_TEMP_M);
+
+  static const uint8_t pim400_temp_upper_critical_raw =
+    (PIM400_TEMP_UPPER_CRITICAL - PIM400_TEMP_B
+           / PIM400_TEMP_M);
+
+  static const uint8_t pim400_temp_upper_nonrecoverable_raw =
+    (PIM400_TEMP_UPPER_NONRECOVERABLE - PIM400_TEMP_B
+           / PIM400_TEMP_M);
+
+  //------------------------------------------------------------------------------
+  // Current
+  //------------------------------------------------------------------------------
+
+#define PIM400_IOUT_UPPER_NONCRITICAL 0
+#define PIM400_IOUT_UPPER_CRITICAL 8
+#define PIM400_IOUT_UPPER_NONRECOVERABLE 9
+#define PIM400_IOUT_LOWER_NONCRITICAL 0
+#define PIM400_IOUT_LOWER_CRITICAL 0
+#define PIM400_IOUT_LOWER_NONRECOVERABLE 0
+#define PIM400_IOUT_M 1
+#define PIM400_IOUT_B 0
+#define PIM400_IOUT_E 3
+
+  static const linear_sensor_constants_t pim400_iout_consts =
+  {
+    .sensor_type=CURRENT,
+    .unit_type=AMPERES,
+    .lower_nonrecoverable = PIM400_IOUT_LOWER_NONRECOVERABLE,
+    .lower_critical       = PIM400_IOUT_LOWER_CRITICAL,
+    .lower_noncritical    = PIM400_IOUT_LOWER_NONCRITICAL,
+    .upper_noncritical    = PIM400_IOUT_UPPER_NONCRITICAL,
+    .upper_critical       = PIM400_IOUT_UPPER_CRITICAL,
+    .upper_nonrecoverable = PIM400_IOUT_UPPER_NONRECOVERABLE,
+    .m                    = PIM400_IOUT_M,
+    .b                    = PIM400_IOUT_B,
+    .e                    = PIM400_IOUT_E
+  };
+
+  static const uint8_t pim400_iout_upper_noncritical_raw =
+    (PIM400_IOUT_UPPER_NONCRITICAL - PIM400_IOUT_B
+           / PIM400_IOUT_M);
+
+  static const uint8_t pim400_iout_upper_critical_raw =
+    (PIM400_IOUT_UPPER_CRITICAL - PIM400_IOUT_B
+           / PIM400_IOUT_M);
+
+  static const uint8_t pim400_iout_upper_nonrecoverable_raw =
+    (PIM400_IOUT_UPPER_NONRECOVERABLE - PIM400_IOUT_B
+           / PIM400_IOUT_M);
+
+  //------------------------------------------------------------------------------
+  // Voltage
+  // PIM400 48V input sensors (A and B)
+  //------------------------------------------------------------------------------
+
+#define PIM400_VOLTAGE_UPPER_NONCRITICAL 60
+#define PIM400_VOLTAGE_UPPER_CRITICAL 65
+#define PIM400_VOLTAGE_UPPER_NONRECOVERABLE 70
+#define PIM400_VOLTAGE_LOWER_NONCRITICAL 32
+#define PIM400_VOLTAGE_LOWER_CRITICAL 36
+#define PIM400_VOLTAGE_LOWER_NONRECOVERABLE 40
+#define PIM400_VOLTAGE_M 325
+#define PIM400_VOLTAGE_B 0
+#define PIM400_VOLTAGE_E 3
+
+  static const linear_sensor_constants_t pim400_voltage_consts =
+  {
+    .sensor_type=VOLTAGE,
+    .unit_type=VOLTS,
+    .lower_nonrecoverable = PIM400_VOLTAGE_LOWER_NONRECOVERABLE,
+    .lower_critical       = PIM400_VOLTAGE_LOWER_CRITICAL,
+    .lower_noncritical    = PIM400_VOLTAGE_LOWER_NONCRITICAL,
+    .upper_noncritical    = PIM400_VOLTAGE_UPPER_NONCRITICAL,
+    .upper_critical       = PIM400_VOLTAGE_UPPER_CRITICAL,
+    .upper_nonrecoverable = PIM400_VOLTAGE_UPPER_NONRECOVERABLE,
+    .m                    = PIM400_VOLTAGE_M,
+    .b                    = PIM400_VOLTAGE_B,
+    .e                    = PIM400_VOLTAGE_E
+  };
+
+  static const uint8_t pim400_voltage_upper_noncritical_raw =
+    (PIM400_VOLTAGE_UPPER_NONCRITICAL - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
+
+  static const uint8_t pim400_voltage_upper_critical_raw =
+    (PIM400_VOLTAGE_UPPER_CRITICAL - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
+
+  static const uint8_t pim400_voltage_upper_nonrecoverable_raw =
+    (PIM400_VOLTAGE_UPPER_NONRECOVERABLE - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
+
+  static const uint8_t pim400_voltage_lower_noncritical_raw =
+    (PIM400_VOLTAGE_LOWER_NONCRITICAL - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
+
+  static const uint8_t pim400_voltage_lower_critical_raw =
+    (PIM400_VOLTAGE_LOWER_CRITICAL - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
+
+  static const uint8_t pim400_voltage_lower_nonrecoverable_raw =
+    (PIM400_VOLTAGE_LOWER_NONRECOVERABLE - PIM400_VOLTAGE_B
+           / PIM400_VOLTAGE_M);
 
 
 #endif // __PIM400_H_
