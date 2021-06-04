@@ -1,6 +1,6 @@
 .PHONY: CM7
 
-.PHONY: clean build
+.PHONY: clean build elf
 
 CFLAGS = -mcpu=cortex-m7 -std=gnu11 -g3 -DDATA_IN_D2_SRAM \
 				 -DUSE_HAL_DRIVER -DCORE_CM7 -DDEBUG -DSTM32H745xx -Os \
@@ -96,7 +96,7 @@ COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: headers build
+all: headers build elf
 #elf
 
 headers:

@@ -5,4 +5,8 @@ variables:
 
 build-job:
   stage: build
-  script: "make headers && make build"
+  script: "make headers && make build -j8"
+  artifacts:
+    paths:
+      - openipmc-fw_CM7.bin
+    expire_in: 1 month
