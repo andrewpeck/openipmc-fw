@@ -103,20 +103,19 @@ headers:
 	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
 
-build: $(COBJS) assembly headers
+build: $(COBJS) $(AOBJS) headers
 
 clean:
 	rm -f $(COBJS) $(CFILES:.c=.su) $(CFILES:.c=.d) $(AOBJS)
 	rm openipmc-fw_CM7.bin
 
-assembly:
-	@echo "Building startup_stm32h745xihx.s"
-	@arm-none-eabi-gcc -mcpu=cortex-m7 -g3 -c -x assembler-with-cpp -MMD -MP \
-		-MF"CM7/Core/Startup/startup_stm32h745xihx.d" \
-		-MT"CM7/Core/Startup/startup_stm32h745xihx.o" \
+%.o: %.s
+	@echo "Building $<"
+	arm-none-eabi-gcc -mcpu=cortex-m7 -g3 -c -x assembler-with-cpp -MMD -MP \
+		-MF$(patsubst %.s,%.d,$<) \
+		-MT$(patsubst %.s,%.o,$<) \
 		--specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb \
-		-o "CM7/Core/Startup/startup_stm32h745xihx.o" \
-		"CM7/Core/Startup/startup_stm32h745xihx.s"
+		-o "$@" "$<"
 
 %.o: %.c
 	@echo "Building $<"
