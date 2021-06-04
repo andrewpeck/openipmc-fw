@@ -96,14 +96,14 @@ COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: headers build elf
+all: elf
 #elf
 
 headers:
 	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
 
-build: $(COBJS) assembly
+build: $(COBJS) assembly headers
 
 clean:
 	rm -f $(COBJS) $(CFILES:.c=.su) $(CFILES:.c=.d) $(AOBJS)
@@ -126,7 +126,8 @@ assembly:
 		-MT "$@" \
 		-o "$@"
 
-elf:
+elf: build
+	echo $(COBJS)
 	@echo "Building final binary"
 	@arm-none-eabi-gcc -o "openipmc-fw_CM7.elf" $(COBJS) $(AOBJS) \
 		-T "CM7/STM32H745XIHX_FLASH.ld" \
