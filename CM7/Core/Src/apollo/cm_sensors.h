@@ -1,5 +1,8 @@
-#include "apollo_i2c.h"
+#ifndef CM_SENSORS_H
+#define CM_SENSORS_H
+
 #include "sensor_helper.h"
+#include "apollo_i2c.h"
 
 #define FPGA0 0
 #define FPGA1 1
@@ -100,3 +103,5 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .b=0,
     .e=1
   };
+
+#endif /* CM_SENSORS_H */
