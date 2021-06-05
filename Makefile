@@ -1,6 +1,6 @@
 .PHONY: CM7
 
-.PHONY: clean build elf
+.PHONY: clean elf headers
 
 CFLAGS = -mcpu=cortex-m7 -std=gnu11 -g3 -DDATA_IN_D2_SRAM \
 				 -DUSE_HAL_DRIVER -DCORE_CM7 -DDEBUG -DSTM32H745xx -Os \
@@ -107,7 +107,6 @@ clean:
 		-o "$@"
 
 elf: build
-	echo $(COBJS)
 	@echo "Building final binary"
 	@arm-none-eabi-gcc -o "openipmc-fw_CM7.elf" $(COBJS) $(AOBJS) \
 		-T "CM7/STM32H745XIHX_FLASH.ld" \
