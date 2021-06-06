@@ -40,7 +40,8 @@
 #include "fru_state_machine.h"
 #include "st_bootloader.h"
 #include "device_id.h"
-
+#include "tftp_client.h"
+#include "write_bin_stmflash.h"
 
 
 StreamBufferHandle_t terminal_input_stream = NULL;
@@ -84,6 +85,17 @@ Reboot and jump to STMicroelectronics bootloader"
 Enable to show the IPMI messaging from OpenIPMC"
 #define CMD_DEBUG_IPMI_CALLBACK debug_ipmi_cb
 
+#define CMD_LOAD_BIN_NAME "load-bin"
+#define CMD_LOAD_BIN_DESCRIPTION "\
+Load binary from a TFTP server into TEMP area (Sector 12).\r\n\
+\t\tex: load-bin 192 168 0 1\r\n\
+\t\tThis client always load file named fimware.bin"
+#define CMD_LOAD_BIN_CALLBACK load_bin_cb
+
+#define CMD_CHECK_BIN_NAME "check-bin"
+#define CMD_CHECK_BIN_DESCRIPTION "\
+Check the validity of binary present in Sector 12."
+#define CMD_CHECK_BIN_CALLBACK check_bin_cb
 
 
 /*
@@ -166,6 +178,35 @@ static uint8_t debug_ipmi_cb()
 }
 
 
+extern struct tftp_context tftp_ctx;
+uint8_t tftp_buff[100];
+
+uint8_t load_bin_cb()
+{
+	// Get Server IP addr from parameters
+	ip_addr_t tfpt_server_addr;
+	IP_ADDR4(&tfpt_server_addr, CLI_GetArgDec(0)&0xFF, CLI_GetArgDec(1)&0xFF, CLI_GetArgDec(2)&0xFF, CLI_GetArgDec(3)&0xFF);
+
+	bin_stmflash_open(12);
+	tftp_init_client(&tftp_ctx);
+	tftp_get( tftp_buff, &tfpt_server_addr, 69, "firmware.bin", TFTP_MODE_OCTET);
+
+	return TE_OK;
+}
+
+
+static uint8_t check_bin_cb()
+{
+	uint32_t crc;
+	int is_valid = bin_stmflash_validate(12, &crc);
+	if( is_valid == 0 )
+		mt_printf( "Binary is invalid!\r\n" );
+	mt_printf( "CRC: %x\r\n", crc );
+
+	return TE_OK;
+}
+
+
 /*
  * Callback for "~"
  *
@@ -242,6 +283,9 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
 	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
+	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    4, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
+	CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
+
 
 
 	while(1)
