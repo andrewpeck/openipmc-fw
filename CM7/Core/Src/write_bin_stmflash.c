@@ -185,11 +185,12 @@ static void stm32_flash_erase_sector( uint32_t sector_start_addr )
 {
 	uint32_t sector_number = (sector_start_addr-FLASH_ORIGIN)/SECTOR_SIZE;
 
-	HAL_FLASHEx_Unlock_Bank1();
+	HAL_FLASH_Unlock();
 
-	FLASH_Erase_Sector(sector_number, FLASH_BANK_1, FLASH_VOLTAGE_RANGE_1);
+	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGSERR);
+	FLASH_Erase_Sector(sector_number, FLASH_BANK_BOTH, FLASH_VOLTAGE_RANGE_1);
 
-	HAL_FLASHEx_Lock_Bank1();
+	HAL_FLASH_Lock();
 
 }
 
