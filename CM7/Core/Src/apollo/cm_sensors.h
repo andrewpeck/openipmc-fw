@@ -71,7 +71,8 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .e=1
+    .re=1,
+    .be=0
   };
 
   const linear_sensor_constants_t cm_firefly_temp_consts =
@@ -86,7 +87,8 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .e=1
+    .re=1,
+    .be=0
   };
 
   const linear_sensor_constants_t cm_regulator_temp_consts =
@@ -101,7 +103,8 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .e=1
+    .re=1,
+    .be=0
   };
 
 #endif /* CM_SENSORS_H */

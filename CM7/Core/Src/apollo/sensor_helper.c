@@ -1,27 +1,8 @@
-#ifndef __SENSOR_HELPER_H_
-#define __SENSOR_HELPER_H_
-
 #include <stddef.h>
-#include "sensor_helper.h"
 #include <stdint.h>
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
-
-typedef struct  {
-  uint8_t sensor_type; // TEMPERATURE, VOLTAGE, CURRENT
-  uint8_t unit_type; // DEGREES_C, DEGREES_F, KELVIN, VOLTS, AMPERES, WATTS
-
-  // specified in sensor bits
-  uint8_t lower_nonrecoverable;
-  uint8_t lower_noncritical;
-  uint8_t lower_critical;
-  uint8_t upper_noncritical;
-  uint8_t upper_critical;
-  uint8_t upper_nonrecoverable;
-  uint16_t m;
-  uint8_t b;
-  uint8_t e;
-} linear_sensor_constants_t;
+#include "sensor_helper.h"
 
 void create_linear_sensor (const linear_sensor_constants_t params,
                            char* id_string,
@@ -48,8 +29,8 @@ void create_linear_sensor (const linear_sensor_constants_t params,
                                  params.unit_type,
                                  params.m,  // m
                                  params.b,  // b
-                                 params.e,  // be
-                                 -params.e, // re
+                                 params.be, // be
+                                -params.re, // re
                                  threshold_mask,
                                  threshold_list,
                                  id_string,
@@ -87,5 +68,3 @@ void set_sensor_lower_state(sensor_reading_t *sensor_reading,
     sensor_reading->present_state |= LOWER_NON_RECOVERABLE;
 
 }
-
-#endif // __SENSOR_HELPER_H_
