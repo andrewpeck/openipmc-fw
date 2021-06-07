@@ -143,7 +143,20 @@ static uint8_t apollo_read_io_cb()
 static uint8_t apollo_boot_status_cb()
 {
 	mt_printf( "\r\n\n" );
+
+	uint8_t mode = apollo_get_zynq_boot_mode ();
+
+	if (mode == APOLLO_BOOT_SD)
+		mt_printf("Boot mode = %d (%s)\r\n", mode, "SD");
+	else if (mode == APOLLO_BOOT_QSPI)
+		mt_printf("Boot mode = %d (%s)\r\n", mode, "QSPI");
+	else if (mode == APOLLO_BOOT_NAND)
+		mt_printf("Boot mode = %d (%s)\r\n", mode, "NAND");
+	else if (mode == APOLLO_BOOT_JTAG)
+		mt_printf("Boot mode = %d (%s)\r\n", mode, "JTAG");
+
 	mt_printf("state = %s\r\n", get_apollo_status());
+
 	return TE_OK;
 }
 
