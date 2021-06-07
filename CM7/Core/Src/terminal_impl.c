@@ -136,6 +136,10 @@ static uint8_t apollo_read_io_cb()
 	mt_printf("ESM Power Good = %d\r\n", apollo_get_esm_pwr_good ());
 	mt_printf("Noshelf Jumper = %d\r\n", apollo_get_noshelf ());
 	mt_printf("SM Revision    = %d\r\n", apollo_get_revision ());
+	mt_printf("Boot Mode      = %d\r\n", apollo_get_zynq_boot_mode ());
+	return TE_OK;
+}
+
 static uint8_t apollo_boot_status_cb()
 {
 	mt_printf( "\r\n\n" );
