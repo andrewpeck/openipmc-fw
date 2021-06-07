@@ -76,6 +76,7 @@ uint8_t apollo_get_fpga_done ();
 uint8_t apollo_get_noshelf ();
 uint8_t apollo_get_revision ();
 uint8_t apollo_get_zynq_up ();
+uint8_t apollo_get_zynq_boot_mode ();
 
 void apollo_set_cm_enable (uint8_t enable);
 void apollo_set_eeprom_we_n (uint8_t state);
@@ -91,5 +92,32 @@ void apollo_init_gpios ();
 void apollo_init_bootmode ();
 void apollo_powerdown_sequence ();
 void apollo_powerup_sequence ();
+
+char* get_apollo_status () ;
+
+uint8_t apollo_get_handle_open ();
+
+#define APOLLO_STATUS_PU_INIT_IO  0
+#define APOLLO_STATUS_PU_SET_BOOT_MODE  1
+#define APOLLO_STATUS_PU_SET_UART_ADR  2
+#define APOLLO_STATUS_PU_SET_CHAIN_SEL  3
+#define APOLLO_STATUS_PU_SET_EEPROM_WE  4
+#define APOLLO_STATUS_PU_RESET_I2C_MUX  5
+#define APOLLO_STATUS_PU_SET_12V_EN  6
+#define APOLLO_STATUS_PU_SET_ZYNQ_EN  7
+#define APOLLO_STATUS_PU_TIMEOUT_FPGA_DONE  8
+#define APOLLO_STATUS_PU_WAIT_FPGA_DONE  9
+#define APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE  10
+#define APOLLO_STATUS_PU_DONE  11
+#define APOLLO_STATUS_PU_WAIT_ZYNQ_DONE  12
+#define APOLLO_STATUS_PD_WAIT_ZYNQ_OFF  13
+#define APOLLO_STATUS_PD_TIMEOUT_ZYNQ_OFF  14
+#define APOLLO_STATUS_PD_12V_PD  15
+#define APOLLO_STATUS_PD_DONE  16
+
+#define APOLLO_ERR_TIMEOUT_ZYNQ_FPGA 1 
+#define APOLLO_ERR_TIMEOUT_ZYNQ_CPU 2 
+#define APOLLO_ERR_TIMEOUT_ZYNQ_SHUTDOWN 3 
+#define APOLLO_ERR_OPEN_HANDLE 4
 
 #endif // __APOLLO_H_
