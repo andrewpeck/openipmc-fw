@@ -15,6 +15,7 @@ static struct __attribute__((packed)) {
       uint8_t revision_number;
       uint8_t mac_eth0[6];
       uint8_t mac_eth1[6];
+      uint8_t boot_mode;
     } v0;
   };
 } eeprom = {.version = 0xFE};
@@ -86,6 +87,22 @@ char user_eeprom_set_serial_number(uint8_t sn) {
     eeprom.v0.serial_number = sn;
     return 0;
   } 
+  return -1;
+}
+
+char user_eeprom_get_boot_mode(uint8_t *bm) {
+  if (eeprom.version == 0) {
+    *(bm) = eeprom.v0.boot_mode;
+    return 0;
+  } 
+  return -1;
+}
+
+char user_eeprom_set_boot_mode(uint8_t bm) {
+  if (eeprom.version == 0) {
+    eeprom.v0.boot_mode = bm;
+    return 0;
+  }
   return -1;
 }
 

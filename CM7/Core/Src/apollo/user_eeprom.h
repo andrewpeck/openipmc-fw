@@ -68,5 +68,7 @@ user_eeprom_write_disable(void);
 
 char
 user_eeprom_get_wren(uint8_t * lvl);
+char user_eeprom_set_boot_mode(uint8_t bm);
+char user_eeprom_get_boot_mode(uint8_t *bm);
 
 #endif // USER_EEPROM_H
