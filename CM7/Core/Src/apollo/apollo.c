@@ -2,7 +2,7 @@
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
-
+#include "user_eeprom.h"
 #include "sensor_helper.h"
 #include "apollo_i2c.h"
 #include "cm_sensors.h"
