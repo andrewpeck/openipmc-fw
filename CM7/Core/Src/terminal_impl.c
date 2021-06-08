@@ -310,13 +310,13 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 
 	// dashes and underscores don't seem to work as expected here :(
-	CLI_AddCmd("bootmode",  apollo_boot_mode_cb,     1, 0, "Set the apollo boot mode pin");
-	CLI_AddCmd("bootstatus", apollo_boot_status_cb,  0, 0, "Get the status of the boot sequence");
-	CLI_AddCmd("powerdown", apollo_powerdown_cb,     0, 0, "Power down Apollo");
-	CLI_AddCmd("powerup",   apollo_powerup_cb,       0, 0, "Power up Apollo");
-	CLI_AddCmd("readio",    apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
-	CLI_AddCmd("zynqwr",    apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
-	CLI_AddCmd("zynqrd",    apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
+	CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, "Set the apollo boot mode pin");
+	CLI_AddCmd("bootstatus", apollo_boot_status_cb,   0, 0, "Get the status of the boot sequence");
+	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
+	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
+	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
+	CLI_AddCmd("zynqwr",     apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
+	CLI_AddCmd("zynqrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
 
 	info_cb();
 	

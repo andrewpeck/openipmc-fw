@@ -11,9 +11,9 @@
 #include "stdint.h"
 
 uint8_t apollo_abormal_shutdown = 0;
-uint8_t APOLLO_STARTUP_STARTED   = 0;
-uint8_t APOLLO_STARTUP_DONE      = 0;
-uint8_t APOLLO_BOOT_MODE         = APOLLO_BOOT_SD;
+uint8_t apollo_startup_started  = 0;
+uint8_t apollo_startup_done     = 0;
+uint8_t apollo_boot_mode        = APOLLO_BOOT_SD;
 
 uint8_t apollo_status       = 0;
 
@@ -44,14 +44,14 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     // somebody opened the handle
     if (apollo_get_handle_open()) {
       apollo_powerdown_sequence();
-      APOLLO_STARTUP_STARTED = 0;
+      apollo_startup_started = 0;
       apollo_abormal_shutdown=APOLLO_ERR_OPEN_HANDLE;
       return 1;
     }
   }
 
   // timeout, shutdown!
-  APOLLO_STARTUP_STARTED=0;
+  apollo_startup_started=0;
   apollo_abormal_shutdown=err;
   apollo_powerdown_sequence();
   return 1;
@@ -147,11 +147,11 @@ uint8_t apollo_get_esm_pwr_good () {
 }
 
 uint8_t apollo_get_ipmc_startup_done () {
-  return APOLLO_STARTUP_DONE;
+  return apollo_startup_done;
 }
 
 uint8_t apollo_get_ipmc_startup_started () {
-  return APOLLO_STARTUP_STARTED;
+  return apollo_startup_started;
 }
 
 uint8_t apollo_get_ipmc_abnormal_shutdown () {
@@ -175,7 +175,7 @@ void apollo_set_uart_adr (uint8_t adr) {
 }
 
 void apollo_set_zynq_boot_mode (uint8_t mode) {
-  APOLLO_BOOT_MODE = mode;
+  apollo_boot_mode = mode;
   GPIO_SET_STATE_EXPAND ((mode>>0) & 1, APOLLO_BOOT_MODE_0);
   GPIO_SET_STATE_EXPAND ((mode>>1) & 1, APOLLO_BOOT_MODE_1);
 }
@@ -238,8 +238,8 @@ void apollo_esm_reset(const int delay) {
 
 void apollo_powerdown_sequence() {
 
-  APOLLO_STARTUP_DONE = 0;
-  APOLLO_STARTUP_STARTED = 0;
+  apollo_startup_done = 0;
+  apollo_startup_started = 0;
 
   ipmc_ios_printf("Powering Down Service Module:\r\n");
 
@@ -383,7 +383,7 @@ char* get_apollo_status () {
 
 void apollo_powerup_sequence () {
 
-  APOLLO_STARTUP_STARTED = 1;
+  apollo_startup_started=1;
   apollo_abormal_shutdown=0;
 
   // re-init to their default states
@@ -394,7 +394,7 @@ void apollo_powerup_sequence () {
   osDelay(100);
 
   const uint8_t revision=apollo_get_revision();
-  uint8_t boot_mode=APOLLO_BOOT_MODE;
+  uint8_t boot_mode=apollo_boot_mode;
 
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
@@ -528,7 +528,7 @@ void apollo_powerup_sequence () {
 
   apollo_status = APOLLO_STATUS_PU_DONE;
 
-  APOLLO_STARTUP_DONE = 1;
+  apollo_startup_done = 1;
 
 }
 
