@@ -375,6 +375,9 @@ char* get_apollo_status () {
     case APOLLO_STATUS_PD_DONE:
       return "Powerdown: Powerdown Finished";
       break;
+    case APOLLO_STATUS_READ_EEPROM:
+      return "Powerup: Reading EEPROM";
+      break;
     default:
       return "Unknown state.. oh no";
       break;
@@ -394,7 +397,6 @@ void apollo_powerup_sequence () {
   osDelay(100);
 
   const uint8_t revision=apollo_get_revision();
-  uint8_t boot_mode=apollo_boot_mode;
 
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
@@ -406,11 +408,20 @@ void apollo_powerup_sequence () {
 
   ipmc_ios_printf("Powering Up Service Module:\r\n");
 
-  // set boot bins
+  // Read from EEPROM
+  //------------------------------------------------------------------------------
+
+  apollo_status = APOLLO_STATUS_READ_EEPROM;
+  user_eeprom_init();
+  if (0==user_eeprom_read()) {
+    user_eeprom_get_boot_mode(&apollo_boot_mode);
+  }
+
+  // set boot pins
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_BOOT_MODE;
-  ipmc_ios_printf(" > Setting boot mode to 0x%1X...\r\n", boot_mode);
-  apollo_set_zynq_boot_mode (boot_mode);
+  ipmc_ios_printf(" > Setting boot mode to 0x%1X...\r\n", apollo_boot_mode);
+  apollo_set_zynq_boot_mode (apollo_boot_mode);
 
   // set uart pins
   //------------------------------------------------------------------------------

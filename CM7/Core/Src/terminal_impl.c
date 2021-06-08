@@ -25,6 +25,7 @@
 
 #include "apollo.h"
 #include "apollo_i2c.h"
+#include "user_eeprom.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -165,8 +166,10 @@ static uint8_t apollo_boot_mode_cb()
 	mt_printf( "\r\n\n" );
 	uint8_t boot_mode = CLI_GetArgDec(0);
 	if (boot_mode >= 0 && boot_mode <= 3) {
-		mt_printf("Setting boot mode to %d\r\n", boot_mode);
+		mt_printf("Setting boot mode to %d and saving in eeprom\r\n", boot_mode);
 		apollo_set_zynq_boot_mode(boot_mode);
+		user_eeprom_set_boot_mode(boot_mode);
+		user_eeprom_write();
 	}
 	else {
 		mt_printf("Invalid boot mode %d!\r\n", boot_mode);
