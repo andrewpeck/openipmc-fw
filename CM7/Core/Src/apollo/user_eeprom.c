@@ -7,6 +7,10 @@
 #define MEM_ADDR 0x50
 #define ID_PAGE 0x58
 
+char user_eeprom_get_wren(uint8_t * lvl);
+char user_eeprom_write_enable(void);
+char user_eeprom_write_disable(void);
+
 static struct __attribute__((packed)) {
   uint8_t version;
   union {
