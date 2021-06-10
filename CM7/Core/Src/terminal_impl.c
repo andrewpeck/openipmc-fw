@@ -26,6 +26,7 @@
 #include "apollo.h"
 #include "apollo_i2c.h"
 #include "user_eeprom.h"
+#include "zynq_i2c.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -158,6 +159,8 @@ static uint8_t apollo_boot_status_cb()
 
 	mt_printf("state = %s\r\n", get_apollo_status());
 
+	mt_printf("zynq_i2d_done = %d\r\n", get_zynq_i2c_done());
+
 	return TE_OK;
 }
 
@@ -181,20 +184,35 @@ static uint8_t apollo_boot_mode_cb()
 static uint8_t apollo_zynq_i2c_tx_cb()
 {
 	mt_printf( "\r\n\n" );
-	const uint8_t adr = CLI_GetArgHex(0);
+	uint8_t adr = CLI_GetArgHex(0);
 	uint8_t data = CLI_GetArgHex(1);
-	const HAL_StatusTypeDef status = zynq_i2c_tx (&data, adr);
-	mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
+
+	HAL_StatusTypeDef status = HAL_OK;
+	status |= zynq_i2c_tx (&adr,  ZYNQ_I2C_SLAVE_ADDR);
+	status |= zynq_i2c_tx (&data, ZYNQ_I2C_SLAVE_ADDR);
+
+	if (status==HAL_OK)
+		mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
 	return status;
 }
 
 static uint8_t apollo_zynq_i2c_rx_cb()
 {
 	mt_printf( "\r\n\n" );
-	const uint8_t adr = CLI_GetArgHex(0);
+
+	uint8_t adr = CLI_GetArgHex(0);
 	uint8_t data = 0xFF;
-	const HAL_StatusTypeDef status = zynq_i2c_rx (&data, adr);
-	mt_printf("Zynq I2C RX adr=0x%02X data=0x%02X\r\n", adr, data);
+
+	HAL_StatusTypeDef status = HAL_OK;
+	status |= zynq_i2c_tx (&adr, ZYNQ_I2C_SLAVE_ADDR);
+	status |= zynq_i2c_rx (&data, ZYNQ_I2C_SLAVE_ADDR);
+
+	if (status==HAL_OK)
+		mt_printf("Zynq I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
 	return status;
 }
 

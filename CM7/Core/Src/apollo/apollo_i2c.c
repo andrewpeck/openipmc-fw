@@ -38,10 +38,3 @@ CREATE_APOLLO_I2C_RX (local_i2c_rx, tca9546_sel_local);
 CREATE_APOLLO_I2C_RX (cm1_i2c_rx,   tca9546_sel_m1);
 CREATE_APOLLO_I2C_RX (cm2_i2c_rx,   tca9546_sel_m2);
 CREATE_APOLLO_I2C_RX (zynq_i2c_rx,  tca9546_sel_zynq);
-
-
-
-
-
-
-
