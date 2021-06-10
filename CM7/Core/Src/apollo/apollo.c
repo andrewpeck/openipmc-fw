@@ -544,22 +544,10 @@ void apollo_powerup_sequence () {
 }
 
 void board_specific_activation_control(uint8_t current_power_level,
-    uint8_t new_power_level) {
-
-  /*
-   * For customization, 'current_power_level' and 'new_power_level' can be used
-   * to improve any the transition between power levels.
-   */
-
-  // DEACTIVATION
+                                       uint8_t new_power_level) {
   if (new_power_level == 0) {
-
-    // Customize DEACTIVATION process
     apollo_powerdown_sequence();
-  }
-  // ACTIVATION
-  else {
-    // Customize ACTIVATION process
+  } else {
     apollo_powerup_sequence();
   }
   return;
