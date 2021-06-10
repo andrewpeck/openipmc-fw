@@ -42,6 +42,7 @@
 #include "device_id.h"
 #include "tftp_client.h"
 #include "write_bin_stmflash.h"
+#include "bootloader_tools.h"
 
 
 StreamBufferHandle_t terminal_input_stream = NULL;
@@ -96,6 +97,14 @@ Load binary from a TFTP server into TEMP area (Sector 12).\r\n\
 #define CMD_CHECK_BIN_DESCRIPTION "\
 Check the validity of binary present in Sector 12."
 #define CMD_CHECK_BIN_CALLBACK check_bin_cb
+
+#define CMD_BOOT_NAME "bootloader"
+#define CMD_BOOT_DESCRIPTION "\
+Mange Bootloader.\r\n\
+\t\tNo argument: Print Bootloader status\r\n\
+\t\t     enable: Bootloader boots first after reset\r\n\
+\t\t    disable: OpenIPMC-FW boots directly after reset"
+#define CMD_BOOT_CALLBACK bootloader_cb
 
 
 /*
@@ -187,7 +196,7 @@ uint8_t load_bin_cb()
 	ip_addr_t tfpt_server_addr;
 	IP_ADDR4(&tfpt_server_addr, CLI_GetArgDec(0)&0xFF, CLI_GetArgDec(1)&0xFF, CLI_GetArgDec(2)&0xFF, CLI_GetArgDec(3)&0xFF);
 
-	bin_stmflash_open(12);
+	bin_stmflash_open(9);
 	tftp_init_client(&tftp_ctx);
 	tftp_get( tftp_buff, &tfpt_server_addr, 69, "firmware.bin", TFTP_MODE_OCTET);
 
@@ -198,10 +207,40 @@ uint8_t load_bin_cb()
 static uint8_t check_bin_cb()
 {
 	uint32_t crc;
-	int is_valid = bin_stmflash_validate(12, &crc);
+	int is_valid = bin_stmflash_validate(9, &crc);
 	if( is_valid == 0 )
 		mt_printf( "Binary is invalid!\r\n" );
 	mt_printf( "CRC: %x\r\n", crc );
+
+	return TE_OK;
+}
+
+static uint8_t bootloader_cb()
+{
+	mt_printf( "\r\n\r\n" );
+
+	if ( CLI_IsArgFlag("enable") )
+	{
+		if( bootloader_enable() == false )
+			mt_printf( "Enabling failed!\r\n" );
+	}
+	else if( CLI_IsArgFlag("disable") )
+	{
+		if( bootloader_disable() == false )
+			mt_printf( "Disabling failed!\r\n" );
+	}
+
+	mt_printf( "Bootloader is present in the Flash: " );
+	if( bootloader_is_present() )
+		mt_printf( "YES\r\n" );
+	else
+		mt_printf( "NO\r\n" );
+
+	mt_printf( "Bootloader is active: " );
+	if( bootloader_is_active() )
+		mt_printf( "YES\r\n" );
+	else
+		mt_printf( "NO\r\n" );
 
 	return TE_OK;
 }
@@ -285,6 +324,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    4, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
 	CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
+	CLI_AddCmd( CMD_BOOT_NAME,        CMD_BOOT_CALLBACK,        0, TMC_None, CMD_BOOT_DESCRIPTION   );
 
 
 

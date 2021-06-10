@@ -108,7 +108,7 @@ int bin_stmflash_write( uint8_t* data, int len )
 
 	}
 
-
+	return 0;
 }
 
 
@@ -168,7 +168,7 @@ int bin_stmflash_validate( int sector_number, uint32_t* crc32 )
 		return 0; // Binary is not valid
 	}
 
-	uint32_t calculated_crc = ~HAL_CRC_Calculate( &hcrc, (uint32_t)payload_origin, payload_size );
+	uint32_t calculated_crc = ~HAL_CRC_Calculate( &hcrc, (uint32_t*)payload_origin, payload_size );
 
 	// Compare calculated CRC with the header CRC
 	if( *((uint32_t*)(origin+12)) != calculated_crc )
@@ -180,15 +180,20 @@ int bin_stmflash_validate( int sector_number, uint32_t* crc32 )
 }
 
 
-
 static void stm32_flash_erase_sector( uint32_t sector_start_addr )
 {
 	uint32_t sector_number = (sector_start_addr-FLASH_ORIGIN)/SECTOR_SIZE;
+	uint32_t bank_number;
+
+	if( sector_number < 8 )
+		bank_number = FLASH_BANK_1;
+	else
+		bank_number = FLASH_BANK_2;
 
 	HAL_FLASH_Unlock();
 
 	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGSERR);
-	FLASH_Erase_Sector(sector_number, FLASH_BANK_BOTH, FLASH_VOLTAGE_RANGE_1);
+	FLASH_Erase_Sector(sector_number, bank_number, FLASH_VOLTAGE_RANGE_1);
 
 	HAL_FLASH_Lock();
 
