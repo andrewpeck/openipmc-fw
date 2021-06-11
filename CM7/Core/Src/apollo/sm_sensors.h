@@ -22,10 +22,16 @@ void sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
   else if (sensor==TCN_MID)
     adr = 0x49; 
   else if (sensor==TCN_BOT)
-    adr = 0x50; 
+    adr = 0x50;
+
+  // TCN reg 00 = temperature
+  // TCN reg 01 = config
+  // TCN reg 10 = temperature hysteresis
+  // TCN reg 11 = temperature limit set
 
   uint8_t data [2];
-  HAL_StatusTypeDef status; 
+  HAL_StatusTypeDef status = HAL_OK;
+  status = local_i2c_tx_n (0x0,  adr, 2); // temperature register 0x0
   status = local_i2c_rx_n (data, adr, 2);
 
   // mask off the sign bit, we don't care about it
