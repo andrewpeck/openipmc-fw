@@ -83,6 +83,8 @@ all: elf
 headers:
 	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
+	touch CM7/Core/Src/openipmc_inits.c
+	make CM7/Core/Src/openipmc_inits.o
 
 build: $(COBJS) $(AOBJS) headers
 
