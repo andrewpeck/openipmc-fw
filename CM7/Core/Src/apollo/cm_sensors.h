@@ -71,7 +71,7 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .re=1,
+    .re=0,
     .be=0
   };
 
@@ -87,7 +87,7 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .re=1,
+    .re=0,
     .be=0
   };
 
@@ -103,7 +103,7 @@ void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
     .upper_nonrecoverable=110,
     .m=1,
     .b=0,
-    .re=1,
+    .re=0,
     .be=0
   };
 
