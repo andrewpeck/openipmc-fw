@@ -1062,7 +1062,7 @@ void StartDefaultTask(void *argument)
   const uint8_t ip_octet = ipmc_ios_read_haddress();
   eth_ctrls_change_ip_addr( 192, 168,  21, ip_octet,  // IP Address
                             255, 255,   0,  0,        // Network Mask
-                            192, 168,   0,  1  );     // Gateway
+                            192, 168,   1,  4);       // Gateway
 
   // Opens telnet port 23 for the remote IPMC CLI
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
