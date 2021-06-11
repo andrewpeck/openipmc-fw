@@ -20,8 +20,8 @@ void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 #define PIM400_VHOLDUP_REG 0x1F
 
 #define PIM400_IOUT_REG 0x21
-#define PIM400_VAF_REG 0x22
-#define PIM400_VBF_REG 0x23
+#define PIM400_VAF_REG  0x22
+#define PIM400_VBF_REG  0x23
 #define PIM400_TEMP_REG 0x28
 
 //------------------------------------------------------------------------------

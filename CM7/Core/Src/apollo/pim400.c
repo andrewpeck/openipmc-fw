@@ -10,11 +10,13 @@
 #include "sdr_definitions.h"
 
 // https://library.industrialsolutions.abb.com/publibrary/checkout/PIM400?TNR=Data%20Sheets|PIM400|PDF
-void sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
-  uint8_t tx_data, rx_data;
-  tx_data = PIM400_TEMP_REG;
+// https://www.mouser.com/datasheet/2/167/PIM400_DS-1920379.pdf
 
-  mgm_i2c_transmit(PIM400_I2C_ADR, &tx_data, 1, 100 ); // (adr , data, size, timeout)
+void sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
+  uint8_t reg_adr, rx_data;
+  reg_adr = PIM400_TEMP_REG;
+
+  mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
   mgm_i2c_receive (PIM400_I2C_ADR, &rx_data, 1, 100 ); // (adr , data, size, timeout)
 
   // temperature = 1.961 C / bit  - 50C
@@ -30,10 +32,10 @@ void sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
 }
 
 void sensor_reading_iout_pim400(sensor_reading_t* sensor_reading) {
-  uint8_t tx_data, rx_data;
-  tx_data = PIM400_IOUT_REG;
+  uint8_t reg_adr, rx_data;
+  reg_adr = PIM400_IOUT_REG;
 
-  mgm_i2c_transmit(PIM400_I2C_ADR, &tx_data, 1, 100 ); // (adr , data, size, timeout)
+  mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
   mgm_i2c_receive (PIM400_I2C_ADR, &rx_data, 1, 100 ); // (adr , data, size, timeout)
 
   // current = 0.094 A / bit
@@ -51,14 +53,14 @@ void sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_read
 
   assert(supply == 0 || supply == 1);
 
-  uint8_t tx_data, rx_data;
+  uint8_t reg_adr, rx_data;
   if (supply == 0)
-    tx_data = PIM400_VAF_REG;
+    reg_adr = PIM400_VAF_REG;
   else
-    tx_data = PIM400_VBF_REG;
+    reg_adr = PIM400_VBF_REG;
 
-  mgm_i2c_transmit(PIM400_I2C_ADR, &tx_data, 1, 100); // (adr , data, size, timeout)
-  mgm_i2c_receive(PIM400_I2C_ADR, &rx_data, 1, 100); // (adr , data, size, timeout)
+  mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100); // (adr , data, size, timeout)
+  mgm_i2c_receive (PIM400_I2C_ADR, &rx_data, 1, 100); // (adr , data, size, timeout)
 
   // current = 0.325 V / bit
   sensor_reading->raw_value = rx_data;
