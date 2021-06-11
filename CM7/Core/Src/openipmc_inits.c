@@ -115,60 +115,60 @@ void ipmc_custom_initialization()
 
 
 	// Dummy sensor for FPGA temperature.
-	threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
-	threshold_list[1] = 0;    // Lower Critical        NOT USED
-	threshold_list[2] = 0;    // Lower Non Critical    NOT USED
-	threshold_list[3] = 65;   // Upper Non Critical    65°C
-	threshold_list[4] = 75;   // Upper Critical        75°C
-	threshold_list[5] = 100;  // Upper Non Recoverable 100°C
-	create_generic_analog_sensor_1( TEMPERATURE,
-	                                DEGREES_C,
-	                                1,            // y = 1*x + 0  (temperature in °C is identical to it raw value)
-	                                0,
-	                                0,
-	                                0,
-	                                UPPER_NON_CRITICAL | UPPER_CRITICAL | UPPER_NON_RECOVERABLE,
-	                                threshold_list,
-	                                "FPGA TEMP",
-	                                &sensor_reading_fpga_temp );
+	// threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
+	// threshold_list[1] = 0;    // Lower Critical        NOT USED
+	// threshold_list[2] = 0;    // Lower Non Critical    NOT USED
+	// threshold_list[3] = 65;   // Upper Non Critical    65°C
+	// threshold_list[4] = 75;   // Upper Critical        75°C
+	// threshold_list[5] = 100;  // Upper Non Recoverable 100°C
+	// create_generic_analog_sensor_1( TEMPERATURE,
+	//                                 DEGREES_C,
+	//                                 1,            // y = 1*x + 0  (temperature in °C is identical to it raw value)
+	//                                 0,
+	//                                 0,
+	//                                 0,
+	//                                 UPPER_NON_CRITICAL | UPPER_CRITICAL | UPPER_NON_RECOVERABLE,
+	//                                 threshold_list,
+	//                                 "FPGA TEMP",
+	//                                 &sensor_reading_fpga_temp );
 
 
 	// Dummy sensor for Air temperature.
-	threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
-	threshold_list[1] = 0;    // Lower Critical         NOT USED
-	threshold_list[2] = 0;    // Lower Non Critical     NOT USED
-	threshold_list[3] = 100;  // Upper Non Critical     30°C  (see conversion below)
-	threshold_list[4] = 120;  // Upper Critical         40°C
-	threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
-	create_generic_analog_sensor_1( TEMPERATURE,
-	                                DEGREES_C,
-	                                5,            // y = (0.5*x - 20) = (5*x - 200)*0.1
-	                                -200,
-	                                0,
-	                                -1,
-	                                UPPER_NON_CRITICAL | UPPER_CRITICAL,
-	                                threshold_list,
-	                                "AIR TEMP",
-	                                &sensor_reading_air_temp );
+	// threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
+	// threshold_list[1] = 0;    // Lower Critical         NOT USED
+	// threshold_list[2] = 0;    // Lower Non Critical     NOT USED
+	// threshold_list[3] = 100;  // Upper Non Critical     30°C  (see conversion below)
+	// threshold_list[4] = 120;  // Upper Critical         40°C
+	// threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
+	// create_generic_analog_sensor_1( TEMPERATURE,
+	//                                 DEGREES_C,
+	//                                 5,            // y = (0.5*x - 20) = (5*x - 200)*0.1
+	//                                 -200,
+	//                                 0,
+	//                                 -1,
+	//                                 UPPER_NON_CRITICAL | UPPER_CRITICAL,
+	//                                 threshold_list,
+	//                                 "AIR TEMP",
+	//                                 &sensor_reading_air_temp );
 
 
 	// Dummy sensor for Voltage.
-	threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
-	threshold_list[1] = 0;    // Lower Critical         NOT USED
-	threshold_list[2] = 0;    // Lower Non Critical     NOT USED
-	threshold_list[3] = 0;    // Upper Non Critical     NOT USED
-	threshold_list[4] = 0;    // Upper Critical         NOT USED
-	threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
-	create_generic_analog_sensor_1( VOLTAGE,
-	                                VOLTS,
-	                                1,            // y = 0.1*x = (1*x + 0)*0.1
-	                                0,
-	                                0,
-	                                -1,
-	                                0, // No thresholds
-	                                threshold_list,
-	                                "12V_RAIL",
-	                                &sensor_reading_vcc_out );
+	// threshold_list[0] = 0;    // Lower Non Recoverable  NOT USED
+	// threshold_list[1] = 0;    // Lower Critical         NOT USED
+	// threshold_list[2] = 0;    // Lower Non Critical     NOT USED
+	// threshold_list[3] = 0;    // Upper Non Critical     NOT USED
+	// threshold_list[4] = 0;    // Upper Critical         NOT USED
+	// threshold_list[5] = 0;    // Upper Non Recoverable  NOT USED
+	// create_generic_analog_sensor_1( VOLTAGE,
+	//                                 VOLTS,
+	//                                 1,            // y = 0.1*x = (1*x + 0)*0.1
+	//                                 0,
+	//                                 0,
+	//                                 -1,
+	//                                 0, // No thresholds
+	//                                 threshold_list,
+	//                                 "12V_RAIL",
+	//                                 &sensor_reading_vcc_out );
 
 
 	board_specific_sensor_inits();
