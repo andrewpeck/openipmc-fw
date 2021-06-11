@@ -32,7 +32,7 @@ void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 // 1.961 degrees / bit - 50C
 //
 // y = 1.961*x - 50
-// y = (1961 * x - 50000 ) / 1000
+// y = (1961 * x - 50 * 1000) / 1000
 //
 #define PIM400_TEMP_UPPER_NONCRITICAL 0
 #define PIM400_TEMP_UPPER_CRITICAL 8
@@ -41,8 +41,9 @@ void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 #define PIM400_TEMP_LOWER_CRITICAL 0
 #define PIM400_TEMP_LOWER_NONRECOVERABLE 0
 #define PIM400_TEMP_M 1961
-#define PIM400_TEMP_B -50000I
-#define PIM400_TEMP_E 3
+#define PIM400_TEMP_B -50I
+#define PIM400_TEMP_RE 3
+#define PIM400_TEMP_BE 3
 
 static const linear_sensor_constants_t pim400_temp_consts =
 {
@@ -56,8 +57,8 @@ static const linear_sensor_constants_t pim400_temp_consts =
   .upper_nonrecoverable = PIM400_TEMP_UPPER_NONRECOVERABLE,
   .m                    = PIM400_TEMP_M,
   .b                    = PIM400_TEMP_B,
-  .re                   = PIM400_TEMP_E,
-  .be                   = 0
+  .re                   = PIM400_TEMP_RE,
+  .be                   = PIM400_TEMP_BE,
 };
 
 static const uint8_t pim400_temp_upper_noncritical_raw =
