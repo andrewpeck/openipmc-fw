@@ -567,17 +567,17 @@ void board_specific_sensor_inits() {
   // SM
   //------------------------------------------------------------------------------
 
-  create_linear_sensor (sm_tcn_temp_consts, "CM Top Temperature", &sensor_reading_sm_tcn_top);
-  create_linear_sensor (sm_tcn_temp_consts, "CM Mid Temperature", &sensor_reading_sm_tcn_mid);
-  create_linear_sensor (sm_tcn_temp_consts, "CM Bot Temperature", &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_tcn_temp_consts, "SM Top Temperature", &sensor_reading_sm_tcn_top);
+  create_linear_sensor (sm_tcn_temp_consts, "SM Mid Temperature", &sensor_reading_sm_tcn_mid);
+  create_linear_sensor (sm_tcn_temp_consts, "SM Bot Temperature", &sensor_reading_sm_tcn_bot);
 
   //------------------------------------------------------------------------------
   // CM
   //------------------------------------------------------------------------------
 
-  create_linear_sensor (cm_fpga_temp_consts, "CM FPGA1 Temperature", &sensor_reading_cm1_temp);
-  create_linear_sensor (cm_fpga_temp_consts, "CM FPGA2 Temperature", &sensor_reading_cm2_temp);
-  create_linear_sensor (cm_firefly_temp_consts, "CM Firefly Max Temperature", &sensor_reading_cm_firefly_temp);
+  create_linear_sensor (cm_fpga_temp_consts,      "CM FPGA1 Temperature",         &sensor_reading_cm1_temp);
+  create_linear_sensor (cm_fpga_temp_consts,      "CM FPGA2 Temperature",         &sensor_reading_cm2_temp);
+  create_linear_sensor (cm_firefly_temp_consts,   "CM Firefly Max Temperature",   &sensor_reading_cm_firefly_temp);
   create_linear_sensor (cm_regulator_temp_consts, "CM Regulator Max Temperature", &sensor_reading_cm_regulator_temp);
 
   //------------------------------------------------------------------------------
