@@ -198,6 +198,39 @@ static uint8_t apollo_zynq_i2c_tx_cb()
 	return status;
 }
 
+static uint8_t apollo_local_i2c_tx_cb()
+{
+	mt_printf( "\r\n\n" );
+	uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = CLI_GetArgHex(1);
+
+	HAL_StatusTypeDef status = HAL_OK;
+	status |= zynq_i2c_tx (&data,  adr);
+
+	if (status==HAL_OK)
+		mt_printf("Local I2C adr=0x%02X data=0x%02X\r\n", adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
+	return status;
+}
+
+static uint8_t apollo_local_i2c_rx_cb()
+{
+	mt_printf( "\r\n\n" );
+
+	uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = 0xFE;
+
+	HAL_StatusTypeDef status = HAL_OK;
+	status |= zynq_i2c_rx (&data, adr);
+
+	if (status==HAL_OK)
+		mt_printf("Local I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
+	return status;
+}
+
 static uint8_t apollo_zynq_i2c_rx_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -336,8 +369,12 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
+
 	CLI_AddCmd("zynqwr",     apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
 	CLI_AddCmd("zynqrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
+
+	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
+	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
 
 	info_cb();
 	
