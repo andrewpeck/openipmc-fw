@@ -44,7 +44,7 @@ void sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
     sensor_reading->raw_value = temp;
     sensor_reading->present_state = 0;
   } else {
-    sensor_reading->raw_value = 0;
+    sensor_reading->raw_value = 1;
     sensor_reading->present_state = 0;
   }
 }
