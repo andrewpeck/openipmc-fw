@@ -67,8 +67,7 @@ extern I2C_HandleTypeDef hi2c2;
 // Flag used to enable the IPMI messaging printout
 int enable_ipmi_printouts = 0;
 
-int mt_vprintf(const char* format, va_list va);
-
+void mt_vprintf(const char* format, va_list va);
 
 
 /*
