@@ -106,13 +106,12 @@ void ipmc_custom_initialization()
 	 *  Create Sensors
 	 */
 
-	uint8_t threshold_list[6];
+	//uint8_t threshold_list[6];
 
 	init_sdr_repository();
 
 	create_hot_swap_carrier_sensor ("Hot Swap Carrier");
 	create_ipmb0_sensor ("IPMB-0 Sensor");
-
 
 	// Dummy sensor for FPGA temperature.
 	// threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
