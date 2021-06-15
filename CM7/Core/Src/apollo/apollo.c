@@ -408,6 +408,12 @@ void apollo_powerup_sequence () {
 
   ipmc_ios_printf("Powering Up Service Module:\r\n");
 
+  // reset i2c sense mux
+  //------------------------------------------------------------------------------
+  apollo_status = APOLLO_STATUS_PU_RESET_I2C_MUX;
+  ipmc_ios_printf(" > Resetting MGM I2C Mux...\r\n");
+  apollo_sense_reset ();
+
   // Read from EEPROM
   //------------------------------------------------------------------------------
 
@@ -445,12 +451,6 @@ void apollo_powerup_sequence () {
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_EEPROM_WE;
   apollo_set_eeprom_we_n (1);
-
-  // reset i2c sense mux
-  //------------------------------------------------------------------------------
-  apollo_status = APOLLO_STATUS_PU_RESET_I2C_MUX;
-  ipmc_ios_printf(" > Resetting MGM I2C Mux...\r\n");
-  apollo_sense_reset ();
 
   osDelay(10);
 
