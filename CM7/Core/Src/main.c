@@ -89,7 +89,7 @@ osThreadId_t terminal_input_task_handle;
 const osThreadAttr_t terminal_input_task_attributes = {
   .name = "TerminalInputTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 160* 4
+  .stack_size = 256 * 4
 };
 
 osThreadId_t terminal_process_task_handle;
