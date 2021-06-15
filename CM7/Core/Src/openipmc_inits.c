@@ -106,7 +106,7 @@ void ipmc_custom_initialization()
 	 *  Create Sensors
 	 */
 
-	//uint8_t threshold_list[6];
+	uint8_t threshold_list[6];
 
 	init_sdr_repository();
 
@@ -114,22 +114,22 @@ void ipmc_custom_initialization()
 	create_ipmb0_sensor ("IPMB-0 Sensor");
 
 	// Dummy sensor for FPGA temperature.
-	// threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
-	// threshold_list[1] = 0;    // Lower Critical        NOT USED
-	// threshold_list[2] = 0;    // Lower Non Critical    NOT USED
-	// threshold_list[3] = 65;   // Upper Non Critical    65°C
-	// threshold_list[4] = 75;   // Upper Critical        75°C
-	// threshold_list[5] = 100;  // Upper Non Recoverable 100°C
-	// create_generic_analog_sensor_1( TEMPERATURE,
-	//                                 DEGREES_C,
-	//                                 1,            // y = 1*x + 0  (temperature in °C is identical to it raw value)
-	//                                 0,
-	//                                 0,
-	//                                 0,
-	//                                 UPPER_NON_CRITICAL | UPPER_CRITICAL | UPPER_NON_RECOVERABLE,
-	//                                 threshold_list,
-	//                                 "FPGA TEMP",
-	//                                 &sensor_reading_fpga_temp );
+	threshold_list[0] = 0;    // Lower Non Recoverable NOT USED
+	threshold_list[1] = 0;    // Lower Critical        NOT USED
+	threshold_list[2] = 0;    // Lower Non Critical    NOT USED
+	threshold_list[3] = 65;   // Upper Non Critical    65°C
+	threshold_list[4] = 75;   // Upper Critical        75°C
+	threshold_list[5] = 100;  // Upper Non Recoverable 100°C
+	create_generic_analog_sensor_1( TEMPERATURE,
+	                                DEGREES_C,
+	                                1,            // y = 1*x + 0  (temperature in °C is identical to it raw value)
+	                                0,
+	                                0,
+	                                0,
+	                                UPPER_NON_CRITICAL | UPPER_CRITICAL | UPPER_NON_RECOVERABLE,
+	                                threshold_list,
+	                                "DUMMY TEMP",
+	                                &sensor_reading_fpga_temp );
 
 
 	// Dummy sensor for Air temperature.
