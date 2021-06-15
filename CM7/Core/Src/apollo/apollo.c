@@ -26,15 +26,15 @@ uint8_t apollo_get_handle_open () {
 
 uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     const uint8_t seconds,
-    const uint16_t interval,
+    const uint16_t interval_ms,
     const uint8_t err) {
 
-  const uint16_t max = seconds * (1000 / interval);
+  const uint16_t max = seconds * (1000 / interval_ms);
 
   for (uint16_t i = 0; i < max; i++) {
 
     // just poll periodically, to allow the os to do other things
-    osDelay(interval);
+    osDelay(interval_ms);
 
     // returned successfully
     if ((*check_function)() == 1) {
