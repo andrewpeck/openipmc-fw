@@ -376,7 +376,8 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
 	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
 
-	info_cb();
+	// Andre recommended commenting this out for now, due to a known bug
+	//info_cb();
 	
 	while(1)
 	{
