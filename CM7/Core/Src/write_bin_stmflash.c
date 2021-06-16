@@ -141,7 +141,7 @@ int bin_stmflash_close( void )
 	*((uint32_t*)(&prog_buffer[0])) = BINARY_IS_PRESENT_0;
 	*((uint32_t*)(&prog_buffer[4])) = BINARY_IS_PRESENT_1;
 	*((uint32_t*)(&prog_buffer[8])) = write_index + remain - HEADER_SIZE; // Payload size
-	*((uint32_t*)(&prog_buffer[12])) = ~HAL_CRC_Calculate( &hcrc, (uint32_t)(write_origin+HEADER_SIZE), write_index + remain - HEADER_SIZE );; // CRC32
+	*((uint32_t*)(&prog_buffer[12])) = ~HAL_CRC_Calculate( &hcrc, (uint32_t*)(write_origin+HEADER_SIZE), write_index + remain - HEADER_SIZE );; // CRC32
 
 	HAL_FLASH_Unlock();
 	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGSERR);

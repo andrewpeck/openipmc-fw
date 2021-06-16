@@ -89,7 +89,7 @@ Enable to show the IPMI messaging from OpenIPMC"
 #define CMD_LOAD_BIN_NAME "load-bin"
 #define CMD_LOAD_BIN_DESCRIPTION "\
 Load binary from a TFTP server into TEMP area (Sector 12).\r\n\
-\t\tex: load-bin 192 168 0 1\r\n\
+\t\tex: load-bin 192 168 0 1 new_firmware.bin\r\n\
 \t\tThis client always load file named fimware.bin"
 #define CMD_LOAD_BIN_CALLBACK load_bin_cb
 
@@ -100,7 +100,7 @@ Check the validity of binary present in Sector 12."
 
 #define CMD_BOOT_NAME "bootloader"
 #define CMD_BOOT_DESCRIPTION "\
-Mange Bootloader.\r\n\
+Manage Bootloader.\r\n\
 \t\tNo argument: Print Bootloader status\r\n\
 \t\t     enable: Bootloader boots first after reset\r\n\
 \t\t    disable: OpenIPMC-FW boots directly after reset"
@@ -187,8 +187,9 @@ static uint8_t debug_ipmi_cb()
 }
 
 
-extern struct tftp_context tftp_ctx;
-uint8_t tftp_buff[100];
+_Bool tftp_impl_fwupload_start( const ip_addr_t *server_addr, const char* fname );
+_Bool tftp_impl_fwupload_running( void );
+void  tftp_impl_fwupload_abort( void );
 
 uint8_t load_bin_cb()
 {
@@ -196,9 +197,28 @@ uint8_t load_bin_cb()
 	ip_addr_t tfpt_server_addr;
 	IP_ADDR4(&tfpt_server_addr, CLI_GetArgDec(0)&0xFF, CLI_GetArgDec(1)&0xFF, CLI_GetArgDec(2)&0xFF, CLI_GetArgDec(3)&0xFF);
 
-	bin_stmflash_open(9);
-	tftp_init_client(&tftp_ctx);
-	tftp_get( tftp_buff, &tfpt_server_addr, 69, "firmware.bin", TFTP_MODE_OCTET);
+	// Get filename from parameters
+	char* filename = CLI_GetArgv()[5];
+
+	mt_printf( "\r\n" );
+
+	if( tftp_impl_fwupload_start( &tfpt_server_addr, filename ) )
+	{
+		while( tftp_impl_fwupload_running() )
+		{
+			vTaskDelay( pdMS_TO_TICKS( 500 ) );
+			xSemaphoreTake( terminal_semphr, portMAX_DELAY );
+			if( CLI_GetIntState() ) // If ESC is pressed
+			{
+				tftp_impl_fwupload_abort();
+				mt_printf( "Transfer Aborted!" );
+				return TE_OK;
+			}
+		}
+	}
+	else
+		mt_printf( "Transfer Failed!" );
+
 
 	return TE_OK;
 }
@@ -208,6 +228,7 @@ static uint8_t check_bin_cb()
 {
 	uint32_t crc;
 	int is_valid = bin_stmflash_validate(9, &crc);
+	mt_printf( "\r\n");
 	if( is_valid == 0 )
 		mt_printf( "Binary is invalid!\r\n" );
 	mt_printf( "CRC: %x\r\n", crc );
@@ -236,7 +257,7 @@ static uint8_t bootloader_cb()
 	else
 		mt_printf( "NO\r\n" );
 
-	mt_printf( "Bootloader is active: " );
+	mt_printf( "Run bootloader on boot is enabled: " );
 	if( bootloader_is_active() )
 		mt_printf( "YES\r\n" );
 	else
@@ -322,7 +343,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
 	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
-	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    4, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
+	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
 	CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
 	CLI_AddCmd( CMD_BOOT_NAME,        CMD_BOOT_CALLBACK,        0, TMC_None, CMD_BOOT_DESCRIPTION   );
 

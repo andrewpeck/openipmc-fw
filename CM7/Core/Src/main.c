@@ -90,7 +90,7 @@ osThreadId_t terminal_input_task_handle;
 const osThreadAttr_t terminal_input_task_attributes = {
   .name = "TerminalInputTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 160* 4
+  .stack_size = 200* 4
 };
 
 osThreadId_t terminal_process_task_handle;
@@ -1128,16 +1128,6 @@ void StartDefaultTask(void *argument)
 
 
 
-  // UDP packet output test
-  const char* message = "Hello UDP message!\n\r";
-  osDelay(1000);
-  ip_addr_t PC_IPADDR;
-  IP_ADDR4(&PC_IPADDR, 192, 168, 0, 1);
-  struct udp_pcb* my_udp = udp_new();
-  udp_connect(my_udp, &PC_IPADDR, 55151);
-  struct pbuf* udp_buffer = NULL;
-
-
   /* Infinite loop */
   for(;;)
   {
@@ -1146,15 +1136,6 @@ void StartDefaultTask(void *argument)
     LED_2_SET_STATE(SET);
     osDelay(500);
     LED_2_SET_STATE(RESET);
-
-    // UDP packet output test
-    udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
-    if (udp_buffer != NULL) {
-      memcpy(udp_buffer->payload, message, strlen(message));
-      udp_send(my_udp, udp_buffer);
-      pbuf_free(udp_buffer);
-    }
-
 
   }
   /* USER CODE END 5 */
