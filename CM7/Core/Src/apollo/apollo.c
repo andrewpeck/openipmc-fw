@@ -490,7 +490,7 @@ void apollo_powerup_sequence () {
     ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
 
     // wait for fpga to go up, if it doesn't then shut back down
-    if (apollo_timeout_counter (apollo_get_fpga_done, 60, 100, APOLLO_ERR_TIMEOUT_ZYNQ_FPGA)) {
+    if (apollo_timeout_counter (apollo_get_fpga_done, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_FPGA)) {
       apollo_status = APOLLO_STATUS_PU_TIMEOUT_FPGA_DONE;
       return;
     }
@@ -528,7 +528,7 @@ void apollo_powerup_sequence () {
     ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
 
     // wait for zynq to go up, if it doesn't then shut back down
-    if (apollo_timeout_counter (apollo_get_zynq_up, 60, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
+    if (apollo_timeout_counter (apollo_get_zynq_up, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
       apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
       return;
     }
