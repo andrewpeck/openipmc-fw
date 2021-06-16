@@ -668,7 +668,8 @@ static void MX_UART4_Init(void)
   /* USER CODE BEGIN UART4_Init 2 */
 
   // Immediately starts the reception
-  HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
+  // Commented out to disable UART0, which was crashing the system with spam from the zynq
+  //HAL_UART_Receive_IT(&huart4, (uint8_t*)(&uart4_input_char), 1);
 
   /* USER CODE END UART4_Init 2 */
 
@@ -1018,7 +1019,8 @@ void _putchar(char character)
 {
 
 	// Local CLI via UART
-	HAL_UART_Transmit(&huart4, (uint8_t*)(&character), 1, 1000);
+  // Commented out to disable UART0, which was crashing the system with spam from the zynq
+	// HAL_UART_Transmit(&huart4, (uint8_t*)(&character), 1, 1000);
 
 	// Remote CLI via telnet
 	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
@@ -1052,11 +1054,12 @@ void StartDefaultTask(void *argument)
   apollo_init_gpios();
   apollo_init_bootmode();
 
+
   // send esm reset
   //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Resetting ESM...\r\n");
-  apollo_esm_reset(25);
   osDelay(100);
+  apollo_esm_reset(25);
 
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();
