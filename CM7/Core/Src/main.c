@@ -1058,8 +1058,10 @@ void StartDefaultTask(void *argument)
   // send esm reset
   //------------------------------------------------------------------------------
   ipmc_ios_printf(" > Resetting ESM...\r\n");
+  while (0==apollo_get_esm_pwr_good()) {}
   osDelay(100);
-  apollo_esm_reset(25);
+  apollo_esm_reset(100);
+  osDelay(100);
 
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();
@@ -1125,10 +1127,21 @@ void ipmc_fp_led_blink_task( void *argument )
         LED_2_SET_STATE(SET);
         osDelay(300);
 
+      }else if (0==apollo_get_esm_pwr_good()) {
+
+        // bad shutdown
+        LED_0_SET_STATE(SET);
+        LED_1_SET_STATE(SET);
+        LED_2_SET_STATE(SET);
+        osDelay(200);
+        LED_0_SET_STATE(RESET);
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+        osDelay(200);
+
       } else if (apollo_get_ipmc_abnormal_shutdown() == 1) {
 
         // bad shutdown
-
         LED_0_SET_STATE(SET);
         LED_1_SET_STATE(SET);
         LED_2_SET_STATE(SET);
