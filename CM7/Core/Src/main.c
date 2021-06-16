@@ -1095,12 +1095,12 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
     // UDP packet output test
-    udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
-    if (udp_buffer != NULL) {
-      memcpy(udp_buffer->payload, message, strlen(message));
-      udp_send(my_udp, udp_buffer);
-      pbuf_free(udp_buffer);
-    }
+    //udp_buffer = pbuf_alloc(PBUF_TRANSPORT, strlen(message), PBUF_RAM);
+    //if (udp_buffer != NULL) {
+    //  memcpy(udp_buffer->payload, message, strlen(message));
+    //  udp_send(my_udp, udp_buffer);
+    //  pbuf_free(udp_buffer);
+    //}
   }
   /* USER CODE END 5 */
 }
