@@ -420,7 +420,8 @@ void apollo_powerup_sequence () {
   apollo_status = APOLLO_STATUS_READ_EEPROM;
   user_eeprom_init();
   if (0==user_eeprom_read()) {
-    user_eeprom_get_boot_mode(&apollo_boot_mode);
+   // set apollo_boot_mode to the retval of this
+   user_eeprom_get_boot_mode(&apollo_boot_mode);
   }
 
   // set boot pins
