@@ -22,11 +22,15 @@
 #include "fru_state_machine.h"
 #include "st_bootloader.h"
 #include "device_id.h"
+#include "cmsis_os.h"
 
 #include "apollo.h"
 #include "apollo_i2c.h"
+#include "sm_sensors.h"
 #include "user_eeprom.h"
 #include "zynq_i2c.h"
+#include "tca9546.h"
+#include "pim400.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -159,7 +163,9 @@ static uint8_t apollo_boot_status_cb()
 
 	mt_printf("state = %s\r\n", get_apollo_status());
 
-	mt_printf("zynq_i2d_done = %d\r\n", get_zynq_i2c_done());
+	mt_printf(" > zynq I2C 0x60  = %d\r\n", get_zynq_i2c_done());
+	mt_printf(" > zynq FPGA DONE = %d\r\n", apollo_get_fpga_done ());
+	mt_printf(" > zynq CPU Up    = %d\r\n", apollo_get_zynq_up ());
 
 	return TE_OK;
 }
@@ -205,7 +211,7 @@ static uint8_t apollo_local_i2c_tx_cb()
 	uint8_t data = CLI_GetArgHex(1);
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&data,  adr);
+	status |= local_i2c_tx (&data,  adr);
 
 	if (status==HAL_OK)
 		mt_printf("Local I2C adr=0x%02X data=0x%02X\r\n", adr, data);
@@ -214,21 +220,145 @@ static uint8_t apollo_local_i2c_tx_cb()
 	return status;
 }
 
-static uint8_t apollo_local_i2c_rx_cb()
+void print_hal_status (HAL_StatusTypeDef status) {
+	if (status==HAL_OK)
+		mt_printf("HAL OK\r\n");
+	else if (status==HAL_ERROR)
+		mt_printf("HAL ERROR\r\n");
+	else if (status==HAL_BUSY)
+		mt_printf("HAL BUSY\r\n");
+	else if (status==HAL_TIMEOUT)
+		mt_printf("HAL TIMEOUT\r\n");
+}
+
+static uint8_t apollo_i2c_mux_cb()
 {
 	mt_printf( "\r\n\n" );
 
-	uint8_t adr = CLI_GetArgHex(0);
-	uint8_t data = 0xFE;
-
+	uint8_t mask = CLI_GetArgHex(0) & 0xF;
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_rx (&data, adr);
+	status |= tca9546_config (mask);
 
 	if (status==HAL_OK)
-		mt_printf("Local I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
+		mt_printf("I2C Mux Configured for 0x%1X\r\n", mask);
 	else
-		mt_printf("I2C Failure\r\n");
+		mt_printf("I2C Mux Failure\r\n");
+	  print_hal_status (status);
+
 	return status;
+}
+
+static uint8_t apollo_read_pim_cb() {
+	mt_printf("\r\n\n");
+
+	uint8_t temp;
+	uint8_t iout;
+	uint8_t va;
+	uint8_t vb;
+
+	HAL_StatusTypeDef status = HAL_OK;
+	status |= read_temp_pim400  (&temp);
+	status |= read_iout_pim400  (&iout);
+	status |= read_voltage_pim400  (&va, 0);
+	status |= read_voltage_pim400  (&vb, 1);
+
+	if (status==HAL_OK) {
+		mt_printf("Temp=%d C\r\n", 2*temp-50);
+		mt_printf("Iout=%f A\r\n", (94 * iout)/1000.0 );
+		mt_printf("Va=%d V\r\n", (325*va)/1000);
+		mt_printf("Vb=%d V\r\n", (325*vb)/1000);
+	} else {
+		mt_printf("I2C Read Failure\r\n");
+	}
+	return 0;
+}
+
+
+static uint8_t apollo_read_tcn_cb() {
+	mt_printf("\r\n\n");
+
+	for (int i=0; i<3; i++) {
+		uint8_t rd;
+		HAL_StatusTypeDef status = HAL_OK;
+		status = read_sm_tcn(i, &rd);
+		if (status==HAL_OK) {
+			if (i==TCN_TOP)
+				mt_printf("Top=%d C\r\n", rd);
+			if (i==TCN_MID)
+				mt_printf("Mid=%d C\r\n", rd);
+			if (i==TCN_BOT)
+				mt_printf("Bot=%d C\r\n", rd);
+		} else {
+			mt_printf("I2C Read Failure\r\n");
+		}
+	}
+
+	return 0;
+}
+
+static uint8_t apollo_read_eeprom_cb() {
+	mt_printf("\r\n\n");
+
+	char status = user_eeprom_read();
+
+	if (status == 0) {
+
+		uint8_t boot_mode;
+		uint8_t prom_rev;
+		uint8_t rev;
+		uint8_t id;
+
+		user_eeprom_get_revision_number(&rev);
+		user_eeprom_get_serial_number(&id);
+		user_eeprom_get_version(&prom_rev);
+		user_eeprom_get_boot_mode(&boot_mode);
+
+		mt_printf("prom version = 0x%02X\r\n", prom_rev);
+		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("hw           = rev%d #%d\r\n", rev, id);
+	} else {
+		mt_printf("I2C Failure\r\n");
+	}
+	return status;
+}
+static uint8_t apollo_write_rev_cb() {
+		mt_printf("\r\n\n");
+		uint8_t rev = CLI_GetArgDec(0);
+		user_eeprom_set_revision_number(rev);
+		mt_printf("Setting EEPROM to = rev%d\r\n", rev);
+		user_eeprom_write();
+		osDelay(100);
+		mt_printf("EEPROM Read Back as:\r\n");
+		return (apollo_read_eeprom_cb());
+}
+
+
+static uint8_t apollo_write_id_cb() {
+		mt_printf("\r\n\n");
+		uint8_t id = CLI_GetArgDec(0);
+		user_eeprom_set_serial_number(id);
+		mt_printf("Setting EEPROM to = id%d\r\n", id);
+		user_eeprom_write();
+		osDelay(100);
+		mt_printf("EEPROM Read Back as:\r\n");
+		return (apollo_read_eeprom_cb());
+}
+
+
+static uint8_t apollo_local_i2c_rx_cb() {
+  mt_printf("\r\n\n");
+
+  uint8_t adr = CLI_GetArgHex(0);
+  uint8_t data = 0x00;
+
+  HAL_StatusTypeDef status = HAL_OK;
+  status |= local_i2c_rx(&data, adr);
+
+  if (status == HAL_OK)
+    mt_printf("Local I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
+  else
+    mt_printf("I2C Failure\r\n");
+  return status;
 }
 
 static uint8_t apollo_zynq_i2c_rx_cb()
@@ -341,6 +471,7 @@ void terminal_input_task(void *argument)
 	}
 }
 
+
 /*
  * Task for processing the CLI.
  *
@@ -375,6 +506,21 @@ void terminal_process_task(void *argument)
 
 	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
 	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
+
+	CLI_AddCmd("eepromrd", apollo_read_eeprom_cb,  0, 0, "Read Apollo EEPROM");
+	CLI_AddCmd("revwr",    apollo_write_rev_cb,    1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("idwr",     apollo_write_id_cb,     1, 0, "Write Apollo EEPROM Revision");
+
+	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,  0, 0, "Read Apollo TCN Temperature Sensors");
+	CLI_AddCmd("pimrd",      apollo_read_pim_cb,  0, 0, "Read Apollo PIM400");
+
+	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
+
+	// CLI_AddCmd("cm1wr",      apollo_cm1_i2c_tx_cb,    1, 0, "Write Apollo CM1 I2C");
+	// CLI_AddCmd("cm1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
+
+	// CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
+	// CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
 	// Andre recommended commenting this out for now, due to a known bug
 	//info_cb();
