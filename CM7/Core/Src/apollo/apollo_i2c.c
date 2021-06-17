@@ -10,7 +10,7 @@
     HAL_StatusTypeDef FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
       HAL_StatusTypeDef stat = 0; \
       stat = SEL (); \
-      stat = stat | sense_i2c_transmit(adr, data, bytes, 100); \
+      stat = stat | sense_i2c_transmit(adr<<1, data, bytes, 100); \
       return stat; \
     } \
     HAL_StatusTypeDef FNAME (uint8_t *data, uint8_t adr) { \
@@ -21,7 +21,7 @@
     HAL_StatusTypeDef FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
       HAL_StatusTypeDef stat = 0; \
       stat = SEL (); \
-      stat = stat | sense_i2c_receive(adr, data, bytes, 100); \
+      stat = stat | sense_i2c_receive(adr<<1, data, bytes, 100); \
       return stat; \
     } \
     HAL_StatusTypeDef FNAME (uint8_t *data, uint8_t adr) { \

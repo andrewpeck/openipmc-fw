@@ -4,7 +4,7 @@
 #include <string.h>
 #include <user_eeprom.h>
 
-#define MEM_ADDR 0x50
+#define MEM_ADDR 0x50<<1
 #define ID_PAGE 0x58
 
 char user_eeprom_get_wren(uint8_t * lvl);
@@ -68,8 +68,8 @@ char user_eeprom_write(void) {
   memcpy(&buffer[2], (uint8_t *)&eeprom, sizeof(eeprom));
 
   user_eeprom_write_enable();
-  HAL_StatusTypeDef status =
-      mgm_i2c_transmit(MEM_ADDR, buffer, sizeof(buffer), 1000);
+  HAL_StatusTypeDef status;
+  status = mgm_i2c_transmit(MEM_ADDR, buffer, sizeof(buffer), 1000);
   user_eeprom_write_disable();
   if (status != HAL_OK) {
     return -1;
