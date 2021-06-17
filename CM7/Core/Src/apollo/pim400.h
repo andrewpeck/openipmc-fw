@@ -4,7 +4,12 @@
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
 #include "sensor_helper.h"
- 
+#include "main.h"
+
+HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading);
+HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading);
+HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply);
+
 void sensor_reading_temp_pim400(sensor_reading_t *sensor_reading);
 void sensor_reading_iout_pim400(sensor_reading_t *sensor_reading);
 void sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading);
