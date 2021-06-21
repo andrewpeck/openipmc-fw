@@ -82,6 +82,6 @@ const linear_sensor_constants_t sm_tcn_temp_consts =
   .upper_nonrecoverable=50,
   .m=1,
   .b=0,
-  .re=1,
+  .re=0,
   .be=0
 };
