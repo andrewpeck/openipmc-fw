@@ -39,8 +39,8 @@
 
 extern void _reset_fcn();
 #define _TERM_VER_				"v1.4"				// Terminal version
-#define TERM_SIZE_TASK          (20)				// Max number of commands
-#define TERM_CMD_BUF_SIZE		(60)				// Max number of character buffer string command
+#define TERM_SIZE_TASK          (30)				// Max number of commands
+#define TERM_CMD_BUF_SIZE		(80)				// Max number of character buffer string command
 #define TERM_CMD_LOG_SIZE		(10)				// Max number of loging command
 #define TERM_ARGS_BUF_SIZE		(10)				// Max number of arguments in one command
 #define TERM_ARG_SIZE			(15)				// Max number character of one arguments
@@ -59,7 +59,7 @@ extern void _reset_fcn();
 #define TERM_DEFAULT_STRING_EN			(1)			// Default String functions
 #define TERM_PRINT_ERROR_EXEC_EN		(1)			// Print error after execute command
 #define TERM_PRINT_ERROR_ADD_CMD_EN		(1)			// Print error after added command
-#define ECHO_EN							(1)			// Enter echo enable
+#define ECHO_EN							(0)			// Enter echo enable
 
 // **************************************************************************
 
