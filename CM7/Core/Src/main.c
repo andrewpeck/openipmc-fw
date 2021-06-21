@@ -1111,7 +1111,20 @@ void ipmc_fp_led_blink_task( void *argument )
 
     for (;;) {
 
-      if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
+      if (0==apollo_get_esm_pwr_good()) {
+
+        // ESM power bad
+
+        LED_0_SET_STATE(SET);
+        LED_1_SET_STATE(SET);
+        LED_2_SET_STATE(SET);
+        osDelay(200);
+        LED_0_SET_STATE(RESET);
+        LED_1_SET_STATE(RESET);
+        LED_2_SET_STATE(RESET);
+        osDelay(200);
+
+      } else if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
 
         // front panel opened
         LED_0_SET_STATE(SET);
@@ -1126,18 +1139,6 @@ void ipmc_fp_led_blink_task( void *argument )
         LED_1_SET_STATE(RESET);
         LED_2_SET_STATE(SET);
         osDelay(300);
-
-      }else if (0==apollo_get_esm_pwr_good()) {
-
-        // bad shutdown
-        LED_0_SET_STATE(SET);
-        LED_1_SET_STATE(SET);
-        LED_2_SET_STATE(SET);
-        osDelay(200);
-        LED_0_SET_STATE(RESET);
-        LED_1_SET_STATE(RESET);
-        LED_2_SET_STATE(RESET);
-        osDelay(200);
 
       } else if (apollo_get_ipmc_abnormal_shutdown() == 1) {
 
