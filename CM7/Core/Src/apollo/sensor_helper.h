@@ -2,6 +2,7 @@
 #define __SENSOR_HELPER_H_
 
 #include <stdint.h>
+#include "string.h"
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
 

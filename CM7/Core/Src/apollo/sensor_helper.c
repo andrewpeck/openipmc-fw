@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include "string.h"
 #include "sdr_definitions.h"
 #include "sensors_templates.h"
 #include "sensor_helper.h"
