@@ -9,6 +9,7 @@
 #include "sm_sensors.h"
 #include "pim400.h"
 #include "stdint.h"
+#include "zynq_i2c.h"
 
 uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
@@ -236,6 +237,15 @@ void apollo_esm_reset(const int delay) {
   apollo_set_esm_reset_n(1);
 }
 
+uint8_t apollo_get_zynq_done_generic () {
+  uint8_t revision = apollo_get_revision();
+
+  if (revision == APOLLO_REV1)
+    return apollo_get_zynq_up();
+  else
+    return get_zynq_i2c_done();
+}
+
 void apollo_powerdown_sequence() {
 
   apollo_startup_done = 0;
@@ -247,34 +257,25 @@ void apollo_powerdown_sequence() {
   ipmc_ios_printf(" > Disabling Zynq...\r\n");
   apollo_set_zynq_en(0);
 
-  uint8_t revision = apollo_get_revision();
-
   // wait for zynq to shut down
-  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
 
-    ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
-    apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
+  ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
+  apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
 
-    const uint8_t seconds = 20;
-    for (int8_t i = 0; i < seconds * 10; i++) {
-      if (apollo_get_zynq_up() == 0) {
-        break;
-      }
-      osDelay(100);
+  const uint8_t seconds = 20;
+
+  for (int8_t i = 0; i < seconds * 10; i++) {
+    if (apollo_get_zynq_done_generic() == 0) {
+      break;
     }
-
-    if (apollo_get_zynq_up() == 1) {
-      apollo_abormal_shutdown = APOLLO_ERR_TIMEOUT_ZYNQ_SHUTDOWN;
-    }
-
-    apollo_status = APOLLO_STATUS_PD_TIMEOUT_ZYNQ_OFF;
-
-  } else {
-    // for rev 1 we should be polling the i2c bus
-    // for now just wait for a few seconds
-    osDelay(5000);
+    osDelay(100);
   }
 
+  if (apollo_get_zynq_done_generic() == 1) {
+    apollo_abormal_shutdown = APOLLO_ERR_TIMEOUT_ZYNQ_SHUTDOWN;
+  }
+
+  apollo_status = APOLLO_STATUS_PD_TIMEOUT_ZYNQ_OFF;
 
   // turn off power
   apollo_status = APOLLO_STATUS_PD_12V_PD;
@@ -521,21 +522,14 @@ void apollo_powerup_sequence () {
 
   ipmc_ios_printf(" > Waiting for Zynq OS...\r\n");
 
-  if (revision == APOLLO_REV2 || revision == APOLLO_REV2A) {
+  // Zynq up is from Linux
+  ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
 
-    apollo_status = APOLLO_STATUS_PU_WAIT_ZYNQ_DONE;
-
-    // Zynq up is from Linux
-    ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
-
+  apollo_status = APOLLO_STATUS_PU_WAIT_ZYNQ_DONE;
     // wait for zynq to go up, if it doesn't then shut back down
-    if (apollo_timeout_counter (apollo_get_zynq_up, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
-      apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
-      return;
-    }
-
-  } else {
-    ipmc_ios_printf(" > SMRev1: not waiting for Zynq Up..\r\n");
+  if (apollo_timeout_counter(apollo_get_zynq_done_generic, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
+    apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
+    return;
   }
 
   apollo_status = APOLLO_STATUS_PU_DONE;
