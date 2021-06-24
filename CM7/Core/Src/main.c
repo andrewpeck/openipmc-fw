@@ -1057,11 +1057,16 @@ void StartDefaultTask(void *argument)
 
   // send esm reset
   //------------------------------------------------------------------------------
-  ipmc_ios_printf(" > Resetting ESM...\r\n");
-  while (0==apollo_get_esm_pwr_good()) {}
-  osDelay(100);
-  apollo_esm_reset(100);
-  osDelay(100);
+  // WARNING:
+  //
+  //    enabling this ESM reset breaks network access for the IPMC
+  //    it needs to be further investigated but for now DO NOT reset the ESM
+  //
+  //ipmc_ios_printf(" > Resetting ESM...\r\n");
+  //while (0==apollo_get_esm_pwr_good()) {}
+  //osDelay(100);
+  // apollo_esm_reset(100);
+  //osDelay(100);
 
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();
