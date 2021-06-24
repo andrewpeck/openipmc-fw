@@ -17,10 +17,10 @@ typedef struct  {
   uint8_t upper_noncritical;
   uint8_t upper_critical;
   uint8_t upper_nonrecoverable;
-  uint16_t m;
-  uint8_t b;
-  uint8_t be;
-  uint8_t re;
+  int16_t m;
+  int16_t b;
+  int8_t be;
+  int8_t re;
 } linear_sensor_constants_t;
 
 void create_linear_sensor (const linear_sensor_constants_t params,

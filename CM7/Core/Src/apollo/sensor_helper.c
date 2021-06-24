@@ -31,7 +31,7 @@ void create_linear_sensor (const linear_sensor_constants_t params,
                                  params.m,  // m
                                  params.b,  // b
                                  params.be, // be
-                                -params.re, // re
+                                 params.re, // re
                                  threshold_mask,
                                  threshold_list,
                                  id_string,

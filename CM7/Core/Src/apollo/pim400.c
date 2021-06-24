@@ -111,10 +111,6 @@ void sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_read
                             pim400_voltage_upper_critical_raw,
                             pim400_voltage_upper_nonrecoverable_raw);
 
-    set_sensor_lower_state (sensor_reading,
-                            pim400_voltage_lower_noncritical_raw,
-                            pim400_voltage_lower_critical_raw,
-                            pim400_voltage_lower_nonrecoverable_raw);
   } else {
     sensor_reading->raw_value = 0;
     sensor_reading->present_state = 0;
