@@ -59,7 +59,7 @@ extern void _reset_fcn();
 #define TERM_DEFAULT_STRING_EN			(1)			// Default String functions
 #define TERM_PRINT_ERROR_EXEC_EN		(1)			// Print error after execute command
 #define TERM_PRINT_ERROR_ADD_CMD_EN		(1)			// Print error after added command
-#define ECHO_EN							(0)			// Enter echo enable
+#define ECHO_EN							(1)			// Enter echo enable
 
 // **************************************************************************
 
