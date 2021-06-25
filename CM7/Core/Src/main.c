@@ -1151,11 +1151,11 @@ void ipmc_fp_led_blink_task( void *argument )
         LED_0_SET_STATE(SET);
         LED_1_SET_STATE(SET);
         LED_2_SET_STATE(SET);
-        osDelay(500);
+        osDelay(1000);
         LED_0_SET_STATE(RESET);
         LED_1_SET_STATE(RESET);
         LED_2_SET_STATE(RESET);
-        osDelay(500);
+        osDelay(1000);
 
       } else if (apollo_get_ipmc_startup_started() == 0) {
 
