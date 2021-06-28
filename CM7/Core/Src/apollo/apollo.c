@@ -160,8 +160,14 @@ uint8_t apollo_get_ipmc_abnormal_shutdown () {
 }
 
 uint8_t apollo_get_fpga_done () {
-  uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_FPGA_DONE);
-  return state;
+  uint8_t revision = apollo_get_revision();
+
+  if (revision == APOLLO_REV1)
+    // this pin does not exist in rev1
+    return 1;
+  else
+    return GPIO_GET_STATE_EXPAND (APOLLO_FPGA_DONE);
+
 }
 
 uint8_t apollo_get_revision () {
