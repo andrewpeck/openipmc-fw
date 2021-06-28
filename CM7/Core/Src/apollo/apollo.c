@@ -241,9 +241,9 @@ uint8_t apollo_get_zynq_done_generic () {
   uint8_t revision = apollo_get_revision();
 
   if (revision == APOLLO_REV1)
-    return apollo_get_zynq_up();
-  else
     return get_zynq_i2c_done();
+  else
+    return apollo_get_zynq_up();
 }
 
 void apollo_powerdown_sequence() {
