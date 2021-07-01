@@ -92,6 +92,7 @@ void apollo_init_gpios ();
 void apollo_init_bootmode ();
 void apollo_powerdown_sequence ();
 void apollo_powerup_sequence ();
+void apollo_sense_reset();
 
 char* get_apollo_status () ;
 
