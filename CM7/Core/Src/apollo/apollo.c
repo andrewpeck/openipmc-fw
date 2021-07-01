@@ -580,6 +580,7 @@ void board_specific_sensor_inits() {
   create_linear_sensor (cm_fpga_temp_consts,      "CM FPGA2 Temperature",         &sensor_reading_cm2_temp);
   create_linear_sensor (cm_firefly_temp_consts,   "CM Firefly Max Temperature",   &sensor_reading_cm_firefly_temp);
   create_linear_sensor (cm_regulator_temp_consts, "CM Regulator Max Temperature", &sensor_reading_cm_regulator_temp);
+  create_linear_sensor (cm_mcu_temp_consts,       "CM MCU Temperature",           &sensor_reading_cm_mcu_temp);
 
   //------------------------------------------------------------------------------
   // PIM400
