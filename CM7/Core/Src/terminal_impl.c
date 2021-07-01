@@ -187,6 +187,73 @@ static uint8_t apollo_boot_mode_cb()
 		return TE_OK;
 }
 
+static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
+{
+	mt_printf( "\r\n\n" );
+	uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = CLI_GetArgHex(1);
+
+	HAL_StatusTypeDef status = HAL_OK;
+
+	if (cm==1) {
+		status |= cm1_i2c_tx(&adr, 0x40);
+		status |= cm1_i2c_rx(&data, 0x40);
+	}
+
+	if (cm==2) {
+		status |= cm2_i2c_tx(&adr, 0x40);
+		status |= cm2_i2c_rx(&data, 0x40);
+	}
+
+	if (status==HAL_OK)
+		mt_printf("CM%d I2C RX adr=0x%02X data=0x%02X\r\n", cm, adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
+	return status;
+}
+
+static uint8_t apollo_cm1_i2c_rx_cb() {
+	return (apollo_cm_i2c_rx_cb(1));
+}
+
+static uint8_t apollo_cm2_i2c_rx_cb() {
+	return(apollo_cm_i2c_rx_cb(2));
+}
+
+static uint8_t apollo_cm_i2c_tx_cb(uint8_t cm)
+{
+	mt_printf( "\r\n\n" );
+	uint8_t adr = CLI_GetArgHex(0);
+	uint8_t data = CLI_GetArgHex(1);
+
+	HAL_StatusTypeDef status = HAL_OK;
+
+	if (cm==1) {
+		status |= cm1_i2c_tx(&adr, 0x40);
+		status |= cm1_i2c_tx(&data, 0x40);
+	}
+
+	if (cm==2) {
+		status |= cm2_i2c_tx(&adr, 0x40);
+		status |= cm2_i2c_tx(&data, 0x40);
+	}
+
+	if (status==HAL_OK)
+		mt_printf("CM%d I2C TX adr=0x%02X data=0x%02X\r\n", cm, adr, data);
+	else
+		mt_printf("I2C Failure\r\n");
+	return status;
+}
+
+static uint8_t apollo_cm1_i2c_tx_cb() {
+	return (apollo_cm_i2c_tx_cb(1));
+}
+
+static uint8_t apollo_cm2_i2c_tx_cb() {
+	return(apollo_cm_i2c_tx_cb(2));
+}
+
+
 static uint8_t apollo_zynq_i2c_tx_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -500,6 +567,13 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
+	CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
+	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
+	CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
+
+	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
 
 	CLI_AddCmd("zynqwr",     apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
 	CLI_AddCmd("zynqrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
@@ -507,20 +581,11 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
 	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
 
-	CLI_AddCmd("eepromrd", apollo_read_eeprom_cb,  0, 0, "Read Apollo EEPROM");
-	CLI_AddCmd("revwr",    apollo_write_rev_cb,    1, 0, "Write Apollo EEPROM Revision");
-	CLI_AddCmd("idwr",     apollo_write_id_cb,     1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("cm1wr",      apollo_cm1_i2c_tx_cb,    1, 0, "Write Apollo CM1 I2C");
+	CLI_AddCmd("cm1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
 
-	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,  0, 0, "Read Apollo TCN Temperature Sensors");
-	CLI_AddCmd("pimrd",      apollo_read_pim_cb,  0, 0, "Read Apollo PIM400");
-
-	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
-
-	// CLI_AddCmd("cm1wr",      apollo_cm1_i2c_tx_cb,    1, 0, "Write Apollo CM1 I2C");
-	// CLI_AddCmd("cm1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
-
-	// CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
-	// CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
+	CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
+	CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
 	// Andre recommended commenting this out for now, due to a known bug
 	//info_cb();
