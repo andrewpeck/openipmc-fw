@@ -33,6 +33,8 @@
 #define APOLLO_UART_MEZZ1 2
 #define APOLLO_UART_MEZZ2 3
 
+#define GET_12V_STATE GPIO_GET_STATE(EN_12V)
+
 #define APOLLO_FPGA_DONE        USR_IO_2
 #define APOLLO_UART_ADR_0       USR_IO_5
 #define APOLLO_UART_ADR_1       USR_IO_6

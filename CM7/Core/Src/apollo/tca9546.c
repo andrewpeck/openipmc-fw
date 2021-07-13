@@ -20,5 +20,10 @@ HAL_StatusTypeDef tca9546_sel_m2 () {
 }
 
 HAL_StatusTypeDef tca9546_sel_zynq () {
-  return tca9546_config (0x8);
+  if (GET_12V_STATE == 1 ) {
+    return tca9546_config (0x8);
+  }
+  else  {
+    return tca9546_config (0x0);
+  }
 }
