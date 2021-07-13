@@ -72,6 +72,7 @@ uint8_t apollo_get_ipmc_startup_started ();
 uint8_t apollo_get_ipmc_abnormal_shutdown ();
 
 uint8_t apollo_get_esm_pwr_good ();
+uint8_t apollo_get_zynq_done_generic ();
 uint8_t apollo_get_fpga_done ();
 uint8_t apollo_get_noshelf ();
 uint8_t apollo_get_revision ();
