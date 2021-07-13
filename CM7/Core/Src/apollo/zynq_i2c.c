@@ -16,5 +16,5 @@ uint8_t zynq_rd_reg (uint8_t adr) {
 }
 
 uint8_t get_zynq_i2c_done () {
-  return zynq_rd_reg (ZYNQ_I2C_DONE_REG);
+  return (0x1 & zynq_rd_reg (ZYNQ_I2C_DONE_REG));
 }
