@@ -68,7 +68,6 @@ CFILES = 	$(SRC_LWIP) $(SRC_FREE_RTOS) $(SRC_HAL) $(SRC_OPENIPMC) $(SRC_APOLLO) 
 					CM7/Core/mcu_telnet_server/telnet_server.c \
 					CM7/Core/printf/printf.c \
 					CM7/Drivers/ksz8091/ksz8091.c \
-				 	CM7/Core/openipmc/src/device_id.c \
 				 	CM7/LWIP/App/lwip.c \
 				 	CM7/LWIP/Target/ethernetif.c \
 					Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c
