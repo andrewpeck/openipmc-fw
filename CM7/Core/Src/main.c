@@ -1194,7 +1194,7 @@ void ipmc_fp_led_blink_task( void *argument )
         LED_0_SET_STATE(SET);
         osDelay(1000);
 
-      } else if (apollo_get_zynq_up() == 0) {
+      } else if (apollo_get_zynq_done_generic() == 0) {
 
         // zynq not up
 

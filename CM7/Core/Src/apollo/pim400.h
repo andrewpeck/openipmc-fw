@@ -44,9 +44,9 @@ void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 // WARNING: for whatever reason, can't use 1961 and 10^3 here..
 // something in the bowels must be 8 bits only
 
-#define PIM400_TEMP_UPPER_NONCRITICAL 40
+#define PIM400_TEMP_UPPER_NONCRITICAL 50
 #define PIM400_TEMP_UPPER_CRITICAL  60
-#define PIM400_TEMP_UPPER_NONRECOVERABLE 90
+#define PIM400_TEMP_UPPER_NONRECOVERABLE 70
 #define PIM400_TEMP_LOWER_NONCRITICAL 0
 #define PIM400_TEMP_LOWER_CRITICAL 0
 #define PIM400_TEMP_LOWER_NONRECOVERABLE 0
