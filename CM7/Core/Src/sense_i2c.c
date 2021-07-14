@@ -25,6 +25,11 @@ HAL_StatusTypeDef sense_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint1
 	status = HAL_I2C_Master_Transmit( &hi2c3, DevAddress, pData, Size, Timeout );
 	xSemaphoreGive( sense_i2c_mutex );
 
+	if (status == HAL_ERROR) {
+		HAL_I2C_DeInit(&hi2c3);
+		HAL_I2C_Init(&hi2c3);
+	}
+
 	return status;
 }
 
@@ -38,6 +43,11 @@ HAL_StatusTypeDef sense_i2c_receive( uint16_t DevAddress, uint8_t *pData, uint16
 	xSemaphoreTake( sense_i2c_mutex, portMAX_DELAY );
 	status = HAL_I2C_Master_Receive( &hi2c3, DevAddress, pData, Size, Timeout );
 	xSemaphoreGive( sense_i2c_mutex );
+
+	if (status == HAL_ERROR) {
+		HAL_I2C_DeInit(&hi2c3);
+		HAL_I2C_Init(&hi2c3);
+	}
 
 	return status;
 }
