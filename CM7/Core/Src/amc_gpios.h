@@ -120,15 +120,15 @@
 
 typedef enum
 {
-    OUT = 0,
-     IN = 1   // Default. All pins as input after initialization.
+	AMC_DIR_OUT = 0,
+	AMC_DIR_IN  = 1   // Default. All pins as input after initialization.
 } amc_dir_t;
 
 
 typedef enum
 {
-    OFF = 0, // Default. All pin are floating after initialization.
-     ON = 1
+	AMC_PU_OFF = 0, // Default. All pin are floating after initialization.
+	AMC_PU_ON  = 1
 } amc_pullup_t;
 
 typedef enum
