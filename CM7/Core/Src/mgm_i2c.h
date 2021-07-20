@@ -39,8 +39,8 @@ void mgm_i2c_init( void );
  *
  * Original driver header: stm32h7xx_hal_i2c.h
  */
-HAL_StatusTypeDef mgm_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout );
-HAL_StatusTypeDef mgm_i2c_receive( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout );
+uint32_t mgm_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout );
+uint32_t mgm_i2c_receive( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout );
 
 
 
