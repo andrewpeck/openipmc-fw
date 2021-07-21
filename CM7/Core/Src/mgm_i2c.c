@@ -60,7 +60,7 @@ uint32_t mgm_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint16_t Size, u
 	xSemaphoreTake( mgm_i2c_mutex, portMAX_DELAY );
 
 	ENABLE_I2C_PERIPH();
-	status = HAL_I2C_Master_Transmit( &hi2c_mgm, DevAddress, pData, Size, Timeout );
+	HAL_I2C_Master_Transmit( &hi2c_mgm, DevAddress, pData, Size, Timeout );
 	i2c_error_code = hi2c_mgm.ErrorCode;
 	DISABLE_I2C_PERIPH();
 

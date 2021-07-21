@@ -29,6 +29,22 @@ static SemaphoreHandle_t sense_i2c_mutex = NULL;
 static StaticSemaphore_t sense_i2c_mutex_buffer;
 
 extern I2C_HandleTypeDef hi2c3;
+#define hi2c_sense hi2c3
+
+#define ENABLE_I2C_PERIPH() \
+	{                                                                     \
+		hi2c_sense.Instance->CR1 |= I2C_CR1_PE;                           \
+		while( !(hi2c_sense.Instance->CR1 & I2C_CR1_PE) ) { asm("nop"); } \
+		__HAL_I2C_ENABLE_IT( &hi2c_sense, I2C_IT_ERRI );                  \
+	}
+
+#define DISABLE_I2C_PERIPH() \
+	{                                                                    \
+		hi2c_sense.Instance->CR1 &=~ I2C_CR1_PE;                         \
+		while( (hi2c_sense.Instance->CR1 & I2C_CR1_PE) ) { asm("nop"); } \
+	}
+
+
 
 void sense_i2c_init( void )
 {
@@ -36,30 +52,40 @@ void sense_i2c_init( void )
 }
 
 
-HAL_StatusTypeDef sense_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout )
+uint32_t sense_i2c_transmit( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout )
 {
-	HAL_StatusTypeDef status;
+	uint32_t i2c_error_code;
 
 	while (sense_i2c_mutex == NULL)  { asm("nop"); }
 	xSemaphoreTake( sense_i2c_mutex, portMAX_DELAY );
-	status = HAL_I2C_Master_Transmit( &hi2c3, DevAddress, pData, Size, Timeout );
+
+	ENABLE_I2C_PERIPH();
+	HAL_I2C_Master_Transmit( &hi2c_sense, DevAddress, pData, Size, Timeout );
+	i2c_error_code = hi2c_sense.ErrorCode;
+	DISABLE_I2C_PERIPH();
+
 	xSemaphoreGive( sense_i2c_mutex );
 
-	return status;
+	return i2c_error_code;
 }
 
 
 
-HAL_StatusTypeDef sense_i2c_receive( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout )
+uint32_t sense_i2c_receive( uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout )
 {
-	HAL_StatusTypeDef status;
+	uint32_t i2c_error_code;
 
 	while (sense_i2c_mutex == NULL)  { asm("nop"); }
 	xSemaphoreTake( sense_i2c_mutex, portMAX_DELAY );
-	status = HAL_I2C_Master_Receive( &hi2c3, DevAddress, pData, Size, Timeout );
+
+	ENABLE_I2C_PERIPH();
+	HAL_I2C_Master_Receive( &hi2c_sense, DevAddress, pData, Size, Timeout );
+	i2c_error_code = hi2c_sense.ErrorCode;
+	DISABLE_I2C_PERIPH();
+
 	xSemaphoreGive( sense_i2c_mutex );
 
-	return status;
+	return i2c_error_code;
 }
 
 

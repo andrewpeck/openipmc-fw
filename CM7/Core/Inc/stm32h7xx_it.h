@@ -64,6 +64,7 @@ void UART4_IRQHandler(void);
 void TIM7_IRQHandler(void);
 void ETH_IRQHandler(void);
 void ETH_WKUP_IRQHandler(void);
+void I2C3_ER_IRQHandler(void);
 void SPI4_IRQHandler(void);
 void I2C4_ER_IRQHandler(void);
 void OTG_FS_IRQHandler(void);
