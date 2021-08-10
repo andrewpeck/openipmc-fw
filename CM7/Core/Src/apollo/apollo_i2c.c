@@ -6,6 +6,8 @@
 // TCN75A         0b1001001 Bottom
 // TCN75A         0b1001010 Center
 
+// addr gets shifted by 1 for 7 bit vs. 8 bit addressing
+
 #define CREATE_APOLLO_I2C_TX(FNAME, SEL) \
     HAL_StatusTypeDef FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
       HAL_StatusTypeDef stat = 0; \
