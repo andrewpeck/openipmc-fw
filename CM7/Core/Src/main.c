@@ -1041,7 +1041,7 @@ void _putchar(char character)
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
-  MX_LWIP_Init();
+  //MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
 
   // Initializations for DIMM peripherals and OpenIPMC
@@ -1062,11 +1062,12 @@ void StartDefaultTask(void *argument)
   //
   //    enabling this ESM reset breaks network access for the IPMC
   //    it needs to be further investigated but for now DO NOT reset the ESM
-  //
-  //ipmc_ios_printf(" > Resetting ESM...\r\n");
-  //while (0==apollo_get_esm_pwr_good()) {}
-  //osDelay(100);
-  // apollo_esm_reset(100);
+
+  ipmc_ios_printf(" > Resetting ESM...\r\n");
+  while (0==apollo_get_esm_pwr_good()) {}
+  osDelay(100);
+  //apollo_esm_reset(100);
+  MX_LWIP_Init();
   //osDelay(100);
 
   // Set network interface static IP Address
