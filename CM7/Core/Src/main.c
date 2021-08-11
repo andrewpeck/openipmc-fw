@@ -1080,13 +1080,13 @@ void StartDefaultTask(void *argument)
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
 
   // UDP packet output test
-  const char* message = "Hello UDP message!\n\r";
-  osDelay(1000);
-  ip_addr_t PC_IPADDR;
-  IP_ADDR4(&PC_IPADDR, 192, 168, 0, 1);
-  struct udp_pcb* my_udp = udp_new();
-  udp_connect(my_udp, &PC_IPADDR, 55151);
-  struct pbuf* udp_buffer = NULL;
+  // osDelay(1000);
+  // const char* message = "Hello UDP message!\n\r";
+  // ip_addr_t PC_IPADDR;
+  // IP_ADDR4(&PC_IPADDR, 192, 168, 0, 1);
+  // struct udp_pcb* my_udp = udp_new();
+  // udp_connect(my_udp, &PC_IPADDR, 55151);
+  // struct pbuf* udp_buffer = NULL;
 
   LED_0_SET_STATE(RESET);
   LED_1_SET_STATE(RESET);
@@ -1108,7 +1108,11 @@ void StartDefaultTask(void *argument)
     //  udp_send(my_udp, udp_buffer);
     //  pbuf_free(udp_buffer);
     //}
+
+    osDelay (60000);
+    apollo_write_zynq_i2c_constants ();
   }
+
   /* USER CODE END 5 */
 }
 

@@ -163,7 +163,7 @@ static uint8_t apollo_boot_status_cb()
 
 	mt_printf("state = %s\r\n", get_apollo_status());
 
-	mt_printf(" > zynq I2C 0x60  = %d\r\n", get_zynq_i2c_done());
+	mt_printf(" > zynq I2C 0x60  = %d\r\n", zynq_get_i2c_done());
 	mt_printf(" > zynq FPGA DONE = %d\r\n", apollo_get_fpga_done ());
 	mt_printf(" > zynq CPU Up    = %d\r\n", apollo_get_zynq_up ());
 
@@ -261,8 +261,8 @@ static uint8_t apollo_zynq_i2c_tx_cb()
 	uint8_t data = CLI_GetArgHex(1);
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr,  ZYNQ_I2C_SLAVE_ADDR);
-	status |= zynq_i2c_tx (&data, ZYNQ_I2C_SLAVE_ADDR);
+	status |= zynq_i2c_tx (&adr,  0x60);
+	status |= zynq_i2c_tx (&data, 0x60);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
@@ -436,8 +436,8 @@ static uint8_t apollo_zynq_i2c_rx_cb()
 	uint8_t data = 0xFF;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr, ZYNQ_I2C_SLAVE_ADDR);
-	status |= zynq_i2c_rx (&data, ZYNQ_I2C_SLAVE_ADDR);
+	status |= zynq_i2c_tx (&adr,  0x60);
+	status |= zynq_i2c_rx (&data, 0x60);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
