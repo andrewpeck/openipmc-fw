@@ -1055,6 +1055,15 @@ void StartDefaultTask(void *argument)
   apollo_init_gpios();
   apollo_init_bootmode();
 
+  LED_0_SET_STATE(RESET);
+  LED_1_SET_STATE(RESET);
+  LED_2_SET_STATE(RESET);
+
+  // Check for Benchtop mode
+  if (0x41 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    set_benchtop_payload_power_level(1);
+  }
 
   // send esm reset
   //------------------------------------------------------------------------------
@@ -1087,16 +1096,6 @@ void StartDefaultTask(void *argument)
   // struct udp_pcb* my_udp = udp_new();
   // udp_connect(my_udp, &PC_IPADDR, 55151);
   // struct pbuf* udp_buffer = NULL;
-
-  LED_0_SET_STATE(RESET);
-  LED_1_SET_STATE(RESET);
-  LED_2_SET_STATE(RESET);
-
-  // Check for Benchtop mode
-  if (0x41 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
-    set_benchtop_payload_power_level(1);
-  }
 
   /* Infinite loop */
   for(;;)
