@@ -90,17 +90,17 @@ void ipmc_custom_initialization()
 	board_info = create_board_info_field ( COMPILING_EPOCH/60 - 13674240,  // Manufacturing Date/Time (Here is being inserted the compiling time in GMT)
 	                                       "SPRACE-KIT",        // Board Manufacturer       (string fields: max of 63 ASCII char)
 	                                       "OpenIPMC-HW",       // Board Product Name
-	                                       ipmc_id,             // DSN
-	                                       ipmc_sha,            // Part Number
+	                                       ipmc_id,             // Board Serial Number == DSN
+	                                       ipmc_sha,            // Board Part Number == Git SHA
 	                                       "file.xml"    );     // FRU File ID
 	// Create the Product Info Area
 	fru_inventory_field_t product_info;
 	product_info = create_product_info_field ( "BOSTON-UNIVERSITY", // Manufacturer Name       (string fields: max of 63 ASCII char)
 	                                           "APOLLO-BLADE",      // Product Name
-	                                           sm_rev,              // SM Revision
-	                                           "1.0",               // IPMC version
-	                                           sm_sn,               // Product Serial Number
-	                                           "2021-1234",         // Asset tag ??
+	                                           sm_rev,              // Product Part/Model == SM Revision
+	                                           "1.0",               // Product Version == IPMC Hardware Version
+	                                           sm_sn,               // Product Serial Number == SM Serial
+	                                           "2021-1234",         // Asset tag == ??
 	                                           "file.xml"      );   // FRU File ID
 
 
