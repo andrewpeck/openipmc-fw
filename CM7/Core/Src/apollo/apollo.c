@@ -1,4 +1,5 @@
 #include "apollo.h"
+#include "stm32h7xx_hal.h"
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
