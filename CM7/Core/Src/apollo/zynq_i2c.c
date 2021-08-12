@@ -36,7 +36,7 @@ uint8_t zynq_wr_reg(uint8_t adr, uint8_t data, uint8_t slave_addr) {
 
   HAL_StatusTypeDef status = HAL_OK;
   status |= zynq_i2c_tx(&wr_adr, slave_addr);
-  status |= zynq_i2c_rx(&wr_data, slave_addr);
+  status |= zynq_i2c_tx(&wr_data, slave_addr);
 
   if (status)
     return 0;
