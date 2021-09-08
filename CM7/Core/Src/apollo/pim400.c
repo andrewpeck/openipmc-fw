@@ -123,9 +123,9 @@ sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_rea
 }
 
 sensor_reading_status_t sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading) {
-  sensor_reading_voltage_pim400(0, sensor_reading);
+  return(sensor_reading_voltage_pim400(0, sensor_reading));
 }
 
 sensor_reading_status_t sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading) {
-  sensor_reading_voltage_pim400(1, sensor_reading);
+  return(sensor_reading_voltage_pim400(1, sensor_reading));
 }
