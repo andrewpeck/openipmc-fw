@@ -2,10 +2,6 @@
 #include "sense_i2c.h"
 #include "tca9546.h"
 
-// TCN75A         0b1001000 Top
-// TCN75A         0b1001001 Bottom
-// TCN75A         0b1001010 Center
-
 // addr gets shifted by 1 for 7 bit vs. 8 bit addressing
 
 #define CREATE_APOLLO_I2C_TX(FNAME, SEL) \
@@ -29,7 +25,6 @@
     HAL_StatusTypeDef FNAME (uint8_t *data, uint8_t adr) { \
       return FNAME ## _n (data, adr, 1); \
     } 
-
 
 CREATE_APOLLO_I2C_TX (local_i2c_tx, tca9546_sel_local);
 CREATE_APOLLO_I2C_TX (cm1_i2c_tx,   tca9546_sel_m1);

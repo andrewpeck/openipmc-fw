@@ -4,6 +4,7 @@
 #include "apollo_i2c.h"
 
 uint8_t zynq_get_i2c_done ();
+uint8_t zynq_get_boot_error ();
 void zynq_request_shutdown();
 void zynq_set_ipmc_mac(uint8_t* mac);
 void zynq_set_blade_sn(uint8_t sn);

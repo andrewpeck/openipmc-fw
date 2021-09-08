@@ -72,10 +72,14 @@ uint8_t zynq_get_i2c_done() {
   return (0x1 & zynq_s1_rd_reg(ZYNQ_I2C_DONE_REG));
 }
 
+uint8_t zynq_get_boot_error() {
+  return (0x2 & zynq_s1_rd_reg(ZYNQ_I2C_DONE_REG));
+}
+
 void zynq_request_shutdown() {
-  uint8_t rd = zynq_s1_rd_reg(0x0);
-  rd = rd | 0x20;
-  zynq_s1_wr_reg(0x0, rd);
+  uint8_t rd = zynq_s1_rd_reg(ZYNQ_I2C_DONE_REG);
+  rd = rd | 0x10;
+  zynq_s1_wr_reg(ZYNQ_I2C_DONE_REG, rd);
 }
 
 void zynq_set_blade_sn(uint8_t sn) {
