@@ -10,10 +10,10 @@ HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading);
 HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading);
 HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply);
 
-void sensor_reading_temp_pim400(sensor_reading_t *sensor_reading);
-void sensor_reading_iout_pim400(sensor_reading_t *sensor_reading);
-void sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading);
-void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_temp_pim400(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading);
 
 #define PIM400_I2C_ADR 0x5E
 

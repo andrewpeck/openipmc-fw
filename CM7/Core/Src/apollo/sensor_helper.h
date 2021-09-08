@@ -25,7 +25,7 @@ typedef struct  {
 
 void create_linear_sensor (const linear_sensor_constants_t params,
                            char* id_string,
-                           void (*get_sensor_reading_func)(sensor_reading_t*));
+                           sensor_reading_status_t (*get_sensor_reading_func)(sensor_reading_t*));
 
 void set_sensor_upper_state(sensor_reading_t *sensor_reading,
                       const uint8_t upper_noncritical_raw,

@@ -7,7 +7,7 @@
 
 void create_linear_sensor (const linear_sensor_constants_t params,
                            char* id_string,
-                           void (*get_sensor_reading_func)(sensor_reading_t*)) {
+                           sensor_reading_status_t (*get_sensor_reading_func)(sensor_reading_t*)) {
 
   const uint8_t threshold_mask =
     (params.upper_nonrecoverable > 0 ? UPPER_NON_RECOVERABLE  : 0x00) |

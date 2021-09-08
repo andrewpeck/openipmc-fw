@@ -65,7 +65,7 @@ const linear_sensor_constants_t cm_mcu_temp_consts = {
     .re = 0,
     .be = 0};
 
-void sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
 
   uint8_t rx_data = 0xFF;
   uint8_t upper_critical=255;
@@ -103,17 +103,24 @@ void sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
   status |= cm1_i2c_tx(&rx_data, ADR);
   status |= cm1_i2c_rx(&rx_data, ADR);
 
+	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
+
   if (status == HAL_OK) {
 
-    if (rx_data == 0xFF) // device not powered or present
+    if (rx_data == 0xFF) { // device not powered or present
       sensor_reading->raw_value = 2;
-    else if (rx_data == 0xFE) // stale
+      sensor_status = SENSOR_READING_UNAVAILABLE;
+    }
+    else if (rx_data == 0xFE) { // stale
       sensor_reading->raw_value = 3;
-    else
+      sensor_status = SENSOR_READING_UNAVAILABLE;
+    }
+    else {
       sensor_reading->raw_value = rx_data;
-
+    }
   } else {
     sensor_reading->raw_value = 1;
+    sensor_status = SENSOR_READING_UNAVAILABLE;
   }
 
   sensor_reading->present_state = 0;
@@ -123,25 +130,26 @@ void sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
                           upper_critical,
                           upper_nonrecoverable);
 
+  return (sensor_status);
 }
 
-void sensor_reading_cm1_temp(sensor_reading_t *sensor_reading) {
-  sensor_reading_cm_temp(FPGA0, sensor_reading);
+sensor_reading_status_t sensor_reading_cm1_temp(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_cm_temp(FPGA0, sensor_reading));
 }
 
-void sensor_reading_cm2_temp(sensor_reading_t *sensor_reading) {
-  sensor_reading_cm_temp(FPGA1, sensor_reading);
+sensor_reading_status_t sensor_reading_cm2_temp(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_cm_temp(FPGA1, sensor_reading));
 }
 
-void sensor_reading_cm_firefly_temp(sensor_reading_t *sensor_reading) {
-  sensor_reading_cm_temp(FIREFLY, sensor_reading);
+sensor_reading_status_t sensor_reading_cm_firefly_temp(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_cm_temp(FIREFLY, sensor_reading));
 }
 
-void sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
-  sensor_reading_cm_temp(REGULATOR, sensor_reading);
+sensor_reading_status_t sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_cm_temp(REGULATOR, sensor_reading));
 }
 
-void sensor_reading_cm_mcu_temp(sensor_reading_t *sensor_reading) {
-  sensor_reading_cm_temp(MCU, sensor_reading);
+sensor_reading_status_t sensor_reading_cm_mcu_temp(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_cm_temp(MCU, sensor_reading));
 }
 

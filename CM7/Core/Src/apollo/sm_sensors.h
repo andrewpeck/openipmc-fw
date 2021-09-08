@@ -10,10 +10,10 @@
 #define TCN_BOT 2
 
 HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading);
-void sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading);
-void sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading);
-void sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading);
-void sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading);
 extern const linear_sensor_constants_t sm_tcn_temp_consts;
 
 #endif /* SM_SENSORS_H */
