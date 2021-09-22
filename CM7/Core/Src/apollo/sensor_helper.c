@@ -18,9 +18,12 @@ void create_linear_sensor (const linear_sensor_constants_t params,
     (params.lower_noncritical    > 0 ? LOWER_NON_CRITICAL     : 0x00);
 
   uint8_t threshold_list[6] = {
-      params.lower_nonrecoverable, params.lower_noncritical,
-      params.lower_critical,       params.upper_noncritical,
-      params.upper_critical,       params.upper_nonrecoverable};
+      params.lower_nonrecoverable,  // 0 = lower non recoverable
+      params.lower_critical,        // 1 = lower critical
+      params.lower_noncritical,     // 2 = lower non-critcal
+      params.upper_noncritical,     // 3 = upper non-critical
+      params.upper_critical,        // 4 = upper critical
+      params.upper_nonrecoverable}; // 5 = upper non recoverable
 
   // y = [ M*x + (B * 10^Be ) ] * 10^Re
   create_generic_analog_sensor_1(params.sensor_type,
