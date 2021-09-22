@@ -50,6 +50,7 @@
 									<listOptionValue builtIn="false" value="../Core/printf"/>
 									<listOptionValue builtIn="false" value="../Core/openipmc/src"/>
 									<listOptionValue builtIn="false" value="../Drivers/ksz8091"/>
+									<listOptionValue builtIn="false" value="../Drivers/w25n01gv"/>
 									<listOptionValue builtIn="false" value="../../Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
