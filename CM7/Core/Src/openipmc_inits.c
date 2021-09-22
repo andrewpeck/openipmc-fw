@@ -45,9 +45,9 @@ static void power_initialization(void);
  *
  * Defined on openipmc_brd_ctrls.c file
  */
-void sensor_reading_fpga_temp(sensor_reading_t* sensor_reading);
-void sensor_reading_air_temp(sensor_reading_t* sensor_reading);
-void sensor_reading_vcc_out(sensor_reading_t* sensor_reading);
+sensor_reading_status_t sensor_reading_fpga_temp(sensor_reading_t* sensor_reading);
+sensor_reading_status_t sensor_reading_air_temp(sensor_reading_t* sensor_reading);
+sensor_reading_status_t sensor_reading_vcc_out(sensor_reading_t* sensor_reading);
 
 
 /*
