@@ -151,6 +151,13 @@ const osThreadAttr_t vcp_output_task_attributes = {
   .stack_size = 64 * 4
 };
 
+osThreadId_t hpm1_upgrade_task_handle;
+const osThreadAttr_t hpm1_upgrade_task_attributes = {
+  .name = "HPM1UpgradeTask",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 256 * 4
+};
+
 // Telnet instance handler for CLI
 telnet_t telnet23;
 
@@ -308,6 +315,7 @@ Error_Handler();
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
   vcp_output_task_handle = osThreadNew(vcp_output_task, NULL, &vcp_output_task_attributes);
+  hpm1_upgrade_task_handle = osThreadNew(hpm1_upgrade_task, NULL, &hpm1_upgrade_task_attributes);
 
 
   /* USER CODE END RTOS_THREADS */

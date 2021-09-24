@@ -88,6 +88,7 @@ extern I2C_HandleTypeDef hi2c2;
 int enable_ipmi_printouts = 0;
 
 int mt_vprintf(const char* format, va_list va);
+void hpm1_init(void);
 
 
 
@@ -123,6 +124,9 @@ int openipmc_hal_init(void)
 	HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
 	i2c_ipmba_current_state = I2C_MODE_SLAVE;
 	i2c_ipmbb_current_state = I2C_MODE_SLAVE;
+
+	// Initializes the HPM1 Upgrade functionality
+	hpm1_init();
 
 	// Now peripherals are ready and can be used bu OpenIPMC
 	ipmc_ios_ready_flag = pdTRUE;
