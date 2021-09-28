@@ -169,11 +169,6 @@ static StaticSemaphore_t printf_mutex_buffer;
 extern StreamBufferHandle_t terminal_input_stream;
 static StreamBufferHandle_t vcp_output_stream = NULL;
 
-// Reserve the Firmware Metadata area.
-__attribute__((section(".fw_metadata")))
-uint32_t fw_metadata_presence_word = FW_METADATA_IS_PRESENT;
-__attribute__((section(".fw_metadata")))
-uint8_t fw_metadata_content[FW_METADATA_MAX_SIZE-4] = {0}; // Subtract presence word size
 
 /* USER CODE END PV */
 
