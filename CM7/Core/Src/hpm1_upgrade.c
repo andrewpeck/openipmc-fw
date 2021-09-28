@@ -95,9 +95,9 @@ void hpm1_cmd_initiate_upload_for_compare_cb( uint8_t component_number )
 
 void hpm1_cmd_upload_cb( uint8_t component_number, uint8_t* block_data, uint8_t block_size  )
 {
-	mt_printf("UPLOAD IMAGE %d\r\n", component_number);
-	for (int i = 0; i<block_size; i++) mt_printf("%d ", block_data[i]);
-	mt_printf("\r\n");
+	//mt_printf("UPLOAD IMAGE %d\r\n", component_number);
+	//for (int i = 0; i<block_size; i++) mt_printf("%d ", block_data[i]);
+	//mt_printf("\r\n");
 	//vTaskDelay( pdMS_TO_TICKS(100) );
 
 	image_ext_flash_write( block_data, block_size );

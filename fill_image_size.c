@@ -3,7 +3,7 @@
 
 /*
  * This source code generates a simple program capable to insert the image size
- * int the Firmware Metadata area present in the fw image file (*.bin).
+ * into the Firmware Metadata area present in the fw image file (*.bin).
  * 
  * This program must run after the linker genetates the image.
  * 
@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "Core/Src/fw_metadata.h" 
+#include "CM7/Core/Src/fw_metadata.h" 
 
 int main( int argc, char **argv )
 {

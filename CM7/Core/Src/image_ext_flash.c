@@ -30,6 +30,7 @@
 #include "task.h"
 
 #include "w25n01gv.h"
+#include "fw_metadata.h"
 
 // Flash characteristics
 #define BLOCK_SIZE   131072   // Size of erasable block: 128KB or 64 pages = 131072 bytes
@@ -61,7 +62,7 @@ void image_ext_flash_open( int block_number )
 	w25n01gv_write_enable();
 	w25n01gv_block_erase( block_number );
 	while( w25n01gv_is_busy() )
-		vTaskDelay( pdMS_TO_TICKS(50) );
+		vTaskDelay( pdMS_TO_TICKS(10) );
 }
 
 void image_ext_flash_write( uint8_t* data, int len )
@@ -80,7 +81,7 @@ void image_ext_flash_write( uint8_t* data, int len )
 			w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
 			w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
 			while( w25n01gv_is_busy() )
-				vTaskDelay( pdMS_TO_TICKS(50) );
+				vTaskDelay( pdMS_TO_TICKS(10) );
 
 			write_index += PAGE_SIZE;
 
@@ -90,7 +91,7 @@ void image_ext_flash_write( uint8_t* data, int len )
 				w25n01gv_write_enable();
 				w25n01gv_block_erase( (write_origin + write_index)/BLOCK_SIZE );
 				while( w25n01gv_is_busy() )
-					vTaskDelay( pdMS_TO_TICKS(50) );
+					vTaskDelay( pdMS_TO_TICKS(10) );
 			}
 
 			// Restart filling page buffer
@@ -117,7 +118,7 @@ int image_ext_flash_close( void )
 	w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
 	w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
 	while( w25n01gv_is_busy() )
-		vTaskDelay( pdMS_TO_TICKS(50) );
+		vTaskDelay( pdMS_TO_TICKS(10) );
 
 	return 0;
 }
@@ -133,7 +134,7 @@ void image_ext_flash_read( int block_number, uint32_t init_byte, uint32_t len, u
 		// Load page
 		w25n01gv_page_data_read( (addr+read_index)/PAGE_SIZE );
 		while( w25n01gv_is_busy() )
-			vTaskDelay( pdMS_TO_TICKS(50) );
+			vTaskDelay( pdMS_TO_TICKS(10) );
 
 		bytes_to_read = PAGE_SIZE - ((addr+read_index)%PAGE_SIZE);
 		if( (read_index + bytes_to_read) >= len )
@@ -144,10 +145,48 @@ void image_ext_flash_read( int block_number, uint32_t init_byte, uint32_t len, u
 	}
 }
 
-uint32_t image_ext_flash_caclulate_CRC( uint32_t addr, uint32_t len )
+bool image_ext_flash_CRC_is_valid( int block_number )
 {
-	uint8_t data[8] =  { 1, 2, 3, 4, 5, 6, 7, 8};
-	uint32_t crc = ~HAL_CRC_Calculate(&hcrc, data, 4);
-	crc = ~HAL_CRC_Accumulate(&hcrc, &data[4], 4);
-	mt_printf("CRC: %x", crc);
+	metadata_fields_v0_t metadata_fields;
+
+	uint32_t read_index = 0;
+	uint32_t bytes_to_read;
+
+	uint32_t crc_from_tail;
+	uint32_t calculated_crc;
+
+	// Read metadata
+	image_ext_flash_read( block_number, FW_METADATA_ADDR, sizeof(metadata_fields), (uint8_t*)&metadata_fields);
+
+	if( metadata_fields.presence_word != FW_METADATA_PRESENCE_WORD )
+		return false;
+
+	// Get CRC32 present at the end of image
+	image_ext_flash_read( block_number, metadata_fields.image_size, sizeof(crc_from_tail), (uint8_t*)&crc_from_tail);
+
+	calculated_crc = ~HAL_CRC_Calculate(&hcrc, (uint32_t*)page_buffer, 0); // Init CRC32 calculator
+
+	// Feed CRC32 calculator
+	while( read_index < metadata_fields.image_size )
+	{
+		bytes_to_read = metadata_fields.image_size - read_index;
+		if( bytes_to_read > PAGE_SIZE )
+			bytes_to_read = PAGE_SIZE;
+
+		image_ext_flash_read( block_number, read_index, bytes_to_read, page_buffer);
+		calculated_crc = ~HAL_CRC_Accumulate(&hcrc, (uint32_t*)page_buffer, bytes_to_read);
+		read_index += bytes_to_read;
+	}
+
+	mt_printf("Tail CRC: %X\r\n", crc_from_tail);
+	mt_printf("Calc CRC: %X\r\n", calculated_crc);
+
+	if( calculated_crc == crc_from_tail )
+		return true;
+	else
+		return false;
 }
+
+
+
+
