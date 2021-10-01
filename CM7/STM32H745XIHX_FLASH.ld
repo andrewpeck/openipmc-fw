@@ -65,11 +65,9 @@ SECTIONS
    * Firmware metadata.
    *
    * Free space reserved to hold information about this firmware.
-   * This portion contains no executable code. Information is added
-   * here by post-editing the generated image.
+   * This portion contains no executable code.
    * 
-   * Start byte: 0x298      (immediatelly after the STM32H745XI NVIC)
-   * Length:     360 bytes  (.text starts at 0x400)
+   * Start byte: 0x298  (Immediatelly after the STM32H745XI NVIC)
    */
   .fw_metadata :
   {

@@ -124,8 +124,8 @@ const osThreadAttr_t fru_state_machine_task_attributes = {
   .stack_size = 512 * 4
 };
 
-osThreadId_t ipmi_income_requests_manager_task_handle;
-const osThreadAttr_t ipmi_income_requests_manager_task_attributes = {
+osThreadId_t ipmi_incoming_requests_manager_task_handle;
+const osThreadAttr_t ipmi_incoming_requests_manager_task_attributes = {
   .name = "IPMI_MSG_MGMT",
   .priority = (osPriority_t) osPriorityNormal2,
   .stack_size = 512 * 4
@@ -312,7 +312,7 @@ Error_Handler();
   ipmb_0_msg_receiver_task_handle = osThreadNew(ipmb_0_msg_receiver_task, NULL, &ipmb_0_msg_receiver_task_attributes);
   ipmb_0_msg_sender_task_handle = osThreadNew(ipmb_0_msg_sender_task, NULL, &ipmb_0_msg_sender_task_attributes);
   fru_state_machine_task_handle = osThreadNew(fru_state_machine_task, NULL, &fru_state_machine_task_attributes);
-  ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
+  ipmi_incoming_requests_manager_task_handle = osThreadNew(ipmi_incoming_requests_manager_task, NULL, &ipmi_incoming_requests_manager_task_attributes);
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
   vcp_output_task_handle = osThreadNew(vcp_output_task, NULL, &vcp_output_task_attributes);

@@ -158,13 +158,21 @@ bool image_ext_flash_CRC_is_valid( int block_number )
 	// Read metadata
 	image_ext_flash_read( block_number, FW_METADATA_ADDR, sizeof(metadata_fields), (uint8_t*)&metadata_fields);
 
+	// Check presence word
 	if( metadata_fields.presence_word != FW_METADATA_PRESENCE_WORD )
+		return false;
+
+	// Check sum
+	uint32_t sum = 0;
+	for( int i=0; i<(sizeof(metadata_fields)/sizeof(uint32_t)); i++ )
+		sum += ((uint32_t*)(&metadata_fields))[i];
+	if( sum != 0 )
 		return false;
 
 	// Get CRC32 present at the end of image
 	image_ext_flash_read( block_number, metadata_fields.image_size, sizeof(crc_from_tail), (uint8_t*)&crc_from_tail);
 
-	calculated_crc = ~HAL_CRC_Calculate(&hcrc, (uint32_t*)page_buffer, 0); // Init CRC32 calculator
+	calculated_crc = ~HAL_CRC_Calculate(&hcrc, (uint32_t*)page_buffer, 0); // Reset CRC32 calculator
 
 	// Feed CRC32 calculator
 	while( read_index < metadata_fields.image_size )

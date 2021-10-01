@@ -82,32 +82,27 @@ void hpm1_cmd_initiate_prepare_cb( uint8_t component_mask )
 
 void hpm1_cmd_initiate_upload_for_upgrade_cb( uint8_t component_number )
 {
-	mt_printf("INIT UPLOAD UPGRADE %d\r\n", component_number);
-
 	image_ext_flash_open( 0 );
 }
 
 void hpm1_cmd_initiate_upload_for_compare_cb( uint8_t component_number )
 {
 	mt_printf("INIT UPLOAD COMPARE %d\r\n", component_number);
-
 }
 
 void hpm1_cmd_upload_cb( uint8_t component_number, uint8_t* block_data, uint8_t block_size  )
 {
-	//mt_printf("UPLOAD IMAGE %d\r\n", component_number);
-	//for (int i = 0; i<block_size; i++) mt_printf("%d ", block_data[i]);
-	//mt_printf("\r\n");
-	//vTaskDelay( pdMS_TO_TICKS(100) );
-
 	image_ext_flash_write( block_data, block_size );
-
 }
 
-void hpm1_cmd_upload_finish_cb( uint8_t component_number  )
+int hpm1_cmd_upload_finish_cb( uint8_t component_number  )
 {
-	mt_printf("FINISH UPLOAD %d\r\n", component_number);
 	image_ext_flash_close();
+
+	if( !image_ext_flash_CRC_is_valid(0) )
+		return HPM1_CB_RETURN_CHECKSUM_ERROR;
+
+	return HPM1_CB_RETURN_OK;
 }
 
 void hpm1_cmd_activate_cb( void )

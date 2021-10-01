@@ -2,7 +2,7 @@
 
 
 /*
- * This source code generates a simple program capable to insert the image size
+ * This source code generates a program capable to insert the image size
  * into the Firmware Metadata area present in the fw image file (*.bin).
  * 
  * This program must run after the linker genetates the image.
@@ -18,7 +18,8 @@
 
 int main( int argc, char **argv )
 {
-	uint32_t image_size;
+	metadata_fields_v0_t fw_metadata;
+	uint32_t* fw_metadata_32_array = (uint32_t*)(&fw_metadata);
 	
 	
 	if( argc != 2 )
@@ -35,14 +36,25 @@ int main( int argc, char **argv )
 		return 1;
 	}
 	
+	// Get the metadata from file
+	fseek( file, FW_METADATA_ADDR, SEEK_SET );
+	fread( &fw_metadata, sizeof(fw_metadata), 1, file );
+	rewind( file );
+	
 	// Get the image size
 	fseek( file, 0, SEEK_END );
-	image_size = ftell( file );
+	fw_metadata.image_size = ftell( file );
 	rewind( file );
 
-	// Write Metadata into the binary
-	fseek( file, FW_METADATA_ADDR + FW_METADATA_IMAGE_SIZE_OFFSET, SEEK_SET );
-	fwrite( &image_size, sizeof(image_size), 1, file );
+	// Calculate checksum
+	uint32_t sum = 0;
+	for( int i=0; i<(sizeof(fw_metadata)/sizeof(uint32_t))-1; i++ )
+		sum += fw_metadata_32_array[i];
+	fw_metadata.checksum = (~sum)+1;
+	
+	// Write Metadata back into the binary
+	fseek( file, FW_METADATA_ADDR, SEEK_SET );
+	fwrite( &fw_metadata, sizeof(fw_metadata), 1, file );
 	
 	fclose( file );
 	
