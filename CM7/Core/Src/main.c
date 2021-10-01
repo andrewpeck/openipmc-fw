@@ -1041,7 +1041,7 @@ void _putchar(char character)
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
-  MX_LWIP_Init();
+  //MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
 
   // Initializations for DIMM peripherals and OpenIPMC
@@ -1055,6 +1055,15 @@ void StartDefaultTask(void *argument)
   apollo_init_gpios();
   apollo_init_bootmode();
 
+  LED_0_SET_STATE(RESET);
+  LED_1_SET_STATE(RESET);
+  LED_2_SET_STATE(RESET);
+
+  // Check for Benchtop mode
+  if (0x41 == ipmc_ios_read_haddress()) {
+    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    set_benchtop_payload_power_level(1);
+  }
 
   // send esm reset
   //------------------------------------------------------------------------------
@@ -1062,11 +1071,12 @@ void StartDefaultTask(void *argument)
   //
   //    enabling this ESM reset breaks network access for the IPMC
   //    it needs to be further investigated but for now DO NOT reset the ESM
-  //
-  //ipmc_ios_printf(" > Resetting ESM...\r\n");
-  //while (0==apollo_get_esm_pwr_good()) {}
-  //osDelay(100);
-  // apollo_esm_reset(100);
+
+  ipmc_ios_printf(" > Resetting ESM...\r\n");
+  while (0==apollo_get_esm_pwr_good()) {}
+  osDelay(100);
+  //apollo_esm_reset(100);
+  MX_LWIP_Init();
   //osDelay(100);
 
   // Set network interface static IP Address
@@ -1079,23 +1089,13 @@ void StartDefaultTask(void *argument)
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
 
   // UDP packet output test
-  const char* message = "Hello UDP message!\n\r";
-  osDelay(1000);
-  ip_addr_t PC_IPADDR;
-  IP_ADDR4(&PC_IPADDR, 192, 168, 0, 1);
-  struct udp_pcb* my_udp = udp_new();
-  udp_connect(my_udp, &PC_IPADDR, 55151);
-  struct pbuf* udp_buffer = NULL;
-
-  LED_0_SET_STATE(RESET);
-  LED_1_SET_STATE(RESET);
-  LED_2_SET_STATE(RESET);
-
-  // Check for Benchtop mode
-  if (0x41 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
-    set_benchtop_payload_power_level(1);
-  }
+  // osDelay(1000);
+  // const char* message = "Hello UDP message!\n\r";
+  // ip_addr_t PC_IPADDR;
+  // IP_ADDR4(&PC_IPADDR, 192, 168, 0, 1);
+  // struct udp_pcb* my_udp = udp_new();
+  // udp_connect(my_udp, &PC_IPADDR, 55151);
+  // struct pbuf* udp_buffer = NULL;
 
   /* Infinite loop */
   for(;;)
@@ -1107,7 +1107,11 @@ void StartDefaultTask(void *argument)
     //  udp_send(my_udp, udp_buffer);
     //  pbuf_free(udp_buffer);
     //}
+
+    osDelay (60000); // once per minute
+    apollo_write_zynq_i2c_constants ();
   }
+
   /* USER CODE END 5 */
 }
 

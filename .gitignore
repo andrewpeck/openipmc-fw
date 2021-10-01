@@ -2,6 +2,14 @@
 makefile
 *.mk
 
+builds/
+build.log
+build.sh
+build
+CM7/.settings
+.metadata
+.ccls-cache
+
 # Compilation and linking outputs
 *.o
 *.d

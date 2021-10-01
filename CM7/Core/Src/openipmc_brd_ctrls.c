@@ -67,7 +67,7 @@ extern void payload_cold_reset (void);
 /*
  * Sensor Reading functions
  */
-void sensor_reading_fpga_temp(sensor_reading_t* sensor_reading)
+sensor_reading_status_t sensor_reading_fpga_temp(sensor_reading_t* sensor_reading)
 {
 
 	// This sensor uses y = 1*x + 0 for conversion
@@ -85,10 +85,13 @@ void sensor_reading_fpga_temp(sensor_reading_t* sensor_reading)
 		sensor_reading->present_state |= UPPER_CRITICAL;
 	if(raw_temp > 100)
 		sensor_reading->present_state |= UPPER_NON_RECOVERABLE;
+
+
+	return(SENSOR_READING_OK);
 }
 
 
-void sensor_reading_air_temp(sensor_reading_t* sensor_reading)
+sensor_reading_status_t sensor_reading_air_temp(sensor_reading_t* sensor_reading)
 {
 
 	// This sensor uses y = (0.5*x - 20) for conversion
@@ -105,13 +108,16 @@ void sensor_reading_air_temp(sensor_reading_t* sensor_reading)
 	if(raw_temp > 120) // 40°C
 		sensor_reading->present_state |= UPPER_CRITICAL;
 
+	return(SENSOR_READING_OK);
 }
 
-void sensor_reading_vcc_out(sensor_reading_t* sensor_reading)
+sensor_reading_status_t sensor_reading_vcc_out(sensor_reading_t* sensor_reading)
 {
 	
 	// This sensor uses y = 0.1*x for conversion
 	sensor_reading->raw_value = 124; // 12.4V
 
 	sensor_reading->present_state = 0; // No thresholds supported by this sensor
+
+	return(SENSOR_READING_OK);
 }

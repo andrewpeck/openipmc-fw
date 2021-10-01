@@ -1,4 +1,5 @@
 #include "apollo.h"
+#include "stm32h7xx_hal.h"
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
 #include "cmsis_os.h"
@@ -247,7 +248,7 @@ uint8_t apollo_get_zynq_done_generic () {
   uint8_t revision = apollo_get_revision();
 
   if (revision == APOLLO_REV1)
-    return get_zynq_i2c_done();
+    return zynq_get_i2c_done();
   else
     return apollo_get_zynq_up();
 }
@@ -259,12 +260,15 @@ void apollo_powerdown_sequence() {
 
   ipmc_ios_printf("Powering Down Service Module:\r\n");
 
+  // ask zynq to shut down
+  ipmc_ios_printf(" > Requesting zynq shutdown...\r\n");
+  zynq_request_shutdown();
+
   // disable zynq
   ipmc_ios_printf(" > Disabling Zynq...\r\n");
   apollo_set_zynq_en(0);
 
   // wait for zynq to shut down
-
   ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
   apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
 
@@ -538,10 +542,50 @@ void apollo_powerup_sequence () {
     return;
   }
 
+  // if (revision==APOLLO_REV1) {
+  //   apollo_esm_reset(100);
+  // }
+
+  // write zynq constants
+  //------------------------------------------------------------------------------
+
+  apollo_write_zynq_i2c_constants();
+
+  // Fini
+  //------------------------------------------------------------------------------
+
   apollo_status = APOLLO_STATUS_PU_DONE;
 
   apollo_startup_done = 1;
 
+}
+
+void apollo_write_zynq_i2c_constants () {
+
+  if (apollo_get_zynq_done_generic ()) {
+      // sn
+      uint8_t sn;
+      user_eeprom_get_serial_number(&sn);
+      zynq_set_blade_sn(sn);
+
+      // slot
+      zynq_set_blade_slot(ipmc_ios_read_haddress()); // TODO: divide by 2, multiply by 2???
+
+      // revision
+      zynq_set_blade_rev(apollo_get_revision());
+
+      // FIXME, somehow retrieve the ip and mac from the ethernet_if instead of
+      // re-calculating it here
+
+      // ip
+      uint8_t ip [4] = {192,168,21,ipmc_ios_read_haddress()};
+      zynq_set_ipmc_ip(ip);
+
+      // mac
+      uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
+      uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
+      zynq_set_ipmc_mac(mac);
+    }
 }
 
 void board_specific_activation_control(uint8_t current_power_level,

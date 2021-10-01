@@ -23,7 +23,7 @@ HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading) {
   return status;
 }
 
-void sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
+sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
 
   uint8_t rx_data;
 
@@ -36,12 +36,14 @@ void sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_temp_upper_noncritical_raw,
-                            pim400_temp_upper_critical_raw,
-                            pim400_temp_upper_nonrecoverable_raw);
+                            pim400_temp_consts.upper_noncritical,
+                            pim400_temp_consts.upper_critical,
+                            pim400_temp_consts.upper_nonrecoverable);
+    return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 0;
     sensor_reading->present_state = 0;
+    return(SENSOR_READING_UNAVAILABLE);
   }
 
 
@@ -57,7 +59,7 @@ HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading) {
   return status;
 }
 
-void sensor_reading_iout_pim400(sensor_reading_t* sensor_reading) {
+sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_reading) {
 
   uint8_t rx_data;
   HAL_StatusTypeDef status = read_iout_pim400 (&rx_data);
@@ -68,12 +70,15 @@ void sensor_reading_iout_pim400(sensor_reading_t* sensor_reading) {
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_iout_upper_noncritical_raw,
-                            pim400_iout_upper_critical_raw,
-                            pim400_iout_upper_nonrecoverable_raw);
+                            pim400_iout_consts.upper_noncritical,
+                            pim400_iout_consts.upper_critical,
+                            pim400_iout_consts.upper_nonrecoverable);
+
+    return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 0;
     sensor_reading->present_state = 0;
+    return(SENSOR_READING_UNAVAILABLE);
   }
 
 }
@@ -95,7 +100,7 @@ HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
   return status;
 }
 
-void sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_reading) {
 
   uint8_t rx_data;
   HAL_StatusTypeDef status = read_voltage_pim400 (&rx_data, supply);
@@ -107,20 +112,22 @@ void sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_read
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_voltage_upper_noncritical_raw,
-                            pim400_voltage_upper_critical_raw,
-                            pim400_voltage_upper_nonrecoverable_raw);
+                            pim400_voltage_consts.upper_noncritical,
+                            pim400_voltage_consts.upper_critical,
+                            pim400_voltage_consts.upper_nonrecoverable);
 
+    return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 0;
     sensor_reading->present_state = 0;
+    return(SENSOR_READING_UNAVAILABLE);
   }
 }
 
-void sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading) {
-  sensor_reading_voltage_pim400(0, sensor_reading);
+sensor_reading_status_t sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_voltage_pim400(0, sensor_reading));
 }
 
-void sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading) {
-  sensor_reading_voltage_pim400(1, sensor_reading);
+sensor_reading_status_t sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_voltage_pim400(1, sensor_reading));
 }

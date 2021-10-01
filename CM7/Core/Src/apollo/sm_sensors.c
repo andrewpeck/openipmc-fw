@@ -39,7 +39,7 @@ HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
 
 }
 
-void sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
 
   HAL_StatusTypeDef status = HAL_OK;
   uint8_t reading;
@@ -50,23 +50,25 @@ void sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
   if (status == HAL_OK) {
     sensor_reading->raw_value = temp;
     sensor_reading->present_state = 0;
+    return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 1;
     sensor_reading->present_state = 0;
+    return(SENSOR_READING_UNAVAILABLE);
   }
 
 }
 
-void sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading) {
-  sensor_reading_sm_tcn(TCN_TOP, sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_sm_tcn(TCN_TOP, sensor_reading));
 }
 
-void sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading) {
-  sensor_reading_sm_tcn(TCN_MID, sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_sm_tcn(TCN_MID, sensor_reading));
 }
 
-void sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading) {
-  sensor_reading_sm_tcn(TCN_BOT, sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading) {
+  return(sensor_reading_sm_tcn(TCN_BOT, sensor_reading));
 }
 
 
