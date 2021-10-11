@@ -21,7 +21,7 @@
 
 /*
  * This file implements dedicated functions to write and read firmware images
- * on the external flash memory (Winbond W25N01GV).
+ * on the external flash memory (Winbond W25N01GV), and others related tools.
  */
 
 #include "main.h"
@@ -35,6 +35,10 @@
 // Flash characteristics
 #define BLOCK_SIZE   131072   // Size of erasable block: 128KB or 64 pages = 131072 bytes
 #define PAGE_SIZE      2048   // Flash is programmed in pages of 2048 bytes
+
+// Info for firmware backup
+#define OPENIPMC_CM7_RUN_ADDR 0x08000000
+#define OPENIPMC_CM7_BACKUP_BLOCK 0 // Backup is made into the beginning of external flash
 
 static uint32_t write_origin;
 static uint32_t write_index;
@@ -195,6 +199,38 @@ bool image_ext_flash_CRC_is_valid( int block_number )
 		return false;
 }
 
+/*
+ * Perform the backup of CM7 firmware present on the STM32 internal flash (ADDR: 0x08000000)
+ *
+ * Firmware is copied to the beginning of external flash present on DIMM
+ */
+int image_ext_flash_openipmc_CM7_backup( void )
+{
+	metadata_fields_v0_t* fw_metadata = (metadata_fields_v0_t*)(OPENIPMC_CM7_RUN_ADDR + FW_METADATA_ADDR);
 
+	// Check metadata checksum
+	uint32_t sum = 0;
+	for( int i=0; i<(sizeof(metadata_fields_v0_t)/sizeof(uint32_t)); i++ )
+		sum += ((uint32_t*)fw_metadata)[i];
+	if( sum != 0 )
+		mt_printf("checksum failed\r\n");
+
+	mt_printf("fw size: %d\r\n", fw_metadata->image_size);
+
+	// Calculate CRC32 of the image present on the internal flash
+	uint32_t calculated_crc = ~HAL_CRC_Calculate(&hcrc, (uint32_t*)OPENIPMC_CM7_RUN_ADDR, fw_metadata->image_size);
+
+	// Copy image to external flash (and add the CRC)
+	image_ext_flash_open( OPENIPMC_CM7_BACKUP_BLOCK );
+	image_ext_flash_write( (uint8_t*)OPENIPMC_CM7_RUN_ADDR, fw_metadata->image_size );
+	image_ext_flash_write( (uint8_t*)&calculated_crc, sizeof(uint32_t) );
+	image_ext_flash_close();
+
+	//Check copy
+	if( image_ext_flash_CRC_is_valid( OPENIPMC_CM7_BACKUP_BLOCK ) )
+		mt_printf("Copy is valid\r\n");
+	else
+		mt_printf("Copy is invalid\r\n");
+}
 
 

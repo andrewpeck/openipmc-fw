@@ -35,6 +35,9 @@
 #include "image_ext_flash.h"
 
 
+#define OPENIPMC_CM7_TEMP_BLOCK 8 // Block in external flash
+
+
 /*
  * Function called during the OpenIPMC HAL initializations.
  * It prepares the HPM1 Upgrade functionality by setting attributes
@@ -72,17 +75,17 @@ void hpm1_init(void)
 
 void hpm1_cmd_initiate_backup_cb( uint8_t component_mask )
 {
-	mt_printf("BACKUP 0x%x\r\n", component_mask);
+	image_ext_flash_openipmc_CM7_backup();
 }
 
 void hpm1_cmd_initiate_prepare_cb( uint8_t component_mask )
 {
-	mt_printf("PREPARE 0x%x\r\n", component_mask);
+	// Not used
 }
 
 void hpm1_cmd_initiate_upload_for_upgrade_cb( uint8_t component_number )
 {
-	image_ext_flash_open( 0 );
+	image_ext_flash_open( OPENIPMC_CM7_TEMP_BLOCK );
 }
 
 void hpm1_cmd_initiate_upload_for_compare_cb( uint8_t component_number )
@@ -99,7 +102,7 @@ int hpm1_cmd_upload_finish_cb( uint8_t component_number  )
 {
 	image_ext_flash_close();
 
-	if( !image_ext_flash_CRC_is_valid(0) )
+	if( !image_ext_flash_CRC_is_valid( OPENIPMC_CM7_TEMP_BLOCK ) )
 		return HPM1_CB_RETURN_CHECKSUM_ERROR;
 
 	return HPM1_CB_RETURN_OK;
