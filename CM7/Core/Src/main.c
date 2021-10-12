@@ -100,7 +100,7 @@ osThreadId_t terminal_process_task_handle;
 const osThreadAttr_t terminal_process_task_attributes = {
   .name = "TerminalProcessTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
+  .stack_size = (256+64) * 4
 };
 
 osThreadId_t ipmb_0_msg_receiver_task_handle;
