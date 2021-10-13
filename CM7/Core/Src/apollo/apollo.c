@@ -31,33 +31,39 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     const uint16_t interval_ms,
     const uint8_t err) {
 
-  const uint16_t max = seconds * (1000 / interval_ms);
-
-  for (uint16_t i = 0; i < max; i++) {
-
-    // just poll periodically, to allow the os to do other things
-    osDelay(interval_ms);
-
-    // returned successfully
-    if ((*check_function)() == 1) {
-      return 0;
-    }
-
-    // somebody opened the handle
-    if (apollo_get_handle_open()) {
-      apollo_powerdown_sequence();
-      apollo_startup_started = 0;
-      apollo_abormal_shutdown=APOLLO_ERR_OPEN_HANDLE;
-      return 1;
-    }
+  uint8_t dis_shutoff=1;
+  user_eeprom_get_disable_shutoff(dis_shutoff);
+  if (dis_shutoff) {
+    return 0;
   }
+  else {
+    const uint16_t max = seconds * (1000 / interval_ms);
 
-  // timeout, shutdown!
-  apollo_startup_started=0;
-  apollo_abormal_shutdown=err;
-  apollo_powerdown_sequence();
-  return 1;
+    for (uint16_t i = 0; i < max; i++) {
 
+      // just poll periodically, to allow the os to do other things
+      osDelay(interval_ms);
+
+      // returned successfully
+      if ((*check_function)() == 1) {
+        return 0;
+      }
+
+      // somebody opened the handle
+      if (apollo_get_handle_open()) {
+        apollo_powerdown_sequence();
+        apollo_startup_started = 0;
+        apollo_abormal_shutdown=APOLLO_ERR_OPEN_HANDLE;
+        return 1;
+      }
+    }
+
+    // timeout, shutdown! (if dis_shutoff is enabled)
+    apollo_startup_started=0;
+    apollo_abormal_shutdown=err;
+    apollo_powerdown_sequence();
+    return 1;
+  }
 }
 
 void apollo_init_gpios () {

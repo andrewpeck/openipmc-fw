@@ -44,4 +44,7 @@ char user_eeprom_set_mac_addr(uint8_t eth, uint8_t * mac);
 char user_eeprom_set_boot_mode(uint8_t bm);
 char user_eeprom_get_boot_mode(uint8_t *bm);
 
+char user_eeprom_set_disable_shutoff(uint8_t ss);
+char user_eeprom_get_disable_shutoff(uint8_t *ss);
+
 #endif // USER_EEPROM_H

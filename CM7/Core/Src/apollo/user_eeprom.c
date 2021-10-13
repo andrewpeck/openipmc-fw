@@ -20,6 +20,7 @@ static struct __attribute__((packed)) {
       uint8_t mac_eth0[6];
       uint8_t mac_eth1[6];
       uint8_t boot_mode;
+      uint8_t dis_shutoff;
     } v0;
   };
 } eeprom = {.version = 0xFE};
@@ -82,7 +83,7 @@ char user_eeprom_get_serial_number(uint8_t *sn) {
   if (eeprom.version == 0) {
     *(sn) = eeprom.v0.serial_number;
     return 0;
-  } 
+  }
   return -1;
 }
 
@@ -90,7 +91,7 @@ char user_eeprom_set_serial_number(uint8_t sn) {
   if (eeprom.version == 0) {
     eeprom.v0.serial_number = sn;
     return 0;
-  } 
+  }
   return -1;
 }
 
@@ -98,7 +99,7 @@ char user_eeprom_get_boot_mode(uint8_t *bm) {
   if (eeprom.version == 0) {
     *(bm) = eeprom.v0.boot_mode;
     return 0;
-  } 
+  }
   return -1;
 }
 
@@ -110,11 +111,27 @@ char user_eeprom_set_boot_mode(uint8_t bm) {
   return -1;
 }
 
+char user_eeprom_get_disable_shutoff(uint8_t *ds) {
+  if (eeprom.version == 0) {
+    *(ds) = eeprom.v0.dis_shutoff;
+    return 0;
+  }
+  return -1;
+}
+
+char user_eeprom_set_disable_shutoff(uint8_t ds) {
+  if (eeprom.version == 0) {
+    eeprom.v0.dis_shutoff = ds;
+    return 0;
+  }
+  return -1;
+}
+
 char user_eeprom_get_revision_number(uint8_t *rn) {
   if (eeprom.version == 0) {
     *(rn) = eeprom.v0.revision_number;
     return 0;
-  } 
+  }
   return -1;
 }
 
@@ -139,7 +156,7 @@ char user_eeprom_get_mac_addr(uint8_t eth, uint8_t *mac) {
         mac[i] = eeprom.v0.mac_eth1[i];
       }
       return 0;
-    } 
+    }
   }
 
   return -1;
