@@ -58,7 +58,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
       }
     }
 
-    // timeout, shutdown! (if dis_shutoff is enabled)
+    // timeout, shutdown! (if dis_shutoff is 0)
     apollo_startup_started=0;
     apollo_abormal_shutdown=err;
     apollo_powerdown_sequence();
