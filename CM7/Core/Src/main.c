@@ -100,7 +100,7 @@ osThreadId_t terminal_process_task_handle;
 const osThreadAttr_t terminal_process_task_attributes = {
   .name = "TerminalProcessTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = (256+64) * 4
+  .stack_size = (256+256) * 4
 };
 
 osThreadId_t ipmb_0_msg_receiver_task_handle;
@@ -156,7 +156,7 @@ osThreadId_t hpm1_upgrade_task_handle;
 const osThreadAttr_t hpm1_upgrade_task_attributes = {
   .name = "HPM1UpgradeTask",
   .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 256 * 4
+  .stack_size = 512 * 4
 };
 
 // Telnet instance handler for CLI
@@ -1178,19 +1178,11 @@ void StartDefaultTask(void *argument)
 
 
   /* Infinite loop */
-  uint8_t data[2] = {0};
-  uint32_t status;
-  mt_printf("start status: %X %X %X\r\n", hi2c4.Instance->CR1, hi2c4.Instance->CR2, hi2c4.Instance->ISR);
   for(;;)
   {
 	// Blink led
     osDelay(500);
     LED_2_SET_STATE(SET);
-    GPIO_CONFIGURE_PIN( USR_IO_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL );
-    GPIO_SET_STATE( RESET, USR_IO_0 );
-    status = sense_i2c_receive( 20, data, 1, 1000/*HAL_MAX_DELAY*/ );
-    GPIO_CONFIGURE_PIN( USR_IO_0, GPIO_MODE_INPUT, GPIO_PULLUP );
-    //mt_printf("error code: %X\r\n", hi2c4.ErrorCode);
     osDelay(500);
     LED_2_SET_STATE(RESET);
 
