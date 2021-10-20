@@ -125,6 +125,7 @@ load_st:
 	st-flash --reset write ./openipmc-fw_CM7.bin 0x08000000
 
 gitlab:
+	rm -rf builds
 	gitlab-runner exec shell build-job
 
 init:
