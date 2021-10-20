@@ -127,5 +127,8 @@ load_st:
 gitlab:
 	gitlab-runner exec shell build-job
 
+init:
+	git submodule update --init --recursive
+
 #CM7:
 #/opt/st/stm32cubeide_1.5.1/headless-build.sh  -build CM7 -data $(PWD)
