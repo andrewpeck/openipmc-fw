@@ -125,7 +125,11 @@ load_st:
 	st-flash --reset write ./openipmc-fw_CM7.bin 0x08000000
 
 gitlab:
+	rm -rf builds
 	gitlab-runner exec shell build-job
+
+init:
+	git submodule update --init --recursive
 
 #CM7:
 #/opt/st/stm32cubeide_1.5.1/headless-build.sh  -build CM7 -data $(PWD)

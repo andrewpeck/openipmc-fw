@@ -170,6 +170,22 @@ static uint8_t apollo_boot_status_cb()
 	return TE_OK;
 }
 
+static uint8_t apollo_disable_shutoff_cb()
+{
+	mt_printf( "\r\n\n" );
+	uint8_t disable_shutoff = CLI_GetArgDec(0);
+	if (disable_shutoff >= 0 && disable_shutoff <= 1) {
+		mt_printf("Setting self shutoff mode to %d and saving in eeprom\r\n", disable_shutoff);
+		user_eeprom_set_disable_shutoff(disable_shutoff);
+		user_eeprom_write();
+	}
+	else {
+		mt_printf("Invalid boot mode %d!\r\n", disable_shutoff);
+		return TE_ArgErr;
+	}
+		return TE_OK;
+}
+
 static uint8_t apollo_boot_mode_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -586,6 +602,8 @@ void terminal_process_task(void *argument)
 
 	CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
 	CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
+
+	CLI_AddCmd("disableshutoff", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
 	// Andre recommended commenting this out for now, due to a known bug
 	//info_cb();
