@@ -30,10 +30,6 @@
 #define FW_METADATA_PRESENCE_WORD  0xF11B9859
 
 
-// Constant used by Linux program to insert the image size
-#define FW_METADATA_IMAGE_SIZE_OFFSET 8
-
-
 // Firmware type values
 #define FW_METADATA_TYPE_BOOTLOADER_CM7  1
 #define FW_METADATA_TYPE_OPENIPMC_CM7    2

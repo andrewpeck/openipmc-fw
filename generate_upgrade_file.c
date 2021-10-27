@@ -20,6 +20,7 @@
 #include <zlib.h>
 #include <unistd.h>
 
+#include "CM7/Core/Src/fw_metadata.h"
 
 
 #define COMPONENT_MASK_0    0x01
@@ -38,9 +39,9 @@
 
 typedef struct
 {
-	uint8_t  major;  // 7 bits (0 ~ 127)
-	uint8_t  minor;  // BCD from 00 to 99. (Example: Ver. x.2.3 -> 0x23)
-	uint32_t aux;    // Any 32bit data
+	uint8_t major;  // 7 bits (0 ~ 127)
+	uint8_t minor;  // BCD from 00 to 99. (Example: Ver. x.2.3 -> 0x23)
+	uint8_t aux[4];    // Any 32bit data
 	
 } revision_t;
 
@@ -72,7 +73,7 @@ typedef struct
 void add_image_header(FILE* file, image_header_t header);
 void add_backup_componets_action(FILE* file, uint8_t component_mask);
 void add_prepare_componets_action(FILE* file, uint8_t component_mask);
-void add_upload_firmware_image_action(FILE* file, uint8_t component_number, revision_t version, char* description_string, uint8_t* image_data, uint32_t image_size);
+void add_upload_firmware_image_action(FILE* file, uint8_t component_number, char* description_string, uint8_t* image_data, uint32_t image_size);
 
 uint8_t* load_binary_from_file(char* file_name, uint32_t* size);
 
@@ -84,65 +85,76 @@ void append_md5(char* file_name);
 
 int main( int argc, char **argv )
 {
-
-	image_header_t image_header;
-	char* image_file_name;
 	
+	image_header_t image_header;
+	
+	char*                 component1_image_file_name;
+	uint8_t*              component1_binary_data;
+	uint32_t              component1_binary_size;
+	metadata_fields_v0_t* component1_metadata;
+	
+	
+	// Get input args
 	if( argc != 2 )
 	{
 		printf( "Generate Upgrade File: Invalid argument." );
 		return 1;
 	}
-	image_file_name = argv[1]; 
+	component1_image_file_name = argv[1];
 	
-	// Fill the header info
-	image_header.manufacturer_id                    = 0x315A;
-	image_header.product_id                         = 0x00;
-	image_header.time                               = 0x00;
-	image_header.image_capabilities                 = IM_CAP_PYLD_OR_FRU_COULD_BE_AFFECTED |
-	                                                  IM_CAP_MANUAL_ROLLBACK_IS_SUPPORTED;
 	
-	image_header.components                         = COMPONENT_MASK_0;
-	
-	image_header.self_test_timeout                  = 0x02; // 10 seconds
-	image_header.rollback_timeout                   = 0x02; // 10 seconds
-	image_header.inaccessibility_timeot             = 0xFF; // 20 seconds
-	
-	image_header.earliest_compatible_major_revision = 0;    // Any version is accepted
-	image_header.earliest_compatible_minor_revision = 0x00;
-	
-	revision_t version = { 1, 0x22, 0xbebacafe };
-	
-	image_header.firmware_revision = version;
-	
-    
-    
-    
-	FILE* file = fopen( FILE_NAME,"wb" );
-	
-	add_image_header(file, image_header);
-	
-	add_backup_componets_action(file, COMPONENT_MASK_0);
-	
-	add_prepare_componets_action(file, COMPONENT_MASK_0);
-	
-	// Load binary for component 0
-	uint8_t* component0_binary_data;
-	uint32_t component0_binary_size;
-	component0_binary_data = load_binary_from_file( image_file_name, &component0_binary_size );
-	if( component0_binary_data == NULL )
+	// Load binary for component 1
+	component1_binary_data = load_binary_from_file( component1_image_file_name, &component1_binary_size );
+	if( component1_binary_data == NULL )
 	{
 		printf( "Generate Upgrade File: Image file does not exist." );
 		return 1;
 	}
+	component1_metadata = (metadata_fields_v0_t*)&component1_binary_data[FW_METADATA_ADDR];
 	
-	add_upload_firmware_image_action( file, 0, version, "my_comp", component0_binary_data, component0_binary_size );
 	
-	free( component0_binary_data );
+	// Fill the header info
+	image_header.manufacturer_id                    = component1_metadata->manufacturer_id;
+	image_header.product_id                         = component1_metadata->product_id;
+	image_header.time                               = 0x00;
+	image_header.image_capabilities                 = IM_CAP_PYLD_OR_FRU_COULD_BE_AFFECTED |
+	                                                  IM_CAP_MANUAL_ROLLBACK_IS_SUPPORTED;
+	
+	image_header.components                         = COMPONENT_MASK_1;
+	
+	image_header.self_test_timeout                  = 0x02; // 10 seconds
+	image_header.rollback_timeout                   = 0x02; // 10 seconds
+	image_header.inaccessibility_timeot             = 0x04; // 20 seconds
+	
+	image_header.earliest_compatible_major_revision = 0;    // Any version is accepted
+	image_header.earliest_compatible_minor_revision = 0x00;
+	
+	image_header.firmware_revision.major  = component1_metadata->firmware_revision_major;
+	image_header.firmware_revision.minor  = component1_metadata->firmware_revision_minor;
+	image_header.firmware_revision.aux[0] = component1_metadata->firmware_revision_aux[0];
+	image_header.firmware_revision.aux[1] = component1_metadata->firmware_revision_aux[1];
+	image_header.firmware_revision.aux[2] = component1_metadata->firmware_revision_aux[2];
+	image_header.firmware_revision.aux[3] = component1_metadata->firmware_revision_aux[3];
+	
+	
+	// Compose the HPM1 upgrade file
+	FILE* file = fopen( FILE_NAME,"wb" );
+	
+	add_image_header(file, image_header);
+	
+	add_backup_componets_action(file, COMPONENT_MASK_1);
+	
+	// add_prepare_componets_action(file, COMPONENT_MASK_1);  Preparation is not used
+	
+	add_upload_firmware_image_action( file, 1, "CM7_fw", component1_binary_data, component1_binary_size );
 	
 	fclose(file);
 	
 	append_md5( FILE_NAME ); // File is reopened inside
+	
+	
+	
+	free( component1_binary_data );
 	
 }
 
@@ -175,10 +187,10 @@ void add_image_header(FILE* file, image_header_t header)
 	image_header_array[25] = header.earliest_compatible_minor_revision;
 	image_header_array[26] = header.firmware_revision.major;
 	image_header_array[27] = header.firmware_revision.minor;
-	image_header_array[28] = (header.firmware_revision.aux >> 24) & 0xFF; // Big-endian (not Intel)
-	image_header_array[29] = (header.firmware_revision.aux >> 16) & 0xFF;
-	image_header_array[30] = (header.firmware_revision.aux >>  8) & 0xFF;
-	image_header_array[31] = (header.firmware_revision.aux >>  0) & 0xFF;
+	image_header_array[28] = header.firmware_revision.aux[0];
+	image_header_array[29] = header.firmware_revision.aux[1];
+	image_header_array[30] = header.firmware_revision.aux[2];
+	image_header_array[31] = header.firmware_revision.aux[3];
 	image_header_array[32] = 0; //No OEM data
 	image_header_array[33] = 0;
 	
@@ -217,20 +229,22 @@ void add_prepare_componets_action(FILE* file, uint8_t component_mask)
 }
 
 
-void add_upload_firmware_image_action(FILE* file, uint8_t component_number, revision_t version, char* description_string, uint8_t* image_data, uint32_t image_size)
+void add_upload_firmware_image_action(FILE* file, uint8_t component_number, char* description_string, uint8_t* image_data, uint32_t image_size)
 {
-	//Add Action: Upload Component 1
+	
+	metadata_fields_v0_t* metadata = (metadata_fields_v0_t*)&image_data[FW_METADATA_ADDR];
+	
 	uint8_t action[34];
 	action[0] = 0x02;  // Action type: UPLOAD IMAGE
 	action[1] = 0x01 << component_number;
 	action[2] = (~(action[0] + action[1]))+1;
 	
-	action[3] =  version.major;
-	action[4] =  version.minor;
-	action[5] = (version.aux >> 24) & 0xFF; // Big-endian (not Intel)
-	action[6] = (version.aux >> 16) & 0xFF;
-	action[7] = (version.aux >>  8) & 0xFF;
-	action[8] = (version.aux >>  0) & 0xFF;
+	action[3] = metadata->firmware_revision_major;
+	action[4] = metadata->firmware_revision_minor;
+	action[5] = metadata->firmware_revision_aux[0];
+	action[6] = metadata->firmware_revision_aux[1];
+	action[7] = metadata->firmware_revision_aux[2];
+	action[8] = metadata->firmware_revision_aux[3];
 	
 	// Copy string limited in 20 chars + end-of-string
 	for(int i=0; i<21; i++) action[9+i] = 0;
@@ -257,12 +271,6 @@ void add_upload_firmware_image_action(FILE* file, uint8_t component_number, revi
 	fwrite( &crc, 4, 1, file );
 	
 	printf("crc32: %x\n", crc);
-	
-	// Test CRC32
-	//printf("crc32: %lx\n", crc);
-	//FILE* filecrc = fopen( "test_crc","wb" );
-	//fwrite( image_data, 1, image_size, filecrc );
-	//fclose(filecrc);
 	
 }
 
