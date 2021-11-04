@@ -36,6 +36,7 @@
 #include "fw_metadata.h"
 #include "image_ext_flash.h"
 #include "head_commit_sha1.h"
+#include "bootloader_ctrl.h"
 
 
 
@@ -149,7 +150,11 @@ int hpm1_cmd_upload_finish_cb( uint8_t component_number  )
 
 void hpm1_cmd_activate_cb( void )
 {
-	mt_printf("ACTIVATE \r\n");
+	if( bootloader_enable() )
+	{
+		bootloader_schedule_load( BOOT_CTRL_LOAD_ADDR_FROM_EXT_FLASH );
+		NVIC_SystemReset();
+	}
 }
 
 

@@ -1,24 +1,18 @@
 
 #include "main.h"
+#include "fw_metadata.h"
+#include "bootloader_ctrl.h"
+#include "image_ext_flash.h"
+
 #include "bootloader_tools.h"
 
 #define BOOTLOADER_SECTOR    15   // Sector where the bootloader is placed
 
 #define FLASH_ORIGIN  0x8000000  // First address of Flash in absolute address
 
-/*
- * Magic words to check if bootloader is present
- *
- * These words are the same used by the bootloader to perform the jump to
- * the target firmware (see run_firmware.c in the bootloader code).
- */
-static const uint32_t bootloader_presence_numbers[4] =
-{
-	0xC878A2A0,
-	0x1CEE78CC,
-	0xD4ED0DC9,
-	0x3CAEB661
-};
+
+__attribute__ ((section (".bootloader_cmd"))) boot_ctrl_v0_t bootloader_ctrl_bckp;
+
 
 
 /*
@@ -27,22 +21,21 @@ static const uint32_t bootloader_presence_numbers[4] =
 bool bootloader_is_present( void )
 {
 	const uint32_t sector_addr     = FLASH_ORIGIN + BOOTLOADER_SECTOR*FLASH_SECTOR_SIZE;
-	const uint32_t sector_addr_max = sector_addr + FLASH_SECTOR_SIZE - 4;
 
-	for( uint32_t i = sector_addr; i < sector_addr_max; i += 4 )
-	{
-		uint32_t* word = (uint32_t*)i;
+	metadata_fields_v0_t* fw_metadata = (metadata_fields_v0_t*)(sector_addr + FW_METADATA_ADDR);
 
-		if( word[0] == bootloader_presence_numbers[0] &&
-		    word[1] == bootloader_presence_numbers[1] &&
-		    word[2] == bootloader_presence_numbers[2] &&
-		    word[3] == bootloader_presence_numbers[3]    )
-		{
-			return true; // Bootloader is present!
-		}
-	}
+	// Check presence word
+	if( fw_metadata->presence_word != FW_METADATA_PRESENCE_WORD )
+		return false;
 
-	return false;  // Bootloader is NOT present!
+	// Check metadata checksum
+	uint32_t sum = 0;
+	for( int i=0; i<(sizeof(metadata_fields_v0_t)/sizeof(uint32_t)); i++ )
+		sum += ((uint32_t*)fw_metadata)[i];
+	if( sum != 0 )
+		return false;
+
+	return true;  // Bootloader is present!
 }
 
 
@@ -137,6 +130,37 @@ bool bootloader_disable( void )
 		return false;
 }
 
+/*
+ * Set the bootloader command data in Backaup RAM to perform upload from the TEMP area
+ */
+void bootloader_schedule_load( uint8_t boot_ctrl_load_mode  )
+{
+	boot_ctrl_v0_t boot_ctrl;
 
+	boot_ctrl.presence_word = BOOT_CTRL_PRESENCE_WORD;
+	boot_ctrl.ctrl_data_version = 0;
+	boot_ctrl.load_mode = boot_ctrl_load_mode;
+	boot_ctrl.watchdog_time = 0;
+	boot_ctrl.error_code = 0;
+	boot_ctrl.load_source_addr = 131072 * 8; // If load mode is NOT "BOOT_CTRL_LOAD_ADDR_FROM_EXT_FLASH", this field is ignored by bootloader
+
+	uint32_t sum = 0;
+	for( int i = 0; i < (sizeof(boot_ctrl)/4) - 1; i++)
+		sum += ((uint32_t*)&boot_ctrl)[i];
+	boot_ctrl.checksum = (~sum)+1;
+
+	PWR->CR1 |= PWR_CR1_DBP;
+
+	while((PWR->CR1 & PWR_CR1_DBP) == 0)
+		osDelay(5);
+
+	__HAL_RCC_BKPRAM_CLK_ENABLE();
+
+	memcpy( &bootloader_ctrl_bckp, &boot_ctrl, sizeof(boot_ctrl) );
+	SCB_CleanDCache_by_Addr((uint32_t*)&bootloader_ctrl_bckp, sizeof(&bootloader_ctrl_bckp));
+
+	PWR->CR1 &= ~PWR_CR1_DBP;
+
+}
 
 
