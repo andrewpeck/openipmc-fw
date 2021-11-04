@@ -238,6 +238,10 @@ static uint8_t check_bin_cb()
 
 static uint8_t bootloader_cb()
 {
+	uint8_t major_ver; // (version info not used here)
+	uint8_t minor_ver;
+	uint8_t aux_ver[4];
+	
 	mt_printf( "\r\n\r\n" );
 
 	if ( CLI_IsArgFlag("enable") )
@@ -252,8 +256,8 @@ static uint8_t bootloader_cb()
 	}
 
 	mt_printf( "Bootloader is present in the Flash: " );
-	if( bootloader_is_present() )
-		mt_printf( "YES\r\n" );
+	if( bootloader_is_present( &major_ver, &minor_ver, aux_ver ) )
+		mt_printf( "YES  ver:%d.%d.%d  %02x%02x%02x%02x\r\n", major_ver, (minor_ver>>4)&0x0F, (minor_ver)&0x0F, aux_ver[0], aux_ver[1], aux_ver[2], aux_ver[3] );
 	else
 		mt_printf( "NO\r\n" );
 
@@ -273,6 +277,10 @@ static uint8_t bootloader_cb()
  * Reboots the MCU. Command defined natively by terminal
  */
 void _reset_fcn( void )
+{
+	// Do not use the "~"
+}
+void _reset_fcn2( void )
 {
 	NVIC_SystemReset();
 }
@@ -346,6 +354,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
 	CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
 	CLI_AddCmd( CMD_BOOT_NAME,        CMD_BOOT_CALLBACK,        0, TMC_None, CMD_BOOT_DESCRIPTION   );
+	CLI_AddCmd( "reset",        _reset_fcn2,        0, TMC_None, ""   );
 
 
 

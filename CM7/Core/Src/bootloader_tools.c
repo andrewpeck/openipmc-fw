@@ -15,10 +15,9 @@ __attribute__ ((section (".bootloader_cmd"))) boot_ctrl_v0_t bootloader_ctrl_bck
 
 
 
-/*
- * Search for the magic word inside the bootloader binary
+/*Check if bootloader is present and return its version via pointers
  */
-bool bootloader_is_present( void )
+bool bootloader_is_present( uint8_t* major_version, uint8_t* minor_version, uint8_t aux_version[4] )
 {
 	const uint32_t sector_addr     = FLASH_ORIGIN + BOOTLOADER_SECTOR*FLASH_SECTOR_SIZE;
 
@@ -34,6 +33,13 @@ bool bootloader_is_present( void )
 		sum += ((uint32_t*)fw_metadata)[i];
 	if( sum != 0 )
 		return false;
+
+	*major_version = fw_metadata->firmware_revision_major;
+	*minor_version = fw_metadata->firmware_revision_minor;
+	aux_version[0] = fw_metadata->firmware_revision_aux[0];
+	aux_version[1] = fw_metadata->firmware_revision_aux[1];
+	aux_version[2] = fw_metadata->firmware_revision_aux[2];
+	aux_version[3] = fw_metadata->firmware_revision_aux[3];
 
 	return true;  // Bootloader is present!
 }
@@ -68,7 +74,10 @@ bool bootloader_enable( void )
 	const uint32_t bootloader_sector_addr = FLASH_ORIGIN + BOOTLOADER_SECTOR*FLASH_SECTOR_SIZE;
 
 	// Be sure that bootloader is present in the flash
-	if( bootloader_is_present() == false )
+	uint8_t major; // (version info not used here)
+	uint8_t minor;
+	uint8_t aux[4];
+	if( bootloader_is_present( &major, &minor, aux ) == false )
 		return false; // Abort
 
 	HAL_FLASHEx_OBGetConfig( &pOBInit );

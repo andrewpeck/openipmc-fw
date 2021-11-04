@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-bool bootloader_is_present( void );
+bool bootloader_is_present( uint8_t* major_version, uint8_t* minor_version, uint8_t aux_version[4] );
 bool bootloader_is_active( void );
 
 bool bootloader_enable( void );

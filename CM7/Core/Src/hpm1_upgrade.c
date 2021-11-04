@@ -37,6 +37,7 @@
 #include "image_ext_flash.h"
 #include "head_commit_sha1.h"
 #include "bootloader_ctrl.h"
+#include "bootloader_tools.h"
 
 
 
