@@ -38,7 +38,6 @@
 #include "ipmb_0.h"
 #include "head_commit_sha1.h"
 #include "fru_state_machine.h"
-#include "st_bootloader.h"
 #include "device_id.h"
 #include "tftp_client.h"
 #include "write_bin_stmflash.h"
@@ -75,11 +74,6 @@ static int esc_translator( char* c, _Bool esc_timeout );
 Force a state change for ATCA Face Plate Handle.\r\n\
 \t[ o | c ] for Open or Close."
 #define CMD_ATCA_HANDLE_CALLBACK atca_handle_cb
-
-#define CMD_ST_BOOT_NAME "st-boot"
-#define CMD_ST_BOOT_DESCRIPTION "\
-Reboot and jump to STMicroelectronics bootloader"
-#define CMD_ST_BOOT_CALLBACK st_boot_cb
 
 #define CMD_DEBUG_IPMI_NAME "debug-ipmi"
 #define CMD_DEBUG_IPMI_DESCRIPTION "\
@@ -151,18 +145,6 @@ static uint8_t atca_handle_cb()
 		fru_trigg_val = CLOSE_HANDLE;
 		xQueueSendToBack(queue_fru_transitions, &fru_trigg_val, 0UL);
 	}
-
-	return TE_OK;
-}
-
-/*
- * Callback for "st-boot"
- *
- * Reboot and jump to STMicroelectronics bootloader
- */
-static uint8_t st_boot_cb()
-{
-	st_bootloader_launch();
 
 	return TE_OK;
 }
@@ -354,7 +336,6 @@ void terminal_process_task(void *argument)
 	// Define the commands to the CLI
 	CLI_AddCmd( CMD_INFO_NAME,        CMD_INFO_CALLBACK,        0, 0, CMD_INFO_DESCRIPTION        );
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
-	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
 	//CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
 	//CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );

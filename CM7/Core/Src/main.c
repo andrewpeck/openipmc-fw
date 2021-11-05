@@ -36,7 +36,6 @@
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
 #include "sense_i2c.h"
-#include "st_bootloader.h"
 #include "network_ctrls.h"
 #include "telnet_server.h"
 #include "printf.h"
@@ -214,7 +213,6 @@ int main(void)
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
 
-  st_bootloader_jump_if_scheduled();
 /* USER CODE END Boot_Mode_Sequence_0 */
 
   /* MPU Configuration--------------------------------------------------------*/
