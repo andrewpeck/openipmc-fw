@@ -61,12 +61,6 @@ void image_ext_flash_open( int block_number )
 	// Initialize flash
 	w25n01gv_device_reset();
 	w25n01gv_set_status_reg(0xA0, 0x00);
-
-	// Erase first used block
-	w25n01gv_write_enable();
-	w25n01gv_block_erase( block_number );
-	while( w25n01gv_is_busy() )
-		vTaskDelay( pdMS_TO_TICKS(10) );
 }
 
 void image_ext_flash_write( uint8_t* data, int len )
@@ -80,14 +74,6 @@ void image_ext_flash_write( uint8_t* data, int len )
 		}
 		else // Page is full...
 		{
-			// Program page into Flash.
-			w25n01gv_write_enable();
-			w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
-			w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
-			while( w25n01gv_is_busy() )
-				vTaskDelay( pdMS_TO_TICKS(10) );
-
-			write_index += PAGE_SIZE;
 
 			// If starting new block, erase it
 			if ( ( (write_origin+write_index) % BLOCK_SIZE) == 0 )
@@ -97,6 +83,15 @@ void image_ext_flash_write( uint8_t* data, int len )
 				while( w25n01gv_is_busy() )
 					vTaskDelay( pdMS_TO_TICKS(10) );
 			}
+
+			// Program page into Flash.
+			w25n01gv_write_enable();
+			w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
+			w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
+			while( w25n01gv_is_busy() )
+				vTaskDelay( pdMS_TO_TICKS(10) );
+
+			write_index += PAGE_SIZE;
 
 			// Restart filling page buffer
 			page_index = 0;
@@ -112,18 +107,29 @@ int image_ext_flash_close( void )
 
 	uint8_t remain = page_index;
 
-	// Complete the page with 0xFF
+	// If an incomplete page is pending...
 	if (page_index != 0)
+	{
 		while( page_index < PAGE_SIZE )
-			page_buffer[ page_index++ ] = 0xFF;
+			page_buffer[ page_index++ ] = 0xFF; // Fill the rest with 0xFF
 
-	// Program page into Flash.
-	w25n01gv_write_enable();
-	w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
-	w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
-	while( w25n01gv_is_busy() )
+		// If starting new block, erase it
+		if ( ( (write_origin+write_index) % BLOCK_SIZE) == 0 )
+		{
+			w25n01gv_write_enable();
+			w25n01gv_block_erase( (write_origin + write_index)/BLOCK_SIZE );
+			while( w25n01gv_is_busy() )
+				vTaskDelay( pdMS_TO_TICKS(10) );
+		}
+
+		// Program page into Flash.
+		w25n01gv_write_enable();
+		w25n01gv_quad_data_load( 0, 2048, page_buffer ); // Fill the entire internal buffer
+		w25n01gv_program_execute( (write_origin + write_index)/PAGE_SIZE );
+		while( w25n01gv_is_busy() )
 		vTaskDelay( pdMS_TO_TICKS(10) );
-
+	}
+	
 	return 0;
 }
 
