@@ -106,6 +106,11 @@ Manage Bootloader.\r\n\
 \t\t    disable: OpenIPMC-FW boots directly after reset"
 #define CMD_BOOT_CALLBACK bootloader_cb
 
+#define CMD_RESET_NAME "reset"
+#define CMD_RESET_DESCRIPTION "\
+Reset IPMC. Use this instead \"~\"!"
+#define CMD_RESET_CALLBACK reset_cb
+
 
 /*
  * Callback for "info"
@@ -278,9 +283,9 @@ static uint8_t bootloader_cb()
  */
 void _reset_fcn( void )
 {
-	// Do not use the "~"
+	// Do not implement "~" for RESET
 }
-void _reset_fcn2( void )
+static uint8_t reset_cb()
 {
 	NVIC_SystemReset();
 }
@@ -351,10 +356,10 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
 	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
-	CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
-	CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
+	//CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
+	//CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
 	CLI_AddCmd( CMD_BOOT_NAME,        CMD_BOOT_CALLBACK,        0, TMC_None, CMD_BOOT_DESCRIPTION   );
-	CLI_AddCmd( "reset",        _reset_fcn2,        0, TMC_None, ""   );
+    CLI_AddCmd( CMD_RESET_NAME,       CMD_RESET_CALLBACK,       0, TMC_None, CMD_RESET_DESCRIPTION   );
 
 
 
