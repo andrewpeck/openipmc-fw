@@ -127,6 +127,19 @@ int image_ext_flash_close( void )
 	return 0;
 }
 
+/*
+ * Destroy the image by deleting the first block
+ */
+void image_ext_flash_delete( int block_number )
+{
+	// Erase first used block
+	w25n01gv_write_enable();
+	w25n01gv_block_erase( block_number );
+	while( w25n01gv_is_busy() )
+		vTaskDelay( pdMS_TO_TICKS(10) );
+}
+
+
 void image_ext_flash_read( int block_number, uint32_t init_byte, uint32_t len, uint8_t* data)
 {
 	uint32_t read_index = 0;
@@ -190,9 +203,6 @@ bool image_ext_flash_CRC_is_valid( int block_number )
 		read_index += bytes_to_read;
 	}
 
-	mt_printf("Tail CRC: %X\r\n", crc_from_tail);
-	mt_printf("Calc CRC: %X\r\n", calculated_crc);
-
 	if( calculated_crc == crc_from_tail )
 		return true;
 	else
@@ -203,8 +213,10 @@ bool image_ext_flash_CRC_is_valid( int block_number )
  * Perform the backup of CM7 firmware present on the STM32 internal flash (ADDR: 0x08000000)
  *
  * Firmware is copied to the beginning of external flash present on DIMM
+ *
+ * return FALSE if backup fails
  */
-int image_ext_flash_openipmc_CM7_backup( void )
+bool image_ext_flash_openipmc_CM7_backup( void )
 {
 	metadata_fields_v0_t* fw_metadata = (metadata_fields_v0_t*)(OPENIPMC_CM7_RUN_ADDR + FW_METADATA_ADDR);
 
@@ -213,9 +225,7 @@ int image_ext_flash_openipmc_CM7_backup( void )
 	for( int i=0; i<(sizeof(metadata_fields_v0_t)/sizeof(uint32_t)); i++ )
 		sum += ((uint32_t*)fw_metadata)[i];
 	if( sum != 0 )
-		mt_printf("checksum failed\r\n");
-
-	mt_printf("fw size: %d\r\n", fw_metadata->image_size);
+		return false;
 
 	// Calculate CRC32 of the image present on the internal flash
 	uint32_t calculated_crc = ~HAL_CRC_Calculate(&hcrc, (uint32_t*)OPENIPMC_CM7_RUN_ADDR, fw_metadata->image_size);
@@ -228,9 +238,9 @@ int image_ext_flash_openipmc_CM7_backup( void )
 
 	//Check copy
 	if( image_ext_flash_CRC_is_valid( OPENIPMC_CM7_BACKUP_BLOCK ) )
-		mt_printf("Copy is valid\r\n");
+		return true;
 	else
-		mt_printf("Copy is invalid\r\n");
+		return false;
 }
 
 
