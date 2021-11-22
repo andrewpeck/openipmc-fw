@@ -1,3 +1,24 @@
+
+/********************************************************************************/
+/*                                                                              */
+/*    OpenIPMC-FW                                                               */
+/*    Copyright (C) 2020-2021 Andre Cascadan, Luigi Calligaris                  */
+/*                                                                              */
+/*    This program is free software: you can redistribute it and/or modify      */
+/*    it under the terms of the GNU General Public License as published by      */
+/*    the Free Software Foundation, either version 3 of the License, or         */
+/*    (at your option) any later version.                                       */
+/*                                                                              */
+/*    This program is distributed in the hope that it will be useful,           */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of            */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             */
+/*    GNU General Public License for more details.                              */
+/*                                                                              */
+/*    You should have received a copy of the GNU General Public License         */
+/*    along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
+/*                                                                              */
+/********************************************************************************/
+
 #ifndef AMC_GPIOS_H
 #define AMC_GPIOS_H
 
@@ -99,15 +120,15 @@
 
 typedef enum
 {
-    OUT = 0,
-     IN = 1   // Default. All pins as input after initialization.
+	AMC_DIR_OUT = 0,
+	AMC_DIR_IN  = 1   // Default. All pins as input after initialization.
 } amc_dir_t;
 
 
 typedef enum
 {
-    OFF = 0, // Default. All pin are floating after initialization.
-     ON = 1
+	AMC_PU_OFF = 0, // Default. All pin are floating after initialization.
+	AMC_PU_ON  = 1
 } amc_pullup_t;
 
 typedef enum

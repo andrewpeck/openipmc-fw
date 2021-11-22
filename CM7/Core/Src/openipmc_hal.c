@@ -1,4 +1,24 @@
 
+/********************************************************************************/
+/*                                                                              */
+/*    OpenIPMC-FW                                                               */
+/*    Copyright (C) 2020-2021 Andre Cascadan, Luigi Calligaris                  */
+/*                                                                              */
+/*    This program is free software: you can redistribute it and/or modify      */
+/*    it under the terms of the GNU General Public License as published by      */
+/*    the Free Software Foundation, either version 3 of the License, or         */
+/*    (at your option) any later version.                                       */
+/*                                                                              */
+/*    This program is distributed in the hope that it will be useful,           */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of            */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             */
+/*    GNU General Public License for more details.                              */
+/*                                                                              */
+/*    You should have received a copy of the GNU General Public License         */
+/*    along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
+/*                                                                              */
+/********************************************************************************/
+
 /*
  * This file contains all specific implementation of the OpenIPMC's Hardware
  * Abstraction Layer functions. These functions are all declared in ipmc_ios.h.
@@ -67,7 +87,9 @@ extern I2C_HandleTypeDef hi2c2;
 // Flag used to enable the IPMI messaging printout
 int enable_ipmi_printouts = 0;
 
-void mt_vprintf(const char* format, va_list va);
+int mt_vprintf(const char* format, va_list va);
+void hpm1_init(void);
+
 
 
 /*
@@ -102,6 +124,9 @@ int openipmc_hal_init(void)
 	HAL_I2C_Slave_Receive_IT(&hi2c_ipmbb, &ipmbb_input_buffer[0], IPMB_BUFF_SIZE);
 	i2c_ipmba_current_state = I2C_MODE_SLAVE;
 	i2c_ipmbb_current_state = I2C_MODE_SLAVE;
+
+	// Initializes the HPM1 Upgrade functionality
+	hpm1_init();
 
 	// Now peripherals are ready and can be used bu OpenIPMC
 	ipmc_ios_ready_flag = pdTRUE;

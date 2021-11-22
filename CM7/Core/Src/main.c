@@ -21,6 +21,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "lwip.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -37,11 +38,12 @@
 #include "amc_gpios.h"
 #include "mgm_i2c.h"
 #include "sense_i2c.h"
-#include "st_bootloader.h"
 #include "network_ctrls.h"
 #include "telnet_server.h"
 #include "apollo/apollo.h"
 #include "printf.h"
+#include "usbd_cdc_if.h"
+#include "fw_metadata.h"
 
 /* USER CODE END Includes */
 
@@ -65,10 +67,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+CRC_HandleTypeDef hcrc;
+
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 I2C_HandleTypeDef hi2c3;
 I2C_HandleTypeDef hi2c4;
+
+QSPI_HandleTypeDef hqspi;
 
 SPI_HandleTypeDef hspi4;
 DMA_HandleTypeDef hdma_spi4_tx;
@@ -81,7 +87,7 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
+  .stack_size = 512 * 4
 };
 /* USER CODE BEGIN PV */
 
@@ -89,14 +95,14 @@ osThreadId_t terminal_input_task_handle;
 const osThreadAttr_t terminal_input_task_attributes = {
   .name = "TerminalInputTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
+  .stack_size = 200* 4
 };
 
 osThreadId_t terminal_process_task_handle;
 const osThreadAttr_t terminal_process_task_attributes = {
   .name = "TerminalProcessTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
+  .stack_size = (256+256) * 4
 };
 
 osThreadId_t ipmb_0_msg_receiver_task_handle;
@@ -120,8 +126,8 @@ const osThreadAttr_t fru_state_machine_task_attributes = {
   .stack_size = 512 * 4
 };
 
-osThreadId_t ipmi_income_requests_manager_task_handle;
-const osThreadAttr_t ipmi_income_requests_manager_task_attributes = {
+osThreadId_t ipmi_incoming_requests_manager_task_handle;
+const osThreadAttr_t ipmi_incoming_requests_manager_task_attributes = {
   .name = "IPMI_MSG_MGMT",
   .priority = (osPriority_t) osPriorityNormal2,
   .stack_size = 512 * 4
@@ -149,6 +155,20 @@ const osThreadAttr_t ipmc_fp_led_blink_task_attributes = {
   .stack_size = 128 * 4
 };
 
+osThreadId_t vcp_output_task_handle;
+const osThreadAttr_t vcp_output_task_attributes = {
+  .name = "VcpOutputTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 64 * 4
+};
+
+osThreadId_t hpm1_upgrade_task_handle;
+const osThreadAttr_t hpm1_upgrade_task_attributes = {
+  .name = "HPM1UpgradeTask",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 512 * 4
+};
+
 // Telnet instance handler for CLI
 telnet_t telnet23;
 
@@ -157,7 +177,7 @@ static char uart4_input_char;
 static SemaphoreHandle_t printf_mutex = NULL;
 static StaticSemaphore_t printf_mutex_buffer;
 extern StreamBufferHandle_t terminal_input_stream;
-
+static StreamBufferHandle_t vcp_output_stream = NULL;
 
 
 /* USER CODE END PV */
@@ -173,6 +193,8 @@ static void MX_I2C2_Init(void);
 static void MX_SPI4_Init(void);
 static void MX_I2C4_Init(void);
 static void MX_I2C3_Init(void);
+static void MX_CRC_Init(void);
+static void MX_QUADSPI_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -182,6 +204,7 @@ extern void    openipmc_hal_init( void );
 extern uint8_t get_haddress_pins( void );
 extern void    set_benchtop_payload_power_level( uint8_t new_power_level );
 void mt_vprintf(const char* format, va_list va);
+static void    vcp_output_task(void *argument);
 
 /* USER CODE END PFP */
 
@@ -202,7 +225,6 @@ int main(void)
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
 
-  st_bootloader_jump_if_scheduled();
 /* USER CODE END Boot_Mode_Sequence_0 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -265,6 +287,8 @@ Error_Handler();
   MX_SPI4_Init();
   MX_I2C4_Init();
   MX_I2C3_Init();
+  MX_CRC_Init();
+  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -298,10 +322,12 @@ Error_Handler();
   ipmb_0_msg_receiver_task_handle = osThreadNew(ipmb_0_msg_receiver_task, NULL, &ipmb_0_msg_receiver_task_attributes);
   ipmb_0_msg_sender_task_handle = osThreadNew(ipmb_0_msg_sender_task, NULL, &ipmb_0_msg_sender_task_attributes);
   fru_state_machine_task_handle = osThreadNew(fru_state_machine_task, NULL, &fru_state_machine_task_attributes);
-  ipmi_income_requests_manager_task_handle = osThreadNew(ipmi_income_requests_manager_task, NULL, &ipmi_income_requests_manager_task_attributes);
+  ipmi_incoming_requests_manager_task_handle = osThreadNew(ipmi_incoming_requests_manager_task, NULL, &ipmi_incoming_requests_manager_task_attributes);
   ipmc_handle_switch_task_handle = osThreadNew(ipmc_handle_switch_task, NULL, &ipmc_handle_switch_task_attributes);
   ipmc_blue_led_blink_task_handle = osThreadNew(ipmc_blue_led_blink_task, NULL, &ipmc_blue_led_blink_task_attributes);
   ipmc_fp_led_blink_task_handle = osThreadNew(ipmc_fp_led_blink_task, NULL, &ipmc_fp_led_blink_task_attributes);
+  vcp_output_task_handle = osThreadNew(vcp_output_task, NULL, &vcp_output_task_attributes);
+  hpm1_upgrade_task_handle = osThreadNew(hpm1_upgrade_task, NULL, &hpm1_upgrade_task_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -345,8 +371,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 2;
@@ -380,15 +407,52 @@ void SystemClock_Config(void)
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_SPI4
                               |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C3
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C4;
+                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C4
+                              |RCC_PERIPHCLK_USB|RCC_PERIPHCLK_QSPI;
+  PeriphClkInitStruct.QspiClockSelection = RCC_QSPICLKSOURCE_D1HCLK;
   PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
   PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
+  /** Enable USB Voltage detector
+  */
+  HAL_PWREx_EnableUSBVoltageDetector();
+}
+
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_ENABLE;
+  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
@@ -573,6 +637,41 @@ static void MX_I2C4_Init(void)
   /* USER CODE BEGIN I2C4_Init 2 */
 
   /* USER CODE END I2C4_Init 2 */
+
+}
+
+/**
+  * @brief QUADSPI Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_QUADSPI_Init(void)
+{
+
+  /* USER CODE BEGIN QUADSPI_Init 0 */
+
+  /* USER CODE END QUADSPI_Init 0 */
+
+  /* USER CODE BEGIN QUADSPI_Init 1 */
+
+  /* USER CODE END QUADSPI_Init 1 */
+  /* QUADSPI parameter configuration*/
+  hqspi.Instance = QUADSPI;
+  hqspi.Init.ClockPrescaler = 255;
+  hqspi.Init.FifoThreshold = 1;
+  hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
+  hqspi.Init.FlashSize = 31;
+  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+  hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
+  hqspi.Init.FlashID = QSPI_FLASH_ID_1;
+  hqspi.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
+  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN QUADSPI_Init 2 */
+
+  /* USER CODE END QUADSPI_Init 2 */
 
 }
 
@@ -946,6 +1045,26 @@ void telnet_command_callback_cli_23( uint8_t* buff, uint16_t len )
 	telnet_transmit(&telnet23, telnet_negotiation_commands, 6);
 }
 
+/*
+ * Task to manage character output via VCP
+ *
+ * This task takes care of accumulating bytes in a stream while VCP is busy.
+ * In case it is busy, it takes care of retry while stream keeps accumulating
+ */
+static void vcp_output_task(void *argument)
+{
+	vcp_output_stream = xStreamBufferCreate(10, 1);
+	uint8_t buff[10];
+
+	while(1)
+	{
+		int rcvd = xStreamBufferReceive( vcp_output_stream, buff, 10, portMAX_DELAY );
+		while( CDC_Transmit_FS(buff, rcvd) == USBD_BUSY )
+			osDelay(50);
+	}
+}
+
+
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if( hspi == &hspi4 )
@@ -1018,7 +1137,6 @@ void mt_vprintf(const char* format, va_list va)
  */
 void _putchar(char character)
 {
-
 	// Local CLI via UART
   // Commented out to disable UART0, which was crashing the system with spam from the zynq
 	// HAL_UART_Transmit(&huart4, (uint8_t*)(&character), 1, 1000);
@@ -1026,6 +1144,9 @@ void _putchar(char character)
 	// Remote CLI via telnet
 	telnet_transmit(&telnet23, (uint8_t*)(&character), 1);
 
+	// CLI on VCP
+	if( vcp_output_stream != NULL )
+		xStreamBufferSend( vcp_output_stream, (uint8_t*)(&character), 1, 0);
 }
 
 
@@ -1042,6 +1163,10 @@ void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
   //MX_LWIP_Init();
+
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
+
   /* USER CODE BEGIN 5 */
 
   // Initializations for DIMM peripherals and OpenIPMC
@@ -1087,6 +1212,7 @@ void StartDefaultTask(void *argument)
 
   // Opens telnet port 23 for the remote IPMC CLI
   telnet_create (&telnet23, 23, &telnet_receiver_callback_cli_23, &telnet_command_callback_cli_23);
+
 
   // UDP packet output test
   // osDelay(1000);

@@ -9,4 +9,4 @@
 	url = https://github.com/cascadan/mcu_telnet_server.git
 [submodule "CM7/Core/terminal"]
 	path = CM7/Core/terminal
-	url = https://github.com/JingoC/terminal.git
+	url = https://github.com/cascadan/terminal.git
