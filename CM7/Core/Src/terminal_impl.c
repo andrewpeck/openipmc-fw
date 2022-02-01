@@ -216,6 +216,7 @@ static uint8_t apollo_disable_shutoff_cb()
 		mt_printf("Setting self shutoff mode to %d and saving in eeprom\r\n", disable_shutoff);
 		user_eeprom_set_disable_shutoff(disable_shutoff);
 		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
 	}
 	else {
 		mt_printf("Invalid boot mode %d!\r\n", disable_shutoff);
@@ -233,6 +234,7 @@ static uint8_t apollo_sdsel_cb()
 		apollo_set_sdsel(sdsel);
 		user_eeprom_set_sdsel(sdsel);
 		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
 	}
 	else {
 		mt_printf("Invalid sd select %d!\r\n", sdsel);
@@ -251,6 +253,7 @@ static uint8_t apollo_boot_mode_cb()
 		apollo_set_zynq_boot_mode(boot_mode);
 		user_eeprom_set_boot_mode(boot_mode);
 		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
 	}
 	else {
 		mt_printf("Invalid boot mode %d!\r\n", boot_mode);
