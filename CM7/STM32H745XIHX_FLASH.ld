@@ -48,6 +48,7 @@ RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
 RAM_D2 (xrw)      : ORIGIN = 0x30000000, LENGTH = 288K
 SRAM4 (xrw)      : ORIGIN = 0x38000000, LENGTH = 64K
+BACKUP (rw)      : ORIGIN = 0x38800000, LENGTH = 4K
 }
 
 /* Define output sections */
@@ -60,7 +61,22 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
-
+  
+  /* 
+   * Firmware metadata.
+   *
+   * Free space reserved to hold information about this firmware.
+   * This portion contains no executable code.
+   * 
+   * Start byte: 0x298  (Immediatelly after the STM32H745XI NVIC)
+   */
+  .fw_metadata :
+  {
+    . = ALIGN(4);
+    KEEP(*(.fw_metadata))
+    . = ALIGN(4);
+  } >FLASH
+  
   /* The program code and other data goes into FLASH */
   .text :
   {
@@ -172,6 +188,11 @@ SECTIONS
     *(.RxArraySection) 
   } >RAM_D2
 
+  .backup_ram (NOLOAD):
+  {
+    KEEP(*(.bootloader_cmd))
+     
+  } >BACKUP
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

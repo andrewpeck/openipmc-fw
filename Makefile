@@ -9,12 +9,16 @@ CFLAGS = -mcpu=cortex-m7 -std=gnu11 -g3 -DDATA_IN_D2_SRAM \
 
 INC = -I CM7/Core/Src/ \
 			-I CM7/Core/Src/apollo \
+			-I CM7/Core/tftp/ \
+			-I CM7/USB_DEVICE/App \
+			-I CM7/USB_DEVICE/Target \
 			-I CM7/Core/Inc \
 			-I CM7/Core/mcu_telnet_server \
 			-I CM7/Core/printf \
 			-I CM7/Core/terminal \
 			-I CM7/Core/openipmc/src \
 			-I CM7/Drivers/ksz8091 \
+			-I CM7/Drivers/w25n01gv \
 			-I Drivers/STM32H7xx_HAL_Driver/Inc \
 			-I Drivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 			-I Drivers/CMSIS/Device/ST/STM32H7xx/Include \
@@ -23,6 +27,8 @@ INC = -I CM7/Core/Src/ \
 			-I Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 			-I CM7/LWIP/App \
 			-I CM7/LWIP/Target \
+			-I Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
+			-I Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
 			-I Middlewares/Third_Party/LwIP/src/include \
 			-I Middlewares/Third_Party/LwIP/system \
 			-I Middlewares/Third_Party/LwIP/src/include/netif/ppp \
@@ -53,7 +59,9 @@ SRC_FREE_RTOS = $(wildcard Middlewares/Third_Party/FreeRTOS/Source/*.c) \
 								Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 								Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 
-SRC_HAL       = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c)
+SRC_HAL       = $(wildcard Drivers/STM32H7xx_HAL_Driver/Src/*.c) \
+								$(wildcard Middlewares/ST/STM32_USB_Device_Library/Core/Src/*.c) \
+								$(wildcard Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.c)
 
 SRC_OPENIPMC  = $(wildcard CM7/Core/openipmc/src/*.c)
 
@@ -66,10 +74,13 @@ SRC_TERMINAL  = $(wildcard CM7/Core/terminal/module/*.c) \
 CFILES = 	$(SRC_LWIP) $(SRC_FREE_RTOS) $(SRC_HAL) $(SRC_OPENIPMC) $(SRC_APOLLO) $(SRC_TERMINAL) \
 					$(wildcard CM7/Core/Src/*.c) \
 					CM7/Core/mcu_telnet_server/telnet_server.c \
+					$(wildcard CM7/USB_DEVICE/Target/*.c) \
+					$(wildcard CM7/USB_DEVICE/App/*.c) \
 					CM7/Core/printf/printf.c \
 					CM7/Drivers/ksz8091/ksz8091.c \
 				 	CM7/LWIP/App/lwip.c \
 				 	CM7/LWIP/Target/ethernetif.c \
+					CM7/Drivers/w25n01gv/w25n01gv.c \
 					Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c
 
 COBJS = $(CFILES:.c=.o)
@@ -107,6 +118,12 @@ clean:
 		-MT "$@" \
 		-o "$@"
 
+generate_upgrade_file: generate_upgrade_file.c
+	gcc generate_upgrade_file.c -o generate_upgrade_file  -lcrypto -lssl -lz
+
+hpm: generate_upgrade_file
+	./generate_upgrade_file openipmc-fw_CM7.bin
+
 elf: build
 	@echo "Building final binary"
 	@arm-none-eabi-gcc -o "openipmc-fw_CM7.elf" $(COBJS) $(AOBJS) \
@@ -117,6 +134,7 @@ elf: build
 	@arm-none-eabi-size   openipmc-fw_CM7.elf
 	@arm-none-eabi-objdump -h -S  openipmc-fw_CM7.elf  > "openipmc-fw_CM7.list"
 	@arm-none-eabi-objcopy  -O binary  openipmc-fw_CM7.elf  "openipmc-fw_CM7.bin"
+# make hpm
 
 load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw_CM7.bin

@@ -1,5 +1,23 @@
 
-
+/********************************************************************************/
+/*                                                                              */
+/*    OpenIPMC-FW                                                               */
+/*    Copyright (C) 2020-2021 Andre Cascadan, Luigi Calligaris                  */
+/*                                                                              */
+/*    This program is free software: you can redistribute it and/or modify      */
+/*    it under the terms of the GNU General Public License as published by      */
+/*    the Free Software Foundation, either version 3 of the License, or         */
+/*    (at your option) any later version.                                       */
+/*                                                                              */
+/*    This program is distributed in the hope that it will be useful,           */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of            */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             */
+/*    GNU General Public License for more details.                              */
+/*                                                                              */
+/*    You should have received a copy of the GNU General Public License         */
+/*    along with this program.  If not, see <https://www.gnu.org/licenses/>.    */
+/*                                                                              */
+/********************************************************************************/
 
 /*
  * This source is dedicated to implement CLI commands and associated resources.
@@ -20,10 +38,8 @@
 #include "ipmb_0.h"
 #include "head_commit_sha1.h"
 #include "fru_state_machine.h"
-#include "st_bootloader.h"
 #include "device_id.h"
 #include "cmsis_os.h"
-
 #include "apollo.h"
 #include "apollo_i2c.h"
 #include "sm_sensors.h"
@@ -31,6 +47,9 @@
 #include "zynq_i2c.h"
 #include "tca9546.h"
 #include "pim400.h"
+#include "tftp_client.h"
+#include "write_bin_stmflash.h"
+#include "bootloader_tools.h"
 
 StreamBufferHandle_t terminal_input_stream = NULL;
 SemaphoreHandle_t    terminal_semphr       = NULL;
@@ -63,16 +82,35 @@ Force a state change for ATCA Face Plate Handle.\r\n\
 \t[ o | c ] for Open or Close."
 #define CMD_ATCA_HANDLE_CALLBACK atca_handle_cb
 
-#define CMD_ST_BOOT_NAME "st-boot"
-#define CMD_ST_BOOT_DESCRIPTION "\
-Reboot and jump to STMicroelectronics bootloader"
-#define CMD_ST_BOOT_CALLBACK st_boot_cb
-
 #define CMD_DEBUG_IPMI_NAME "debug-ipmi"
 #define CMD_DEBUG_IPMI_DESCRIPTION "\
 Enable to show the IPMI messaging from OpenIPMC"
 #define CMD_DEBUG_IPMI_CALLBACK debug_ipmi_cb
 
+#define CMD_LOAD_BIN_NAME "load-bin"
+#define CMD_LOAD_BIN_DESCRIPTION "\
+Load binary from a TFTP server into TEMP area (Sector 12).\r\n\
+\t\tex: load-bin 192 168 0 1 new_firmware.bin\r\n\
+\t\tThis client always load file named fimware.bin"
+#define CMD_LOAD_BIN_CALLBACK load_bin_cb
+
+#define CMD_CHECK_BIN_NAME "check-bin"
+#define CMD_CHECK_BIN_DESCRIPTION "\
+Check the validity of binary present in Sector 12."
+#define CMD_CHECK_BIN_CALLBACK check_bin_cb
+
+#define CMD_BOOT_NAME "bootloader"
+#define CMD_BOOT_DESCRIPTION "\
+Manage Bootloader.\r\n\
+\t\tNo argument: Print Bootloader status\r\n\
+\t\t     enable: Bootloader boots first after reset\r\n\
+\t\t    disable: OpenIPMC-FW boots directly after reset"
+#define CMD_BOOT_CALLBACK bootloader_cb
+
+#define CMD_RESET_NAME "reset"
+#define CMD_RESET_DESCRIPTION "\
+Reset IPMC. Use this instead \"~\"!"
+#define CMD_RESET_CALLBACK reset_cb
 
 
 /*
@@ -170,6 +208,35 @@ static uint8_t apollo_boot_status_cb()
 	return TE_OK;
 }
 
+static uint8_t apollo_read_eeprom_cb() {
+	mt_printf("\r\n\n");
+
+	char status = user_eeprom_read();
+
+	if (status == 0) {
+
+		uint8_t boot_mode;
+		uint8_t prom_rev;
+		uint8_t rev;
+		uint8_t id;
+		uint8_t sdsel;
+
+		user_eeprom_get_revision_number(&rev);
+		user_eeprom_get_serial_number(&id);
+		user_eeprom_get_version(&prom_rev);
+		user_eeprom_get_boot_mode(&boot_mode);
+		user_eeprom_get_sdsel(&sdsel);
+
+		mt_printf("prom version = 0x%02X\r\n", prom_rev);
+		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
+		mt_printf("hw           = rev%d #%d\r\n", rev, id);
+	} else {
+		mt_printf("I2C Failure\r\n");
+	}
+	return status;
+}
+
 static uint8_t apollo_disable_shutoff_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -178,6 +245,7 @@ static uint8_t apollo_disable_shutoff_cb()
 		mt_printf("Setting self shutoff mode to %d and saving in eeprom\r\n", disable_shutoff);
 		user_eeprom_set_disable_shutoff(disable_shutoff);
 		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
 	}
 	else {
 		mt_printf("Invalid boot mode %d!\r\n", disable_shutoff);
@@ -185,6 +253,25 @@ static uint8_t apollo_disable_shutoff_cb()
 	}
 		return TE_OK;
 }
+
+static uint8_t apollo_sdsel_cb()
+{
+	mt_printf( "\r\n\n" );
+	uint8_t sdsel = CLI_GetArgDec(0);
+	if (sdsel >= 0 && sdsel <= 1) {
+		mt_printf("Setting sd select to %d and saving in eeprom\r\n", sdsel);
+		apollo_set_sdsel(sdsel);
+		user_eeprom_set_sdsel(sdsel);
+		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
+	}
+	else {
+		mt_printf("Invalid sd select %d!\r\n", sdsel);
+		return TE_ArgErr;
+	}
+		return TE_OK;
+}
+
 
 static uint8_t apollo_boot_mode_cb()
 {
@@ -195,6 +282,7 @@ static uint8_t apollo_boot_mode_cb()
 		apollo_set_zynq_boot_mode(boot_mode);
 		user_eeprom_set_boot_mode(boot_mode);
 		user_eeprom_write();
+		return (apollo_read_eeprom_cb());
 	}
 	else {
 		mt_printf("Invalid boot mode %d!\r\n", boot_mode);
@@ -379,31 +467,7 @@ static uint8_t apollo_read_tcn_cb() {
 	return 0;
 }
 
-static uint8_t apollo_read_eeprom_cb() {
-	mt_printf("\r\n\n");
 
-	char status = user_eeprom_read();
-
-	if (status == 0) {
-
-		uint8_t boot_mode;
-		uint8_t prom_rev;
-		uint8_t rev;
-		uint8_t id;
-
-		user_eeprom_get_revision_number(&rev);
-		user_eeprom_get_serial_number(&id);
-		user_eeprom_get_version(&prom_rev);
-		user_eeprom_get_boot_mode(&boot_mode);
-
-		mt_printf("prom version = 0x%02X\r\n", prom_rev);
-		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
-		mt_printf("hw           = rev%d #%d\r\n", rev, id);
-	} else {
-		mt_printf("I2C Failure\r\n");
-	}
-	return status;
-}
 static uint8_t apollo_write_rev_cb() {
 		mt_printf("\r\n\n");
 		uint8_t rev = CLI_GetArgDec(0);
@@ -463,18 +527,6 @@ static uint8_t apollo_zynq_i2c_rx_cb()
 }
 
 /*
- * Callback for "st-boot"
- *
- * Reboot and jump to STMicroelectronics bootloader
- */
-static uint8_t st_boot_cb()
-{
-	st_bootloader_launch();
-
-	return TE_OK;
-}
-
-/*
  * Callback for "debug-ipmi"
  *
  * Enable to show the IPMI messaging from OpenIPMC
@@ -499,12 +551,100 @@ static uint8_t debug_ipmi_cb()
 }
 
 
+_Bool tftp_impl_fwupload_start( const ip_addr_t *server_addr, const char* fname );
+_Bool tftp_impl_fwupload_running( void );
+void  tftp_impl_fwupload_abort( void );
+
+uint8_t load_bin_cb()
+{
+	// Get Server IP addr from parameters
+	ip_addr_t tfpt_server_addr;
+	IP_ADDR4(&tfpt_server_addr, CLI_GetArgDec(0)&0xFF, CLI_GetArgDec(1)&0xFF, CLI_GetArgDec(2)&0xFF, CLI_GetArgDec(3)&0xFF);
+
+	// Get filename from parameters
+	char* filename = CLI_GetArgv()[5];
+
+	mt_printf( "\r\n" );
+
+	if( tftp_impl_fwupload_start( &tfpt_server_addr, filename ) )
+	{
+		while( tftp_impl_fwupload_running() )
+		{
+			vTaskDelay( pdMS_TO_TICKS( 500 ) );
+			xSemaphoreTake( terminal_semphr, portMAX_DELAY );
+			if( CLI_GetIntState() ) // If ESC is pressed
+			{
+				tftp_impl_fwupload_abort();
+				mt_printf( "Transfer Aborted!" );
+				return TE_OK;
+			}
+		}
+	}
+	else
+		mt_printf( "Transfer Failed!" );
+
+
+	return TE_OK;
+}
+
+
+static uint8_t check_bin_cb()
+{
+	uint32_t crc;
+	int is_valid = bin_stmflash_validate(9, &crc);
+	mt_printf( "\r\n");
+	if( is_valid == 0 )
+		mt_printf( "Binary is invalid!\r\n" );
+	mt_printf( "CRC: %x\r\n", crc );
+
+	return TE_OK;
+}
+
+static uint8_t bootloader_cb()
+{
+	uint8_t major_ver; // (version info not used here)
+	uint8_t minor_ver;
+	uint8_t aux_ver[4];
+	
+	mt_printf( "\r\n\r\n" );
+
+	if ( CLI_IsArgFlag("enable") )
+	{
+		if( bootloader_enable() == false )
+			mt_printf( "Enabling failed!\r\n" );
+	}
+	else if( CLI_IsArgFlag("disable") )
+	{
+		if( bootloader_disable() == false )
+			mt_printf( "Disabling failed!\r\n" );
+	}
+
+	mt_printf( "Bootloader is present in the Flash: " );
+	if( bootloader_is_present( &major_ver, &minor_ver, aux_ver ) )
+		mt_printf( "YES  ver:%d.%d.%d  %02x%02x%02x%02x\r\n", major_ver, (minor_ver>>4)&0x0F, (minor_ver)&0x0F, aux_ver[0], aux_ver[1], aux_ver[2], aux_ver[3] );
+	else
+		mt_printf( "NO\r\n" );
+
+	mt_printf( "Run bootloader on boot is enabled: " );
+	if( bootloader_is_active() )
+		mt_printf( "YES\r\n" );
+	else
+		mt_printf( "NO\r\n" );
+
+	return TE_OK;
+}
+
+
 /*
  * Callback for "~"
  *
  * Reboots the MCU. Command defined natively by terminal
  */
 void _reset_fcn( void )
+{
+	// Do not implement "~" for RESET
+}
+static uint8_t reset_cb()
 {
 	NVIC_SystemReset();
 }
@@ -574,18 +714,23 @@ void terminal_process_task(void *argument)
 	// Define the commands to the CLI
 	CLI_AddCmd( CMD_INFO_NAME,        CMD_INFO_CALLBACK,        0, 0, CMD_INFO_DESCRIPTION        );
 	CLI_AddCmd( CMD_ATCA_HANDLE_NAME, CMD_ATCA_HANDLE_CALLBACK, 1, 0, CMD_ATCA_HANDLE_DESCRIPTION );
-	CLI_AddCmd( CMD_ST_BOOT_NAME,     CMD_ST_BOOT_CALLBACK,     0, 0, CMD_ST_BOOT_DESCRIPTION     );
 	CLI_AddCmd( CMD_DEBUG_IPMI_NAME,  CMD_DEBUG_IPMI_CALLBACK,  0, 0, CMD_DEBUG_IPMI_DESCRIPTION  );
+	//CLI_AddCmd( CMD_LOAD_BIN_NAME,    CMD_LOAD_BIN_CALLBACK,    5, TMC_None, CMD_LOAD_BIN_DESCRIPTION    );
+	//CLI_AddCmd( CMD_CHECK_BIN_NAME,   CMD_CHECK_BIN_CALLBACK,   0, TMC_None, CMD_CHECK_BIN_DESCRIPTION   );
+	CLI_AddCmd( CMD_BOOT_NAME,        CMD_BOOT_CALLBACK,        0, TMC_None, CMD_BOOT_DESCRIPTION   );
+    CLI_AddCmd( CMD_RESET_NAME,       CMD_RESET_CALLBACK,       0, TMC_None, CMD_RESET_DESCRIPTION   );
+
 
 	// dashes and underscores don't seem to work as expected here :(
-	CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, "Set the apollo boot mode pin");
+	CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, "Set the Apollo boot mode pin");
 	CLI_AddCmd("bootstatus", apollo_boot_status_cb,   0, 0, "Get the status of the boot sequence");
+	CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, "Set the Apollo SD select pin");
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
 	CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
 	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Revision");
-	CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Board ID");
 	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
 	CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
 

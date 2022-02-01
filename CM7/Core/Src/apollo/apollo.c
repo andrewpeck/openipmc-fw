@@ -16,6 +16,7 @@ uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
 uint8_t apollo_startup_done     = 0;
 uint8_t apollo_boot_mode        = APOLLO_BOOT_SD;
+uint8_t apollo_sdsel            = APOLLO_SDSEL_MIDBOARD;
 
 uint8_t apollo_status       = 0;
 
@@ -186,6 +187,14 @@ uint8_t apollo_get_revision () {
 void apollo_set_uart_adr (uint8_t adr) {
   GPIO_SET_STATE_EXPAND ((adr>>0) & 1, APOLLO_UART_ADR_0);
   GPIO_SET_STATE_EXPAND ((adr>>1) & 1, APOLLO_UART_ADR_1);
+}
+
+void apollo_set_sdsel (uint8_t sdsel) {
+  GPIO_SET_STATE_EXPAND (sdsel, APOLLO_SDSEL);
+}
+
+uint8_t apollo_get_sdsel () {
+  return GPIO_GET_STATE_EXPAND (APOLLO_SDSEL);
 }
 
 void apollo_set_zynq_boot_mode (uint8_t mode) {
@@ -439,7 +448,12 @@ void apollo_powerup_sequence () {
   if (0==user_eeprom_read()) {
    // set apollo_boot_mode to the retval of this
    user_eeprom_get_boot_mode(&apollo_boot_mode);
+   user_eeprom_get_sdsel(&apollo_sdsel);
   }
+
+  // set sd card select
+  //------------------------------------------------------------------------------
+  apollo_set_sdsel(apollo_sdsel);
 
   // set boot pins
   //------------------------------------------------------------------------------
