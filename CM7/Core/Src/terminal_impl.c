@@ -446,14 +446,17 @@ static uint8_t apollo_read_eeprom_cb() {
 		uint8_t prom_rev;
 		uint8_t rev;
 		uint8_t id;
+		uint8_t sdsel;
 
 		user_eeprom_get_revision_number(&rev);
 		user_eeprom_get_serial_number(&id);
 		user_eeprom_get_version(&prom_rev);
 		user_eeprom_get_boot_mode(&boot_mode);
+		user_eeprom_get_sdsel(&sdsel);
 
 		mt_printf("prom version = 0x%02X\r\n", prom_rev);
 		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
 		mt_printf("hw           = rev%d #%d\r\n", rev, id);
 	} else {
 		mt_printf("I2C Failure\r\n");
