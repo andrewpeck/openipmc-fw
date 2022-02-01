@@ -208,6 +208,35 @@ static uint8_t apollo_boot_status_cb()
 	return TE_OK;
 }
 
+static uint8_t apollo_read_eeprom_cb() {
+	mt_printf("\r\n\n");
+
+	char status = user_eeprom_read();
+
+	if (status == 0) {
+
+		uint8_t boot_mode;
+		uint8_t prom_rev;
+		uint8_t rev;
+		uint8_t id;
+		uint8_t sdsel;
+
+		user_eeprom_get_revision_number(&rev);
+		user_eeprom_get_serial_number(&id);
+		user_eeprom_get_version(&prom_rev);
+		user_eeprom_get_boot_mode(&boot_mode);
+		user_eeprom_get_sdsel(&sdsel);
+
+		mt_printf("prom version = 0x%02X\r\n", prom_rev);
+		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
+		mt_printf("hw           = rev%d #%d\r\n", rev, id);
+	} else {
+		mt_printf("I2C Failure\r\n");
+	}
+	return status;
+}
+
 static uint8_t apollo_disable_shutoff_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -438,34 +467,7 @@ static uint8_t apollo_read_tcn_cb() {
 	return 0;
 }
 
-static uint8_t apollo_read_eeprom_cb() {
-	mt_printf("\r\n\n");
 
-	char status = user_eeprom_read();
-
-	if (status == 0) {
-
-		uint8_t boot_mode;
-		uint8_t prom_rev;
-		uint8_t rev;
-		uint8_t id;
-		uint8_t sdsel;
-
-		user_eeprom_get_revision_number(&rev);
-		user_eeprom_get_serial_number(&id);
-		user_eeprom_get_version(&prom_rev);
-		user_eeprom_get_boot_mode(&boot_mode);
-		user_eeprom_get_sdsel(&sdsel);
-
-		mt_printf("prom version = 0x%02X\r\n", prom_rev);
-		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
-		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
-		mt_printf("hw           = rev%d #%d\r\n", rev, id);
-	} else {
-		mt_printf("I2C Failure\r\n");
-	}
-	return status;
-}
 static uint8_t apollo_write_rev_cb() {
 		mt_printf("\r\n\n");
 		uint8_t rev = CLI_GetArgDec(0);
