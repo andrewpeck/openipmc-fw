@@ -224,6 +224,24 @@ static uint8_t apollo_disable_shutoff_cb()
 		return TE_OK;
 }
 
+static uint8_t apollo_sdsel_cb()
+{
+	mt_printf( "\r\n\n" );
+	uint8_t sdsel = CLI_GetArgDec(0);
+	if (sdsel >= 0 && sdsel <= 1) {
+		mt_printf("Setting sd select to %d and saving in eeprom\r\n", sdsel);
+		apollo_set_sdsel(sdsel);
+		user_eeprom_set_sdsel(sdsel);
+		user_eeprom_write();
+	}
+	else {
+		mt_printf("Invalid sd select %d!\r\n", sdsel);
+		return TE_ArgErr;
+	}
+		return TE_OK;
+}
+
+
 static uint8_t apollo_boot_mode_cb()
 {
 	mt_printf( "\r\n\n" );
@@ -698,6 +716,7 @@ void terminal_process_task(void *argument)
 	// dashes and underscores don't seem to work as expected here :(
 	CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, "Set the apollo boot mode pin");
 	CLI_AddCmd("bootstatus", apollo_boot_status_cb,   0, 0, "Get the status of the boot sequence");
+	CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, "Set the apollo sd select pin");
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");

@@ -21,6 +21,7 @@ static struct __attribute__((packed)) {
       uint8_t mac_eth1[6];
       uint8_t boot_mode;
       uint8_t dis_shutoff;
+      uint8_t sdsel;
     } v0;
   };
 } eeprom = {.version = 0xFE};
@@ -106,6 +107,22 @@ char user_eeprom_get_boot_mode(uint8_t *bm) {
 char user_eeprom_set_boot_mode(uint8_t bm) {
   if (eeprom.version == 0) {
     eeprom.v0.boot_mode = bm;
+    return 0;
+  }
+  return -1;
+}
+
+char user_eeprom_get_sdsel(uint8_t *ds) {
+  if (eeprom.version == 0) {
+    *(ds) = eeprom.v0.sdsel;
+    return 0;
+  }
+  return -1;
+}
+
+char user_eeprom_set_sdsel(uint8_t sdsel) {
+  if (eeprom.version == 0) {
+    eeprom.v0.sdsel = sdsel;
     return 0;
   }
   return -1;

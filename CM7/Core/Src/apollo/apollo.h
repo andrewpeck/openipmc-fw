@@ -69,6 +69,10 @@
 #define APOLLO_GPIO_6           USR_IO_29
 #define APOLLO_GPIO_7           USR_IO_31
 
+#define APOLLO_SDSEL            IPM_6
+#define APOLLO_SDSEL_MIDBOARD   1
+#define APOLLO_SDSEL_FRONT      0
+
 uint8_t apollo_get_ipmc_startup_done ();
 uint8_t apollo_get_ipmc_startup_started ();
 uint8_t apollo_get_ipmc_abnormal_shutdown ();
@@ -80,6 +84,7 @@ uint8_t apollo_get_noshelf ();
 uint8_t apollo_get_revision ();
 uint8_t apollo_get_zynq_up ();
 uint8_t apollo_get_zynq_boot_mode ();
+uint8_t apollo_get_sdsel ();
 
 void apollo_set_cm_enable (uint8_t enable);
 void apollo_set_eeprom_we_n (uint8_t state);
@@ -89,6 +94,7 @@ void apollo_set_sense_reset_n (uint8_t state);
 void apollo_set_uart_adr (uint8_t adr);
 void apollo_set_zynq_boot_mode (uint8_t mode);
 void apollo_set_zynq_en (uint8_t state);
+void apollo_set_sdsel   (uint8_t state);
 
 void apollo_write_zynq_i2c_constants ();
 void apollo_esm_reset();
@@ -120,7 +126,6 @@ uint8_t apollo_get_handle_open ();
 #define APOLLO_STATUS_PD_12V_PD  15
 #define APOLLO_STATUS_PD_DONE  16
 #define APOLLO_STATUS_READ_EEPROM  17
-
 
 #define APOLLO_ERR_TIMEOUT_ZYNQ_FPGA 1 
 #define APOLLO_ERR_TIMEOUT_ZYNQ_CPU 2 
