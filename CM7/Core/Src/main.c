@@ -1200,7 +1200,9 @@ void StartDefaultTask(void *argument)
   ipmc_ios_printf(" > Resetting ESM...\r\n");
   while (0==apollo_get_esm_pwr_good()) {}
   osDelay(100);
-  //apollo_esm_reset(100);
+  if (apollo_get_revision() == APOLLO_REV1) {
+    apollo_esm_reset(25);
+  }
   MX_LWIP_Init();
   //osDelay(100);
 
