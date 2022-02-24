@@ -234,7 +234,7 @@ static uint8_t apollo_read_eeprom_cb() {
 		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
 		mt_printf("hw           = rev%d #%d\r\n", rev, id);
 	} else {
-		mt_printf("I2C Failure\r\n");
+		mt_printf("I2C Failure Reading from EEPROM\r\n");
 	}
 	return status;
 }
@@ -284,6 +284,7 @@ static uint8_t apollo_boot_mode_cb()
 		apollo_set_zynq_boot_mode(boot_mode);
 		user_eeprom_set_boot_mode(boot_mode);
 		user_eeprom_write();
+		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 	}
 	else {
