@@ -479,7 +479,6 @@ static uint8_t apollo_write_rev_cb() {
 		user_eeprom_set_revision_number(rev);
 		mt_printf("Setting EEPROM to = rev%d\r\n", rev);
 		user_eeprom_write();
-		osDelay(100);
 		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 }
@@ -491,7 +490,6 @@ static uint8_t apollo_write_id_cb() {
 		user_eeprom_set_serial_number(id);
 		mt_printf("Setting EEPROM to = id%d\r\n", id);
 		user_eeprom_write();
-		osDelay(100);
 		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 }
