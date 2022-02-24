@@ -739,17 +739,17 @@ void terminal_process_task(void *argument)
 
 	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
 
-	CLI_AddCmd("zynqwr",     apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
-	CLI_AddCmd("zynqrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
+	CLI_AddCmd("zwr",     apollo_zynq_i2c_tx_cb,   2, 0, "Write Apollo Zynq I2C");
+	CLI_AddCmd("zrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
 
-	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
-	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
+	CLI_AddCmd("lwr",    apollo_local_i2c_tx_cb,  2, 0, "Write Apollo Local I2C");
+	CLI_AddCmd("lrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
 
-	CLI_AddCmd("cm1wr",      apollo_cm1_i2c_tx_cb,    1, 0, "Write Apollo CM1 I2C");
-	CLI_AddCmd("cm1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
+	CLI_AddCmd("c1wr",      apollo_cm1_i2c_tx_cb,    2, 0, "Write Apollo CM1 I2C");
+	CLI_AddCmd("c1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
 
-	CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
-	CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
+	CLI_AddCmd("c2wr",      apollo_cm2_i2c_tx_cb,    2, 0, "Write Apollo CM2 I2C");
+	CLI_AddCmd("c2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
 	CLI_AddCmd("disableshutoff", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
