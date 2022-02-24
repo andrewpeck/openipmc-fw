@@ -211,6 +211,8 @@ static uint8_t apollo_boot_status_cb()
 static uint8_t apollo_read_eeprom_cb() {
 	mt_printf("\r\n\n");
 
+	osDelay(100);
+
 	char status = user_eeprom_read();
 
 	if (status == 0) {
