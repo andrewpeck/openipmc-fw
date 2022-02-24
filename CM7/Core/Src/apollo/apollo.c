@@ -33,7 +33,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     const uint8_t err) {
 
   uint8_t dis_shutoff=1;
-  user_eeprom_get_disable_shutoff(dis_shutoff);
+  user_eeprom_get_disable_shutoff(&dis_shutoff);
   if (dis_shutoff) {
     return 0;
   }
