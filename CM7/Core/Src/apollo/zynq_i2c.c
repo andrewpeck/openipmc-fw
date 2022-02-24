@@ -31,17 +31,14 @@ uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr) {
 
 uint8_t zynq_wr_reg(uint8_t adr, uint8_t data, uint8_t slave_addr) {
 
-  uint8_t wr_adr = adr;
-  uint8_t wr_data = data;
-
+  uint8_t wr_data [] = {adr, data} ;
   HAL_StatusTypeDef status = HAL_OK;
-  status |= zynq_i2c_tx(&wr_adr, slave_addr);
-  status |= zynq_i2c_tx(&wr_data, slave_addr);
+  status |= zynq_i2c_tx_n(wr_data, slave_addr, 2);
 
   if (status)
     return 0;
   else
-    return wr_data;
+    return 1;
 }
 
 //------------------------------------------------------------------------------
