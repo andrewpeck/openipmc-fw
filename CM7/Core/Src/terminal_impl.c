@@ -367,14 +367,16 @@ static uint8_t apollo_zynq_i2c_tx_cb()
 	uint8_t adr = CLI_GetArgHex(0);
 	uint8_t data = CLI_GetArgHex(1);
 
+  uint8_t wr_data [] = {adr, data} ;
+
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr,  0x60);
-	status |= zynq_i2c_tx (&data, 0x60);
+	status |= zynq_i2c_tx_n (&wr_data,  0x60, 2);
 
 	if (status==HAL_OK)
-		mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
+		mt_printf("Zynq I2C TX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
 	else
 		mt_printf("I2C Failure\r\n");
+
 	return status;
 }
 
