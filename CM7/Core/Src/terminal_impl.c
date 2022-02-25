@@ -127,9 +127,8 @@ static uint8_t info_cb()
 	mt_printf( "\r\n\n" );
 	mt_printf( "OpenIPMC-HW\r\n" );
 	mt_printf( "Firmware commit: %s\r\n", commit_s );
-	mt_printf( "\r\n" );
-	mt_printf( "Target Board: %s\r\n", ipmc_device_id.device_id_string );
-	mt_printf( "IPMB-0 Addr: 0x%x\r\n", ipmb_0_addr );
+	mt_printf( "Target Board:    %s\r\n", ipmc_device_id.device_id_string );
+	mt_printf( "IPMB-0 Addr:     0x%x\r\n", ipmb_0_addr );
 	return TE_OK;
 }
 
