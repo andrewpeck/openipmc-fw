@@ -1176,7 +1176,7 @@ void StartDefaultTask(void *argument)
   sense_i2c_init();
 
   // Apollo Inits
-  ipmc_ios_printf(" > Initializing User GPIOs...\r\n");
+  mt_printf(" > Initializing User GPIOs...\r\n");
   apollo_init_gpios();
   apollo_init_bootmode();
 
@@ -1186,7 +1186,7 @@ void StartDefaultTask(void *argument)
 
   // Check for Benchtop mode
   if (0x41 == ipmc_ios_read_haddress()) {
-    ipmc_ios_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
+    mt_printf("1U Shelf Detected... booting up in no shelf mode\r\n");
     set_benchtop_payload_power_level(1);
   }
 
@@ -1197,7 +1197,7 @@ void StartDefaultTask(void *argument)
   //    enabling this ESM reset breaks network access for the IPMC
   //    it needs to be further investigated but for now DO NOT reset the ESM
 
-  ipmc_ios_printf(" > Resetting ESM...\r\n");
+  mt_printf(" > Resetting ESM...\r\n");
   while (0==apollo_get_esm_pwr_good()) {}
 
   // for rev1 boards, enabling the esm is tied to enabling the 12V
