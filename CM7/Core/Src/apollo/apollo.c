@@ -610,9 +610,9 @@ void apollo_write_zynq_i2c_constants () {
 
   if (apollo_get_zynq_done_generic ()) {
       // sn
-      uint8_t sn;
-      user_eeprom_get_serial_number(&sn);
-      zynq_set_blade_sn(sn);
+      uint8_t reading;
+      user_eeprom_get_serial_number(&reading);
+      zynq_set_blade_sn(reading);
 
       // slot
       zynq_set_blade_slot(ipmc_ios_read_haddress() * 2);
@@ -631,6 +631,39 @@ void apollo_write_zynq_i2c_constants () {
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
       zynq_set_ipmc_mac(mac);
+
+      // // pim
+      read_status_pim400(&reading);
+      zynq_wr_reg(0x00, reading, 0x66);
+
+      read_vholdup_pim400(&reading);
+      zynq_wr_reg(0x04, reading, 0x66);
+
+      read_iout_pim400(&reading);
+      zynq_wr_reg(0x05, reading, 0x66);
+
+      read_voltage_pim400(&reading, 0);
+      zynq_wr_reg(0x06, reading, 0x66);
+
+      read_voltage_pim400(&reading, 1);
+      zynq_wr_reg(0x07, reading, 0x66);
+
+      read_temp_pim400(&reading);
+      zynq_wr_reg(0x08, reading, 0x66);
+
+      // tcn
+      uint8_t data [2];
+      read_sm_tcn_raw(TCN_TOP, data);
+      zynq_wr_reg(0x14, data[1], 0x66);
+      zynq_wr_reg(0x15, data[0], 0x66);
+
+      read_sm_tcn_raw(TCN_MID, data);
+      zynq_wr_reg(0x16, data[1], 0x66);
+      zynq_wr_reg(0x17, data[0], 0x66);
+
+      read_sm_tcn_raw(TCN_BOT, data);
+      zynq_wr_reg(0x18, data[1], 0x66);
+      zynq_wr_reg(0x19, data[0], 0x66);
     }
 }
 

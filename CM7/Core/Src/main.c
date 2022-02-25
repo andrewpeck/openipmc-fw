@@ -1241,7 +1241,7 @@ void StartDefaultTask(void *argument)
     //  pbuf_free(udp_buffer);
     //}
 
-    osDelay (60000); // once per minute
+    osDelay (30000); // once per minute
     apollo_write_zynq_i2c_constants ();
   }
 

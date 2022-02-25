@@ -1,7 +1,9 @@
 #include "sm_sensors.h"
 #include <assert.h>
 
-HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
+HAL_StatusTypeDef read_sm_tcn_raw (uint8_t sensor, uint8_t* data) {
+
+  HAL_StatusTypeDef status = HAL_OK;
 
   uint8_t adr=0;
 
@@ -18,10 +20,8 @@ HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
   // TCN reg 01 = config
   // TCN reg 10 = temperature hysteresis
   // TCN reg 11 = temperature limit set
-
-  uint8_t data [2];
-  HAL_StatusTypeDef status = HAL_OK;
   //status |= local_i2c_tx (0x0,  adr); // temperature register 0x0
+
   status |= local_i2c_rx_n (data, adr, 2);
 
   // the TCN75 has all sorts of features that really don't matter for us (alerts, etc).
@@ -31,6 +31,16 @@ HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
   // | °C  | Sign | 2^6 | 2^5 | 2^4 | 2^3 | 2^2 | 2^1 | 2^0 | 2^-1 | 2^-2 | 2^-3 | 2^-4 | 0 | 0 | 0 | 0 |
   //
   // With 9 bit resolution
+
+  return status;
+}
+
+HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
+
+  HAL_StatusTypeDef status = HAL_OK;
+
+  uint8_t data [2];
+  status = read_sm_tcn_raw(sensor, data);
 
   // mask off the sign bit, we don't care about it
   *reading = (0x7F & data[0]);
