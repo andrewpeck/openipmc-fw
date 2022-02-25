@@ -85,6 +85,7 @@ uint8_t apollo_get_revision ();
 uint8_t apollo_get_zynq_up ();
 uint8_t apollo_get_zynq_boot_mode ();
 uint8_t apollo_get_sdsel ();
+uint8_t apollo_get_zynq_en ();
 
 void apollo_set_cm_enable (uint8_t enable);
 void apollo_set_eeprom_we_n (uint8_t state);
