@@ -1199,12 +1199,17 @@ void StartDefaultTask(void *argument)
 
   ipmc_ios_printf(" > Resetting ESM...\r\n");
   while (0==apollo_get_esm_pwr_good()) {}
-  osDelay(100);
+
+  // for rev1 boards, enabling the esm is tied to enabling the 12V
+  // so keep the network off until the ESM comes up and resets
   if (apollo_get_revision() == APOLLO_REV1) {
-    apollo_esm_reset(25);
+    while (0==apollo_get_zynq_en()) {}
+    osDelay(1000);
   }
+
+  osDelay(100);
+
   MX_LWIP_Init();
-  //osDelay(100);
 
   // Set network interface static IP Address
   const uint8_t ip_octet = ipmc_ios_read_haddress();

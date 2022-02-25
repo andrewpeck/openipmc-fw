@@ -43,6 +43,8 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
 
     for (uint16_t i = 0; i < max; i++) {
 
+      mt_printf("     ...\r\n");
+
       // just poll periodically, to allow the os to do other things
       osDelay(interval_ms);
 
@@ -236,6 +238,10 @@ void apollo_set_esm_reset_n (uint8_t state) {
 
 void apollo_set_zynq_en (uint8_t state) {
   GPIO_SET_STATE_EXPAND (state & 1, APOLLO_ZYNQ_EN);
+}
+
+uint8_t apollo_get_zynq_en () {
+  return GPIO_GET_STATE_EXPAND (APOLLO_ZYNQ_EN);
 }
 
 uint8_t apollo_get_zynq_up () {
@@ -511,6 +517,21 @@ void apollo_powerup_sequence () {
   mt_printf(" > Enabling Zynq\r\n");
   apollo_set_zynq_en(1);
   mt_printf("   Zynq Enabled\r\n");
+
+  // reset esm
+  //------------------------------------------------------------------------------
+
+  if (apollo_get_revision() == APOLLO_REV1) {
+
+    mt_printf(" > Resetting ESM (rev1) \r\n");
+    while (0==apollo_get_esm_pwr_good()) {}
+    osDelay(100);
+
+    while (0==EN_12V_GET_STATE()) {}
+    osDelay(100);
+
+    apollo_esm_reset(25);
+  }
 
   // for SMv1
   //------------------------------------------------------------------------------
