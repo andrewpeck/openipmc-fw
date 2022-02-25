@@ -155,18 +155,36 @@ static uint8_t atca_handle_cb()
 	return TE_OK;
 }
 
+static uint8_t apollo_restart_cb()
+{
+	mt_printf("\r\n");
+	if (apollo_get_revision() == APOLLO_REV1) {
+		mt_printf( "Restarting blade, network will disconnect\r\n\n" );
+	}
+	apollo_powerdown_sequence();
+	osDelay(1000);
+	apollo_powerup_sequence();
+	return TE_OK;
+}
+
 static uint8_t apollo_powerdown_cb()
 {
 	mt_printf( "\r\n\n" );
-	mt_printf("Powering down service module\r\n");
-	apollo_powerdown_sequence();
-	return TE_OK;
+
+	if (apollo_get_revision() != APOLLO_REV1) {
+		apollo_powerdown_sequence();
+	} else {
+		mt_printf( "Powerdown not supported in Rev1.. please restart instead\r\n\n" );
+	}
+  return TE_OK;
 }
 
 static uint8_t apollo_powerup_cb()
 {
 	mt_printf( "\r\n\n" );
-	mt_printf("Powering up service module\r\n");
+	if (apollo_get_revision() == APOLLO_REV1) {
+		mt_printf( "Powering up, network will disconnect\r\n\n" );
+	}
 	apollo_powerup_sequence();
 	return TE_OK;
 }
@@ -730,6 +748,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, "Set the Apollo SD select pin");
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
+	CLI_AddCmd("restart",    apollo_restart_cb,       0, 0, "Restart Apollo (may disconnect terminal)");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
 	CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
 	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Revision");
