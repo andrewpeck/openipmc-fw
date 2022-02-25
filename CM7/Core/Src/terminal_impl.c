@@ -388,7 +388,7 @@ static uint8_t apollo_zynq_i2c_tx_cb()
   uint8_t wr_data [] = {adr, data} ;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx_n (&wr_data,  0x60, 2);
+	status |= zynq_i2c_tx_n (wr_data,  0x60, 2);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C TX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
