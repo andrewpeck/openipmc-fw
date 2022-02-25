@@ -240,17 +240,20 @@ static uint8_t apollo_read_eeprom_cb() {
 		uint8_t rev;
 		uint8_t id;
 		uint8_t sdsel;
+		uint8_t disable_shutoff;
 
 		user_eeprom_get_revision_number(&rev);
 		user_eeprom_get_serial_number(&id);
 		user_eeprom_get_version(&prom_rev);
 		user_eeprom_get_boot_mode(&boot_mode);
 		user_eeprom_get_sdsel(&sdsel);
+		user_eeprom_get_disable_shutoff(&disable_shutoff);
 
 		mt_printf("prom version = 0x%02X\r\n", prom_rev);
 		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
 		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
 		mt_printf("hw           = rev%d #%d\r\n", rev, id);
+		mt_printf("dis_shutoff  = 0x%02X\r\n", disable_shutoff);
 	} else {
 		mt_printf("I2C Failure Reading from EEPROM\r\n");
 	}
@@ -770,7 +773,7 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("c2wr",      apollo_cm2_i2c_tx_cb,    2, 0, "Write Apollo CM2 I2C");
 	CLI_AddCmd("c2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
-	CLI_AddCmd("disableshutoff", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
+	CLI_AddCmd("dis_shdn", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
 	// Andre recommended commenting this out for now, due to a known bug
 	//info_cb();
