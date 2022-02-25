@@ -615,7 +615,7 @@ void apollo_write_zynq_i2c_constants () {
       zynq_set_blade_sn(sn);
 
       // slot
-      zynq_set_blade_slot(ipmc_ios_read_haddress()); // TODO: divide by 2, multiply by 2???
+      zynq_set_blade_slot(ipmc_ios_read_haddress() * 2);
 
       // revision
       zynq_set_blade_rev(apollo_get_revision());
