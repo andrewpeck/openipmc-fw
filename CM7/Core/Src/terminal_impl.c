@@ -385,13 +385,14 @@ static uint8_t apollo_cm2_i2c_tx_cb() {
 static uint8_t apollo_zynq_i2c_tx_cb()
 {
 	mt_printf( "\r\n\n" );
-	uint8_t adr = CLI_GetArgHex(0);
-	uint8_t data = CLI_GetArgHex(1);
+	uint8_t slave = CLI_GetArgHex(0);
+	uint8_t adr = CLI_GetArgHex(1);
+	uint8_t data = CLI_GetArgHex(2);
 
   uint8_t wr_data [] = {adr, data} ;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx_n (wr_data,  0x60, 2);
+	status |= zynq_i2c_tx_n (wr_data,  0x60+slave, 2);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C TX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
@@ -536,12 +537,13 @@ static uint8_t apollo_zynq_i2c_rx_cb()
 {
 	mt_printf( "\r\n\n" );
 
-	uint8_t adr = CLI_GetArgHex(0);
-	uint8_t data = 0xFF;
+	uint8_t slave = CLI_GetArgHex(0);
+	uint8_t adr   = CLI_GetArgHex(1);
+	uint8_t data  = 0xFF;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr,  0x60);
-	status |= zynq_i2c_rx (&data, 0x60);
+	status |= zynq_i2c_tx (&adr,  0x60+slave);
+	status |= zynq_i2c_rx (&data, 0x60+slave);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
@@ -761,8 +763,8 @@ void terminal_process_task(void *argument)
 
 	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
 
-	CLI_AddCmd("zwr",     apollo_zynq_i2c_tx_cb,   2, 0, "Write Apollo Zynq I2C");
-	CLI_AddCmd("zrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
+	CLI_AddCmd("zwr",     apollo_zynq_i2c_tx_cb,   3, 0, "Write Apollo Zynq I2C");
+	CLI_AddCmd("zrd",     apollo_zynq_i2c_rx_cb,   2, 0, "Read Apollo Zynq I2C");
 
 	CLI_AddCmd("lwr",    apollo_local_i2c_tx_cb,  2, 0, "Write Apollo Local I2C");
 	CLI_AddCmd("lrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
