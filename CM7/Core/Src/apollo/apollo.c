@@ -527,9 +527,6 @@ void apollo_powerup_sequence () {
     while (0==apollo_get_esm_pwr_good()) {}
     osDelay(100);
 
-    while (0==EN_12V_GET_STATE()) {}
-    osDelay(100);
-
     apollo_esm_reset(25);
   }
 
