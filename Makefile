@@ -87,12 +87,14 @@ COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: elf
+all: headers elf
 #elf
 
 headers:
 	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
+	touch CM7/Core/Src/terminal_impl.c
+	make CM7/Core/Src/terminal_impl.o
 	touch CM7/Core/Src/openipmc_inits.c
 	make CM7/Core/Src/openipmc_inits.o
 
