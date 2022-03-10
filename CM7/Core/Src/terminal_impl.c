@@ -226,7 +226,7 @@ static uint8_t apollo_boot_status_cb()
 }
 
 static uint8_t apollo_read_eeprom_cb() {
-	mt_printf("\r\n\n");
+	mt_printf("\r\n");
 
 	osDelay(100);
 
@@ -248,11 +248,14 @@ static uint8_t apollo_read_eeprom_cb() {
 		user_eeprom_get_sdsel(&sdsel);
 		user_eeprom_get_disable_shutoff(&disable_shutoff);
 
-		mt_printf("prom version = 0x%02X\r\n", prom_rev);
-		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
-		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
-		mt_printf("hw           = rev%d #%d\r\n", rev, id);
-		mt_printf("dis_shutoff  = 0x%02X\r\n", disable_shutoff);
+		if (prom_rev != 0x0) {
+			mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
+		}
+		mt_printf("  prom version = 0x%02X\r\n", prom_rev);
+		mt_printf("  bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("  sdsel        = 0x%02X\r\n", sdsel);
+		mt_printf("  hw           = rev%d #%d\r\n", rev, id);
+		mt_printf("  dis_shutoff  = 0x%02X\r\n", disable_shutoff);
 	} else {
 		mt_printf("I2C Failure Reading from EEPROM\r\n");
 	}
@@ -491,6 +494,16 @@ static uint8_t apollo_read_tcn_cb() {
 	}
 
 	return 0;
+}
+
+static uint8_t apollo_write_ver_cb() {
+		mt_printf("\r\n\n");
+		uint8_t rev = CLI_GetArgDec(0);
+		user_eeprom_set_version(rev);
+		mt_printf("Setting EEPROM dataformat rev to = rev%d\r\n", rev);
+		user_eeprom_write();
+		mt_printf("EEPROM Read Back as:\r\n");
+		return (apollo_read_eeprom_cb());
 }
 
 
@@ -755,8 +768,9 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("restart",    apollo_restart_cb,       0, 0, "Restart Apollo (may disconnect terminal)");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
 	CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
-	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Board Revision");
 	CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Board ID");
+	CLI_AddCmd("verwr",      apollo_write_ver_cb,     1, 0, "Write Apollo EEPROM Dataformat Revision");
 	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
 	CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
 
