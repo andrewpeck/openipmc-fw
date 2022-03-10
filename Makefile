@@ -134,7 +134,7 @@ elf: build
 	@arm-none-eabi-size   openipmc-fw_CM7.elf
 	@arm-none-eabi-objdump -h -S  openipmc-fw_CM7.elf  > "openipmc-fw_CM7.list"
 	@arm-none-eabi-objcopy  -O binary  openipmc-fw_CM7.elf  "openipmc-fw_CM7.bin"
-# make hpm
+	make hpm
 
 load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw_CM7.bin
