@@ -140,7 +140,10 @@ load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw_CM7.bin
 
 load_st:
-	st-flash --reset write ./openipmc-fw_CM7.bin 0x08000000
+	st-flash --freq 1000 --reset write ./openipmc-fw_CM7.bin 0x08000000
+
+load_bootloader:
+	st-flash --freq 1000 --reset write ./openipmc-fw-bootloader_CM7.bin 0x081E0000
 
 gitlab:
 	rm -rf builds
