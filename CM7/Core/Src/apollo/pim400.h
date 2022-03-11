@@ -6,6 +6,8 @@
 #include "sensor_helper.h"
 #include "main.h"
 
+HAL_StatusTypeDef read_vholdup_pim400 (uint8_t* reading);
+HAL_StatusTypeDef read_status_pim400 (uint8_t* reading);
 HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading);
 HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading);
 HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply);

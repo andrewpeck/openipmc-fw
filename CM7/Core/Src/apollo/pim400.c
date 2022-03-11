@@ -11,6 +11,28 @@
 
 // https://library.industrialsolutions.abb.com/publibrary/checkout/PIM400?TNR=Data%20Sheets|PIM400|PDF
 // https://www.mouser.com/datasheet/2/167/PIM400_DS-1920379.pdf
+//
+HAL_StatusTypeDef read_status_pim400 (uint8_t* reading) {
+  uint8_t reg_adr;
+  reg_adr = PIM400_STATUS_REG;
+
+  HAL_StatusTypeDef status = HAL_OK;
+  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
+  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+
+  return status;
+}
+
+HAL_StatusTypeDef read_vholdup_pim400 (uint8_t* reading) {
+  uint8_t reg_adr;
+  reg_adr = PIM400_VHOLDUP_REG;
+
+  HAL_StatusTypeDef status = HAL_OK;
+  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
+  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+
+  return status;
+}
 
 HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading) {
   uint8_t reg_adr;

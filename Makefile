@@ -87,12 +87,14 @@ COBJS = $(CFILES:.c=.o)
 
 AOBJS = CM7/Core/Startup/startup_stm32h745xihx.o
 
-all: elf
+all: headers elf
 #elf
 
 headers:
 	@echo "Generating headers"
 	@cd CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
+	touch CM7/Core/Src/terminal_impl.c
+	make CM7/Core/Src/terminal_impl.o
 	touch CM7/Core/Src/openipmc_inits.c
 	make CM7/Core/Src/openipmc_inits.o
 
@@ -134,13 +136,16 @@ elf: build
 	@arm-none-eabi-size   openipmc-fw_CM7.elf
 	@arm-none-eabi-objdump -h -S  openipmc-fw_CM7.elf  > "openipmc-fw_CM7.list"
 	@arm-none-eabi-objcopy  -O binary  openipmc-fw_CM7.elf  "openipmc-fw_CM7.bin"
-# make hpm
+	make hpm
 
 load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw_CM7.bin
 
 load_st:
-	st-flash --reset write ./openipmc-fw_CM7.bin 0x08000000
+	st-flash --freq 1000 --reset write ./openipmc-fw_CM7.bin 0x08000000
+
+load_bootloader:
+	st-flash --freq 1000 --reset write ./openipmc-fw-bootloader_CM7.bin 0x081E0000
 
 gitlab:
 	rm -rf builds

@@ -3,6 +3,9 @@
 
 #include "apollo_i2c.h"
 
+uint8_t zynq_wr_reg(uint8_t adr, uint8_t data, uint8_t slave_addr);
+uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr);
+
 uint8_t zynq_get_i2c_done ();
 uint8_t zynq_get_boot_error ();
 void zynq_request_shutdown();

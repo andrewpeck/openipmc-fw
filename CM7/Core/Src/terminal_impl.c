@@ -127,9 +127,8 @@ static uint8_t info_cb()
 	mt_printf( "\r\n\n" );
 	mt_printf( "OpenIPMC-HW\r\n" );
 	mt_printf( "Firmware commit: %s\r\n", commit_s );
-	mt_printf( "\r\n" );
-	mt_printf( "Target Board: %s\r\n", ipmc_device_id.device_id_string );
-	mt_printf( "IPMB-0 Addr: 0x%x\r\n", ipmb_0_addr );
+	mt_printf( "Target Board:    %s\r\n", ipmc_device_id.device_id_string );
+	mt_printf( "IPMB-0 Addr:     0x%x\r\n", ipmb_0_addr );
 	return TE_OK;
 }
 
@@ -155,18 +154,36 @@ static uint8_t atca_handle_cb()
 	return TE_OK;
 }
 
+static uint8_t apollo_restart_cb()
+{
+	mt_printf("\r\n");
+	if (apollo_get_revision() == APOLLO_REV1) {
+		mt_printf( "Restarting blade, network will disconnect\r\n\n" );
+	}
+	apollo_powerdown_sequence();
+	osDelay(1000);
+	apollo_powerup_sequence();
+	return TE_OK;
+}
+
 static uint8_t apollo_powerdown_cb()
 {
 	mt_printf( "\r\n\n" );
-	mt_printf("Powering down service module\r\n");
-	apollo_powerdown_sequence();
-	return TE_OK;
+
+	if (apollo_get_revision() != APOLLO_REV1) {
+		apollo_powerdown_sequence();
+	} else {
+		mt_printf( "Powerdown not supported in Rev1.. please restart instead\r\n\n" );
+	}
+  return TE_OK;
 }
 
 static uint8_t apollo_powerup_cb()
 {
 	mt_printf( "\r\n\n" );
-	mt_printf("Powering up service module\r\n");
+	if (apollo_get_revision() == APOLLO_REV1) {
+		mt_printf( "Powering up, network will disconnect\r\n\n" );
+	}
 	apollo_powerup_sequence();
 	return TE_OK;
 }
@@ -209,7 +226,9 @@ static uint8_t apollo_boot_status_cb()
 }
 
 static uint8_t apollo_read_eeprom_cb() {
-	mt_printf("\r\n\n");
+	mt_printf("\r\n");
+
+	osDelay(100);
 
 	char status = user_eeprom_read();
 
@@ -220,19 +239,25 @@ static uint8_t apollo_read_eeprom_cb() {
 		uint8_t rev;
 		uint8_t id;
 		uint8_t sdsel;
+		uint8_t disable_shutoff;
 
 		user_eeprom_get_revision_number(&rev);
 		user_eeprom_get_serial_number(&id);
 		user_eeprom_get_version(&prom_rev);
 		user_eeprom_get_boot_mode(&boot_mode);
 		user_eeprom_get_sdsel(&sdsel);
+		user_eeprom_get_disable_shutoff(&disable_shutoff);
 
-		mt_printf("prom version = 0x%02X\r\n", prom_rev);
-		mt_printf("bootmode     = 0x%02X\r\n", boot_mode);
-		mt_printf("sdsel        = 0x%02X\r\n", sdsel);
-		mt_printf("hw           = rev%d #%d\r\n", rev, id);
+		if (prom_rev != 0x0) {
+			mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
+		}
+		mt_printf("  prom version = 0x%02X\r\n", prom_rev);
+		mt_printf("  bootmode     = 0x%02X\r\n", boot_mode);
+		mt_printf("  sdsel        = 0x%02X\r\n", sdsel);
+		mt_printf("  hw           = rev%d #%d\r\n", rev, id);
+		mt_printf("  dis_shutoff  = 0x%02X\r\n", disable_shutoff);
 	} else {
-		mt_printf("I2C Failure\r\n");
+		mt_printf("I2C Failure Reading from EEPROM\r\n");
 	}
 	return status;
 }
@@ -282,6 +307,7 @@ static uint8_t apollo_boot_mode_cb()
 		apollo_set_zynq_boot_mode(boot_mode);
 		user_eeprom_set_boot_mode(boot_mode);
 		user_eeprom_write();
+		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 	}
 	else {
@@ -361,17 +387,20 @@ static uint8_t apollo_cm2_i2c_tx_cb() {
 static uint8_t apollo_zynq_i2c_tx_cb()
 {
 	mt_printf( "\r\n\n" );
-	uint8_t adr = CLI_GetArgHex(0);
-	uint8_t data = CLI_GetArgHex(1);
+	uint8_t slave = CLI_GetArgHex(0);
+	uint8_t adr = CLI_GetArgHex(1);
+	uint8_t data = CLI_GetArgHex(2);
+
+  uint8_t wr_data [] = {adr, data} ;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr,  0x60);
-	status |= zynq_i2c_tx (&data, 0x60);
+	status |= zynq_i2c_tx_n (wr_data,  0x60+slave, 2);
 
 	if (status==HAL_OK)
-		mt_printf("Zynq I2C TX adr=0x%02X data=0x%02X\r\n", adr, data);
+		mt_printf("Zynq I2C TX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
 	else
 		mt_printf("I2C Failure\r\n");
+
 	return status;
 }
 
@@ -467,6 +496,16 @@ static uint8_t apollo_read_tcn_cb() {
 	return 0;
 }
 
+static uint8_t apollo_write_ver_cb() {
+		mt_printf("\r\n\n");
+		uint8_t rev = CLI_GetArgDec(0);
+		user_eeprom_set_version(rev);
+		mt_printf("Setting EEPROM dataformat rev to = rev%d\r\n", rev);
+		user_eeprom_write();
+		mt_printf("EEPROM Read Back as:\r\n");
+		return (apollo_read_eeprom_cb());
+}
+
 
 static uint8_t apollo_write_rev_cb() {
 		mt_printf("\r\n\n");
@@ -474,7 +513,6 @@ static uint8_t apollo_write_rev_cb() {
 		user_eeprom_set_revision_number(rev);
 		mt_printf("Setting EEPROM to = rev%d\r\n", rev);
 		user_eeprom_write();
-		osDelay(100);
 		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 }
@@ -486,7 +524,6 @@ static uint8_t apollo_write_id_cb() {
 		user_eeprom_set_serial_number(id);
 		mt_printf("Setting EEPROM to = id%d\r\n", id);
 		user_eeprom_write();
-		osDelay(100);
 		mt_printf("EEPROM Read Back as:\r\n");
 		return (apollo_read_eeprom_cb());
 }
@@ -512,12 +549,13 @@ static uint8_t apollo_zynq_i2c_rx_cb()
 {
 	mt_printf( "\r\n\n" );
 
-	uint8_t adr = CLI_GetArgHex(0);
-	uint8_t data = 0xFF;
+	uint8_t slave = CLI_GetArgHex(0);
+	uint8_t adr   = CLI_GetArgHex(1);
+	uint8_t data  = 0xFF;
 
 	HAL_StatusTypeDef status = HAL_OK;
-	status |= zynq_i2c_tx (&adr,  0x60);
-	status |= zynq_i2c_rx (&data, 0x60);
+	status |= zynq_i2c_tx (&adr,  0x60+slave);
+	status |= zynq_i2c_rx (&data, 0x60+slave);
 
 	if (status==HAL_OK)
 		mt_printf("Zynq I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
@@ -727,28 +765,30 @@ void terminal_process_task(void *argument)
 	CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, "Set the Apollo SD select pin");
 	CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
 	CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
+	CLI_AddCmd("restart",    apollo_restart_cb,       0, 0, "Restart Apollo (may disconnect terminal)");
 	CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
 	CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
-	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Revision");
+	CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Board Revision");
 	CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Board ID");
+	CLI_AddCmd("verwr",      apollo_write_ver_cb,     1, 0, "Write Apollo EEPROM Dataformat Revision");
 	CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
 	CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
 
 	CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
 
-	CLI_AddCmd("zynqwr",     apollo_zynq_i2c_tx_cb,   1, 0, "Write Apollo Zynq I2C");
-	CLI_AddCmd("zynqrd",     apollo_zynq_i2c_rx_cb,   1, 0, "Read Apollo Zynq I2C");
+	CLI_AddCmd("zwr",     apollo_zynq_i2c_tx_cb,   3, 0, "Write Apollo Zynq I2C");
+	CLI_AddCmd("zrd",     apollo_zynq_i2c_rx_cb,   2, 0, "Read Apollo Zynq I2C");
 
-	CLI_AddCmd("localwr",    apollo_local_i2c_tx_cb,  1, 0, "Write Apollo Local I2C");
-	CLI_AddCmd("localrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
+	CLI_AddCmd("lwr",    apollo_local_i2c_tx_cb,  2, 0, "Write Apollo Local I2C");
+	CLI_AddCmd("lrd",    apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
 
-	CLI_AddCmd("cm1wr",      apollo_cm1_i2c_tx_cb,    1, 0, "Write Apollo CM1 I2C");
-	CLI_AddCmd("cm1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
+	CLI_AddCmd("c1wr",      apollo_cm1_i2c_tx_cb,    2, 0, "Write Apollo CM1 I2C");
+	CLI_AddCmd("c1rd",      apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
 
-	CLI_AddCmd("cm2wr",      apollo_cm2_i2c_tx_cb,    1, 0, "Write Apollo CM2 I2C");
-	CLI_AddCmd("cm2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
+	CLI_AddCmd("c2wr",      apollo_cm2_i2c_tx_cb,    2, 0, "Write Apollo CM2 I2C");
+	CLI_AddCmd("c2rd",      apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
-	CLI_AddCmd("disableshutoff", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
+	CLI_AddCmd("dis_shdn", apollo_disable_shutoff_cb, 1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
 	// Andre recommended commenting this out for now, due to a known bug
 	//info_cb();

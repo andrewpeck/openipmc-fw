@@ -1,4 +1,5 @@
 #include "apollo.h"
+#include "printf.h"
 #include "stm32h7xx_hal.h"
 #include "ipmc_ios.h"
 #include "../dimm_gpios.h"
@@ -33,7 +34,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     const uint8_t err) {
 
   uint8_t dis_shutoff=1;
-  user_eeprom_get_disable_shutoff(dis_shutoff);
+  user_eeprom_get_disable_shutoff(&dis_shutoff);
   if (dis_shutoff) {
     return 0;
   }
@@ -41,6 +42,8 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     const uint16_t max = seconds * (1000 / interval_ms);
 
     for (uint16_t i = 0; i < max; i++) {
+
+      mt_printf("     ...\r\n");
 
       // just poll periodically, to allow the os to do other things
       osDelay(interval_ms);
@@ -237,6 +240,10 @@ void apollo_set_zynq_en (uint8_t state) {
   GPIO_SET_STATE_EXPAND (state & 1, APOLLO_ZYNQ_EN);
 }
 
+uint8_t apollo_get_zynq_en () {
+  return GPIO_GET_STATE_EXPAND (APOLLO_ZYNQ_EN);
+}
+
 uint8_t apollo_get_zynq_up () {
   uint8_t state = GPIO_GET_STATE_EXPAND (APOLLO_ZYNQ_UP);
   return state;
@@ -273,40 +280,53 @@ void apollo_powerdown_sequence() {
   apollo_startup_done = 0;
   apollo_startup_started = 0;
 
-  ipmc_ios_printf("Powering Down Service Module:\r\n");
+  mt_printf("Powering Down Service Module:\r\n");
 
-  // ask zynq to shut down
-  ipmc_ios_printf(" > Requesting zynq shutdown...\r\n");
+  // ask zynq (nicely) to shut down
+  mt_printf(" > Requesting zynq shutdown\r\n");
   zynq_request_shutdown();
 
-  // disable zynq
-  ipmc_ios_printf(" > Disabling Zynq...\r\n");
-  apollo_set_zynq_en(0);
-
   // wait for zynq to shut down
-  ipmc_ios_printf(" > Waiting for Zynq to shut down...\r\n");
+  mt_printf(" > Waiting for Zynq to shut down\r\n");
   apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
 
-  const uint8_t seconds = 20;
+  const uint8_t seconds = 10;
 
   for (int8_t i = 0; i < seconds * 10; i++) {
     if (apollo_get_zynq_done_generic() == 0) {
       break;
     }
     osDelay(100);
+    if (i % 10 == 0) {
+      mt_printf("     ...\r\n");
+    }
   }
 
   if (apollo_get_zynq_done_generic() == 1) {
     apollo_abormal_shutdown = APOLLO_ERR_TIMEOUT_ZYNQ_SHUTDOWN;
+    mt_printf("   Zynq failed to shut down properly!! powering off anyway\r\n");
+  } else {
+    mt_printf("   Zynq shut down ok.. powering off\r\n");
   }
+
+  // disable zynq
+  mt_printf(" > Disabling Zynq Enable Line\r\n");
+  apollo_set_zynq_en(0);
+
+  osDelay(500);
 
   apollo_status = APOLLO_STATUS_PD_TIMEOUT_ZYNQ_OFF;
 
   // turn off power
   apollo_status = APOLLO_STATUS_PD_12V_PD;
-  ipmc_ios_printf(" > Disabling 12V Power...\r\n");
+
+  mt_printf(" > Disabling 12V Power\r\n");
+
   EN_12V_SET_STATE(RESET);
+  mt_printf("   12V power disabled\r\n");
   apollo_status = APOLLO_STATUS_PD_DONE;
+  mt_printf(" > Shutdown done\r\n");
+  return;
 }
 
 void apollo_init_bootmode () {
@@ -432,12 +452,12 @@ void apollo_powerup_sequence () {
   EN_12V_SET_STATE(RESET);
   apollo_set_zynq_en(0);
 
-  ipmc_ios_printf("Powering Up Service Module:\r\n");
+  mt_printf("Powering Up Service Module:\r\n");
 
   // reset i2c sense mux
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_RESET_I2C_MUX;
-  ipmc_ios_printf(" > Resetting MGM I2C Mux...\r\n");
+  mt_printf(" > Resetting MGM I2C Mux\r\n");
   apollo_sense_reset ();
 
   // Read from EEPROM
@@ -458,14 +478,14 @@ void apollo_powerup_sequence () {
   // set boot pins
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_BOOT_MODE;
-  ipmc_ios_printf(" > Setting boot mode to 0x%1X...\r\n", apollo_boot_mode);
+  mt_printf(" > Setting boot mode to 0x%1X\r\n", apollo_boot_mode);
   apollo_set_zynq_boot_mode (apollo_boot_mode);
 
   // set uart pins
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_UART_ADR;
   uint8_t uart_adr = APOLLO_UART_DISCONNECT;
-  ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
+  mt_printf(" > Setting uart adr to 0x%1X\r\n", uart_adr);
   apollo_set_uart_adr (uart_adr);
 
   // set jtag chain select pins
@@ -476,7 +496,7 @@ void apollo_powerup_sequence () {
     // chain sel has a different meaning in rev0
     chain_sel = 0;
   }
-  ipmc_ios_printf(" > Setting jtag chain sel to 0x%1X...\r\n", chain_sel);
+  mt_printf(" > Setting jtag chain sel to 0x%1X\r\n", chain_sel);
   apollo_set_jtag_chain_sel (chain_sel);
 
   // turn off we on eeprom
@@ -489,25 +509,34 @@ void apollo_powerup_sequence () {
   // turn on power
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_12V_EN;
-  ipmc_ios_printf(" > Enabling 12V power...\r\n");
+  mt_printf(" > Enabling 12V power\r\n");
   EN_12V_SET_STATE(SET);
-
-  osDelay(100);
-
   // set zynq enable
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_ZYNQ_EN;
-  ipmc_ios_printf(" > Enabling Zynq...\r\n");
+  mt_printf(" > Enabling Zynq\r\n");
   apollo_set_zynq_en(1);
-  ipmc_ios_printf(" > Zynq Enabled...\r\n");
+  mt_printf("   Zynq Enabled\r\n");
+
+  // reset esm
+  //------------------------------------------------------------------------------
+
+  if (apollo_get_revision() == APOLLO_REV1) {
+
+    mt_printf(" > Resetting ESM (rev1) \r\n");
+    while (0==apollo_get_esm_pwr_good()) {}
+    osDelay(100);
+
+    apollo_esm_reset(25);
+  }
 
   // for SMv1
   //------------------------------------------------------------------------------
 
   //if (revision == APOLLO_REV1) {
-  //    ipmc_ios_printf(" > Waiting for ESM Power Good...\r\n");
+  //    mt_printf(" > Waiting for ESM Power Good\r\n");
   //    while (0==apollo_get_esm_pwr_good()) {;}
-  //    ipmc_ios_printf(" > ESM Power Good...\r\n");
+  //    mt_printf(" > ESM Power Good\r\n");
   //    LED_0_SET_STATE(SET);
   // TODO: timeout
   // turn off power  ?
@@ -519,7 +548,7 @@ void apollo_powerup_sequence () {
 
     apollo_status = APOLLO_STATUS_PU_WAIT_FPGA_DONE;
 
-    ipmc_ios_printf(" > Waiting for Zynq FPGA...\r\n");
+    mt_printf(" > Waiting for Zynq FPGA\r\n");
 
     // wait for fpga to go up, if it doesn't then shut back down
     if (apollo_timeout_counter (apollo_get_fpga_done, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_FPGA)) {
@@ -527,7 +556,7 @@ void apollo_powerup_sequence () {
       return;
     }
 
-    ipmc_ios_printf(" > ZYNQ FPGA DONE...\r\n");
+    mt_printf(" > ZYNQ FPGA DONE\r\n");
     LED_0_SET_STATE(SET);
 
     // TODO: timeout
@@ -540,20 +569,18 @@ void apollo_powerup_sequence () {
   //------------------------------------------------------------------------------
 
   uart_adr = APOLLO_UART_ZYNQ;
-  ipmc_ios_printf(" > Setting uart adr to 0x%1X...\r\n", uart_adr);
+  mt_printf(" > Setting uart adr to 0x%1X\r\n", uart_adr);
   // FIXME: for now we just set to zero
   uart_adr = 0; // 0 == connect to Zynq
   apollo_set_uart_adr (uart_adr);
 
-  ipmc_ios_printf(" > Powerup done\n", uart_adr);
+  mt_printf(" > Powerup done\n", uart_adr);
 
   // zynq timeout
   //------------------------------------------------------------------------------
 
-  ipmc_ios_printf(" > Waiting for Zynq OS...\r\n");
-
   // Zynq up is from Linux
-  ipmc_ios_printf(" > SMRev2: Waiting for Zynq Up..\r\n");
+  mt_printf(" > Waiting for Zynq Up\r\n");
 
   apollo_status = APOLLO_STATUS_PU_WAIT_ZYNQ_DONE;
     // wait for zynq to go up, if it doesn't then shut back down
@@ -562,13 +589,10 @@ void apollo_powerup_sequence () {
     return;
   }
 
-  // if (revision==APOLLO_REV1) {
-  //   apollo_esm_reset(100);
-  // }
-
   // write zynq constants
   //------------------------------------------------------------------------------
 
+  mt_printf(" > Writing I2C Constants to Zynq\r\n");
   apollo_write_zynq_i2c_constants();
 
   // Fini
@@ -578,18 +602,20 @@ void apollo_powerup_sequence () {
 
   apollo_startup_done = 1;
 
+  mt_printf(" > Startup DONE\r\n");
+
 }
 
 void apollo_write_zynq_i2c_constants () {
 
   if (apollo_get_zynq_done_generic ()) {
       // sn
-      uint8_t sn;
-      user_eeprom_get_serial_number(&sn);
-      zynq_set_blade_sn(sn);
+      uint8_t reading;
+      user_eeprom_get_serial_number(&reading);
+      zynq_set_blade_sn(reading);
 
       // slot
-      zynq_set_blade_slot(ipmc_ios_read_haddress()); // TODO: divide by 2, multiply by 2???
+      zynq_set_blade_slot(ipmc_ios_read_haddress() * 2);
 
       // revision
       zynq_set_blade_rev(apollo_get_revision());
@@ -605,6 +631,39 @@ void apollo_write_zynq_i2c_constants () {
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
       zynq_set_ipmc_mac(mac);
+
+      // // pim
+      read_status_pim400(&reading);
+      zynq_wr_reg(0x00, reading, 0x66);
+
+      read_vholdup_pim400(&reading);
+      zynq_wr_reg(0x04, reading, 0x66);
+
+      read_iout_pim400(&reading);
+      zynq_wr_reg(0x05, reading, 0x66);
+
+      read_voltage_pim400(&reading, 0);
+      zynq_wr_reg(0x06, reading, 0x66);
+
+      read_voltage_pim400(&reading, 1);
+      zynq_wr_reg(0x07, reading, 0x66);
+
+      read_temp_pim400(&reading);
+      zynq_wr_reg(0x08, reading, 0x66);
+
+      // tcn
+      uint8_t data [2];
+      read_sm_tcn_raw(TCN_TOP, data);
+      zynq_wr_reg(0x14, data[1], 0x66);
+      zynq_wr_reg(0x15, data[0], 0x66);
+
+      read_sm_tcn_raw(TCN_MID, data);
+      zynq_wr_reg(0x16, data[1], 0x66);
+      zynq_wr_reg(0x17, data[0], 0x66);
+
+      read_sm_tcn_raw(TCN_BOT, data);
+      zynq_wr_reg(0x18, data[1], 0x66);
+      zynq_wr_reg(0x19, data[0], 0x66);
     }
 }
 

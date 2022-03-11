@@ -3,9 +3,16 @@ image: "hardwario/gcc-arm-embedded:8-2018-q4-major"
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
+before_script:
+  - apt-get update
+  - apt-get --yes install libssl-dev zlib1g-dev
+
 build-job:
   stage: build
-  script: "make headers && make -j8"
+  script:
+    - make headers
+    - make -j8
+    - make hpm
   artifacts:
     paths:
       - openipmc-fw_CM7.bin
