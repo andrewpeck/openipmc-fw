@@ -13,6 +13,9 @@
 #include "stdint.h"
 #include "zynq_i2c.h"
 
+extern uint8_t shelf_address;
+extern uint8_t shelf_address_type;
+
 uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
 uint8_t apollo_startup_done     = 0;
@@ -664,6 +667,10 @@ void apollo_write_zynq_i2c_constants () {
       read_sm_tcn_raw(TCN_BOT, data);
       zynq_wr_reg(0x18, data[1], 0x66);
       zynq_wr_reg(0x19, data[0], 0x66);
+
+      zynq_wr_reg(0x08, shelf_address, 0x60);
+      zynq_wr_reg(0x09, shelf_address_type, 0x60);
+
     }
 }
 
