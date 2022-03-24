@@ -1,12 +1,3 @@
-[submodule "CM7/Core/printf"]
-	path = CM7/Core/printf
-	url = https://github.com/mpaland/printf.git
-[submodule "CM7/Core/openipmc"]
-	path = CM7/Core/openipmc
-	url = https://gitlab.com/openipmc/openipmc.git
-[submodule "CM7/Core/mcu_telnet_server"]
-	path = CM7/Core/mcu_telnet_server
-	url = https://github.com/cascadan/mcu_telnet_server.git
-[submodule "CM7/Core/terminal"]
-	path = CM7/Core/terminal
-	url = https://github.com/cascadan/terminal.git
+[submodule "openipmc-fw"]
+	path = openipmc-fw
+	url = https://gitlab.com/openipmc/openipmc-fw/
