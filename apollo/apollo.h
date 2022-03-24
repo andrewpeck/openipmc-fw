@@ -1,7 +1,7 @@
 #ifndef __APOLLO_H_
 #define __APOLLO_H_
 
-#include "../dimm_gpios.h"
+#include "dimm_gpios.h"
 
 // add a layer with an extra level of indirection to allow macro expansion in the arguments of the macro..
 // uhg...

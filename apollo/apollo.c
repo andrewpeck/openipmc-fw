@@ -2,7 +2,7 @@
 #include "printf.h"
 #include "stm32h7xx_hal.h"
 #include "ipmc_ios.h"
-#include "../dimm_gpios.h"
+#include "dimm_gpios.h"
 #include "cmsis_os.h"
 #include "user_eeprom.h"
 #include "sensor_helper.h"
@@ -15,6 +15,7 @@
 
 extern uint8_t shelf_address;
 extern uint8_t shelf_address_type;
+void mt_printf(const char* format, ...);
 
 uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
@@ -674,7 +675,7 @@ void apollo_write_zynq_i2c_constants () {
     }
 }
 
-void board_specific_activation_control(uint8_t current_power_level,
+void board_specific_activation_policy (uint8_t current_power_level,
                                        uint8_t new_power_level) {
   if (new_power_level == 0) {
     apollo_powerdown_sequence();
@@ -684,13 +685,13 @@ void board_specific_activation_control(uint8_t current_power_level,
   return;
 }
 
-void payload_cold_reset(void) {
-  PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence();
+// void payload_cold_reset(void) {
+//   PAYLOAD_RESET_SET_STATE(RESET);
+//   apollo_powerdown_sequence();
 
-  PAYLOAD_RESET_SET_STATE(SET);
-  apollo_powerup_sequence();
-}
+//   PAYLOAD_RESET_SET_STATE(SET);
+//   apollo_powerup_sequence();
+// }
 
 void board_specific_sensor_inits() {
 

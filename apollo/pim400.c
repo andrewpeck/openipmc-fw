@@ -4,8 +4,8 @@
 //OpenIPMC includes
 #include "pim400.h"
 #include "apollo.h"
-#include "../dimm_gpios.h"
-#include "../mgm_i2c.h"
+#include "dimm_gpios.h"
+#include "mgm_i2c.h"
 #include "power_manager.h"
 #include "sdr_definitions.h"
 

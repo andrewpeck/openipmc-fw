@@ -7,6 +7,6 @@
 #define FW_VERSION_MAJOR 1      // Integer 0 ~ 127
 #define FW_VERSION_MINOR 0x00   // BCD from 00 to 99 (two digits) Example: Ver. 1.2.3 -> 0x23
 
-#define DEVICE_ID_STRING "some-ATCA-board";    // String, 16 characters maximum.
+#define DEVICE_ID_STRING "APOLLO-OPENIPMC";    // String, 16 characters maximum.
 
 #endif
