@@ -11,10 +11,10 @@ build-job:
   stage: build
   script:
     - make headers
-    - make -j8
-    - make hpm
+    - make -j8 hpm
+    - make generate_upgrade_file
   artifacts:
     paths:
-      - openipmc-fw_CM7.bin
-      - upgrade.hpm
+      - openipmc-fw/CM7/openipmc-fw_CM7.bin
+      - openipmc-fw/CM7/upgrade.hpm
     expire_in: 1 month
