@@ -12,7 +12,6 @@ build-job:
   script:
     - make headers
     - make -j8 hpm
-    - make generate_upgrade_file
   artifacts:
     paths:
       - openipmc-fw/CM7/openipmc-fw_CM7.bin
