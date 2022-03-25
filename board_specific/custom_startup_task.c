@@ -21,108 +21,108 @@ extern void set_benchtop_payload_power_level( uint8_t new_power_level );
 void ipmc_fp_led_blink_task( void *argument )
 {
 
-	for (;;) {
+  for (;;) {
 
-		if (0==apollo_get_esm_pwr_good()) {
+    if (0==apollo_get_esm_pwr_good()) {
 
-			// ESM power bad
+      // ESM power bad
 
-			LED_0_SET_STATE(SET);
-			LED_1_SET_STATE(SET);
-			LED_2_SET_STATE(SET);
-			osDelay(200);
-			LED_0_SET_STATE(RESET);
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
-			osDelay(200);
+      LED_0_SET_STATE(SET);
+      LED_1_SET_STATE(SET);
+      LED_2_SET_STATE(SET);
+      osDelay(200);
+      LED_0_SET_STATE(RESET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
+      osDelay(200);
 
-		} else if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
+    } else if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
 
-			// front panel opened
-			LED_0_SET_STATE(SET);
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
-			osDelay(300);
-			LED_0_SET_STATE(RESET);
-			LED_1_SET_STATE(SET);
-			LED_2_SET_STATE(RESET);
-			osDelay(300);
-			LED_0_SET_STATE(RESET);
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(SET);
-			osDelay(300);
+      // front panel opened
+      LED_0_SET_STATE(SET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
+      osDelay(300);
+      LED_0_SET_STATE(RESET);
+      LED_1_SET_STATE(SET);
+      LED_2_SET_STATE(RESET);
+      osDelay(300);
+      LED_0_SET_STATE(RESET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(SET);
+      osDelay(300);
 
-		} else if (apollo_get_ipmc_abnormal_shutdown() == 1) {
+    } else if (apollo_get_ipmc_abnormal_shutdown() == 1) {
 
-			// bad shutdown
-			LED_0_SET_STATE(SET);
-			LED_1_SET_STATE(SET);
-			LED_2_SET_STATE(SET);
-			osDelay(1000);
-			LED_0_SET_STATE(RESET);
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
-			osDelay(1000);
+      // bad shutdown
+      LED_0_SET_STATE(SET);
+      LED_1_SET_STATE(SET);
+      LED_2_SET_STATE(SET);
+      osDelay(1000);
+      LED_0_SET_STATE(RESET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
+      osDelay(1000);
 
-		} else if (apollo_get_ipmc_startup_started() == 0) {
+    } else if (apollo_get_ipmc_startup_started() == 0) {
 
-			// haven't started powerup... power level is off or something
+      // haven't started powerup... power level is off or something
 
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
 
-			LED_0_SET_STATE(SET);
-			osDelay(1000);
-			LED_0_SET_STATE(RESET);
-			osDelay(1000);
+      LED_0_SET_STATE(SET);
+      osDelay(1000);
+      LED_0_SET_STATE(RESET);
+      osDelay(1000);
 
-		} else if (apollo_get_ipmc_startup_done() == 1) {
+    } else if (apollo_get_ipmc_startup_done() == 1) {
 
-			// startup is done
+      // startup is done
 
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
 
-			LED_0_SET_STATE(SET);
-			osDelay(100);
-			LED_0_SET_STATE(RESET);
-			osDelay(100);
+      LED_0_SET_STATE(SET);
+      osDelay(100);
+      LED_0_SET_STATE(RESET);
+      osDelay(100);
 
-		} else if (apollo_get_fpga_done() == 0) {
+    } else if (apollo_get_fpga_done() == 0) {
 
-			// fpga not up
+      // fpga not up
 
-			LED_2_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
 
-			LED_1_SET_STATE(SET);
-			LED_0_SET_STATE(RESET);
-			osDelay(1000);
-			LED_1_SET_STATE(RESET);
-			LED_0_SET_STATE(SET);
-			osDelay(1000);
+      LED_1_SET_STATE(SET);
+      LED_0_SET_STATE(RESET);
+      osDelay(1000);
+      LED_1_SET_STATE(RESET);
+      LED_0_SET_STATE(SET);
+      osDelay(1000);
 
-		} else if (apollo_get_zynq_done_generic() == 0) {
+    } else if (apollo_get_zynq_done_generic() == 0) {
 
-			// zynq not up
+      // zynq not up
 
-			LED_2_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
 
-			LED_1_SET_STATE(SET);
-			LED_0_SET_STATE(RESET);
-			osDelay(500);
-			LED_1_SET_STATE(RESET);
-			LED_0_SET_STATE(SET);
-			osDelay(500);
-		} else {
-			LED_1_SET_STATE(RESET);
-			LED_2_SET_STATE(RESET);
+      LED_1_SET_STATE(SET);
+      LED_0_SET_STATE(RESET);
+      osDelay(500);
+      LED_1_SET_STATE(RESET);
+      LED_0_SET_STATE(SET);
+      osDelay(500);
+    } else {
+      LED_1_SET_STATE(RESET);
+      LED_2_SET_STATE(RESET);
 
-			LED_0_SET_STATE(SET);
-			osDelay(3000);
-			LED_0_SET_STATE(RESET);
-			osDelay(3000);
-		}
-	}
+      LED_0_SET_STATE(SET);
+      osDelay(3000);
+      LED_0_SET_STATE(RESET);
+      osDelay(3000);
+    }
+  }
 }
 
 /*
@@ -150,7 +150,7 @@ void custom_startup_task( void )
     set_benchtop_payload_power_level(2);
   }
 
-	eth_ctrls_dhcp_disable();
+  eth_ctrls_dhcp_disable();
   // Set network interface static IP Address
   // const uint8_t ip_octet = ipmc_ios_read_haddress();
   const uint8_t ip_octet = 65;
@@ -177,20 +177,17 @@ void custom_startup_task( void )
 
   osDelay(100);
 
-	// FIXME!!!! is this ok??
-  //MX_LWIP_Init();
+  /*
+   * User can choose when the OpenIPMC is started. If any OpenIPMC
+   * board-specific hook/callback requires some previous code to run,
+   * it must be done before this point.
+   */
+  openipmc_start();
 
-	/*
-	 * User can choose when the OpenIPMC is started. If any OpenIPMC
-	 * board-specific hook/callback requires some previous code to run,
-	 * it must be done before this point.
-	 */
-	openipmc_start();
-
-	for(;;)
-	{
-		osDelay (30000); // once per 30s
+  for(;;)
+  {
+    osDelay (30000); // once per 30s
     apollo_write_zynq_i2c_constants ();
-	}
+  }
 
 }
