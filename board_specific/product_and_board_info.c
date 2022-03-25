@@ -17,16 +17,12 @@
 static uint32_t board_mfg_date_time = COMPILING_EPOCH/60 - 13674240;  // Manufacturing Date/Time (Here is being inserted the compiling time in GMT)
 static char*    board_manufacturer  = "BOSTON-UNIVERSITY";
 static char*    board_product_name  = "APOLLO-BLADE";
-// static char*    board_serial_number = "000000-0001";
-// static char*    board_part_number   = "XXXXXXX1";
 static char*    board_fru_file_id   = "file.xml";
 
 static char* product_manufacturer      = "SPRACE-KIT";
 static char* product_name              = "OpenIPMC-HW";
 static char* product_part_model_number = "123456AB";
 static char* product_version           = "2.0";
-//static char* product_serial_number     = "AB5555-01";
-//static char* product_asset_tag         = "2021-1234";
 static char* product_fru_file_id       = "file.xml";
 
 
@@ -44,44 +40,44 @@ static char* product_fru_file_id       = "file.xml";
  */
 void get_product_and_board_info( board_and_product_info_t* info )
 {
-	uint8_t sn = 0;
+  uint8_t sn = 0;
   if (0==user_eeprom_read()) {
-		user_eeprom_get_serial_number(&sn);
-	}
+    user_eeprom_get_serial_number(&sn);
+  }
 
-	char sm_sn [9];
-	snprintf(sm_sn, 9, "SM%05d", sn);
+  char sm_sn [9];
+  snprintf(sm_sn, 9, "SM%05d", sn);
 
-	char sm_rev [9] = "REV00000";
-	uint8_t rev = apollo_get_revision();
+  char sm_rev [9] = "REV00000";
+  uint8_t rev = apollo_get_revision();
 
-	if (rev==APOLLO_REV1)
-		snprintf(sm_rev, 9, "REV00001");
-	else if (rev==APOLLO_REV2)
-		snprintf(sm_rev, 9, "REV00002");
-	else if (rev==APOLLO_REV2A)
-		snprintf(sm_rev, 9, "REV0002A");
+  if (rev==APOLLO_REV1)
+    snprintf(sm_rev, 9, "REV00001");
+  else if (rev==APOLLO_REV2)
+    snprintf(sm_rev, 9, "REV00002");
+  else if (rev==APOLLO_REV2A)
+    snprintf(sm_rev, 9, "REV0002A");
 
-	unsigned int id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
+  unsigned int id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
 
-	char ipmc_id [9];
-	snprintf(ipmc_id, 9, "%08X", id);
+  char ipmc_id [9];
+  snprintf(ipmc_id, 9, "%08X", id);
 
-	char ipmc_sha [9];
-	snprintf(ipmc_sha, 9, "%08X", HEAD_COMMIT_SHA1);
+  char ipmc_sha [9];
+  snprintf(ipmc_sha, 9, "%08X", HEAD_COMMIT_SHA1);
 
-	info->board_mfg_date_time         =  board_mfg_date_time;
-	info->board_manufacturer          =  board_manufacturer;
-	info->board_product_name          =  board_product_name;
-	info->board_serial_number         =  sm_sn,
-	info->board_part_number           =  sm_rev,
-	info->board_fru_file_id           =  board_fru_file_id;
+  info->board_mfg_date_time         =  board_mfg_date_time;
+  info->board_manufacturer          =  board_manufacturer;
+  info->board_product_name          =  board_product_name;
+  info->board_serial_number         =  sm_sn,
+  info->board_part_number           =  sm_rev,
+  info->board_fru_file_id           =  board_fru_file_id;
 
-	info->product_manufacturer        =  product_manufacturer;
-	info->product_name                =  product_name;
-	info->product_part_model_number   =  product_part_model_number;
-	info->product_version             =  product_version;
-	info->product_serial_number       =  ipmc_id,
-	info->product_asset_tag           =  ipmc_sha,
-	info->product_fru_file_id         =  product_fru_file_id;
+  info->product_manufacturer        =  product_manufacturer;
+  info->product_name                =  product_name;
+  info->product_part_model_number   =  product_part_model_number;
+  info->product_version             =  product_version;
+  info->product_serial_number       =  ipmc_id,
+  info->product_asset_tag           =  ipmc_sha,
+  info->product_fru_file_id         =  product_fru_file_id;
 }
