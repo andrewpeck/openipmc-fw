@@ -184,6 +184,8 @@ void custom_startup_task( void )
    */
   openipmc_start();
 
+  eth_ctrls_dhcp_enable();
+
   for(;;)
   {
     osDelay (30000); // once per 30s
