@@ -11,6 +11,6 @@
 // Set if DHCP is ON or OFF by default (0 = OFF; 1 = ON)
 #define DHCP_STARTUP_STATE 1;
 
-
+#define CLI_AVAILABLE_ON_UART 0
 
 #endif
