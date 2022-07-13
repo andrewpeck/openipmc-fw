@@ -693,7 +693,7 @@ void board_specific_activation_policy (uint8_t current_power_level,
 //   apollo_powerup_sequence();
 // }
 
-void board_specific_sensor_inits() {
+void create_board_specific_sensors() {
 
   //------------------------------------------------------------------------------
   // SM
