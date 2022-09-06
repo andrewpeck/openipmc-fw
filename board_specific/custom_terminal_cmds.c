@@ -432,6 +432,37 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   return status;
 }
 
+static uint8_t apollo_set_mac_addr_in_eeprom() {
+  /*
+   * Sets the MAC address field in EEPROM
+   */
+  mt_printf( "\r\n\n" );
+
+  // First argument: Read the ETH port to set the MAC address for
+  uint8_t eth = CLI_GetArgDec(0);
+
+  // Read the MAC address one by one from the command line
+  uint8_t mac_adr[6];
+  for (uint8_t i=0; i<6; i++) {
+    mac_adr[i] = CLI_GetArgHex(i+1);
+  }
+
+  // Set the MAC address in EEPROM
+  char status = user_eeprom_set_mac_addr(eth, mac_adr);
+  if (status == 0) {
+    mt_printf("Set the MAC address for eth%d:\n", eth);
+    for (int i=0; i<5; i++) {
+      mt_printf("%d:", mac_adr[i]);
+    }
+    mt_printf("%d\n", mac_adr[5]);
+    return status;
+  }
+
+  // Something has gone wrong
+  mt_printf("Failed to set the MAC address for eth%d\n", eth);
+  return 1;
+}
+
 /*
  * This functions is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
@@ -470,4 +501,6 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("c2rd",       apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
+
+  CLI_AddCmd("eeprom_set_mac",    apollo_set_mac_addr_in_eeprom, 7, 0, "Set the MAC address field in EEPROM");
 }
