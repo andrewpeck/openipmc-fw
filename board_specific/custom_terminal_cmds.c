@@ -108,6 +108,8 @@ static uint8_t apollo_read_eeprom_cb() {
     uint8_t id;
     uint8_t sdsel;
     uint8_t disable_shutoff;
+    uint8_t eth0_mac_addr[6];
+    uint8_t eth1_mac_addr[6];
 
     user_eeprom_get_revision_number(&rev);
     user_eeprom_get_serial_number(&id);
@@ -115,6 +117,9 @@ static uint8_t apollo_read_eeprom_cb() {
     user_eeprom_get_boot_mode(&boot_mode);
     user_eeprom_get_sdsel(&sdsel);
     user_eeprom_get_disable_shutoff(&disable_shutoff);
+
+    user_eeprom_get_mac_addr(0, eth0_mac_addr);
+    user_eeprom_get_mac_addr(1, eth1_mac_addr);
 
     if (prom_rev != 0x0) {
       mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
@@ -124,6 +129,19 @@ static uint8_t apollo_read_eeprom_cb() {
     mt_printf("  sdsel        = 0x%02X\r\n", sdsel);
     mt_printf("  hw           = rev%d #%d\r\n", rev, id);
     mt_printf("  dis_shutoff  = 0x%02X\r\n", disable_shutoff);
+    mt_printf("  eth0_mac     = ");
+    
+    for (uint8_t i=0; i<5; i++) {
+      mt_printf("%02X:", eth0_mac_addr[i]);
+    }
+    mt_printf("%02X\r\n", eth0_mac_addr[5]);
+
+    mt_printf("  eth1_mac     = ");
+    for (uint8_t i=0; i<5; i++) {
+      mt_printf("%02X:", eth1_mac_addr[i]);
+    }
+    mt_printf("%02X\r\n", eth1_mac_addr[5]);
+
   } else {
     mt_printf("I2C Failure Reading from EEPROM\r\n");
   }
@@ -450,11 +468,11 @@ static uint8_t apollo_set_mac_addr_in_eeprom() {
   // Set the MAC address in EEPROM
   char status = user_eeprom_set_mac_addr(eth, mac_adr);
   if (status == 0) {
-    mt_printf("Set the MAC address for eth%d:\n", eth);
+    mt_printf("Set the MAC address for eth%d:\r\n", eth);
     for (int i=0; i<5; i++) {
-      mt_printf("%d:", mac_adr[i]);
+      mt_printf("%02X:", mac_adr[i]);
     }
-    mt_printf("%d\n", mac_adr[5]);
+    mt_printf("%02X\r\n", mac_adr[5]);
     return status;
   }
 
