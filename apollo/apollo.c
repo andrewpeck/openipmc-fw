@@ -631,10 +631,18 @@ void apollo_write_zynq_i2c_constants () {
       uint8_t ip [4] = {192,168,21,ipmc_ios_read_haddress()};
       zynq_set_ipmc_ip(ip);
 
-      // mac
-      uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
-      uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
-      zynq_set_ipmc_mac(mac);
+      // MAC address: Read it from EEProm for the ETH0 and ETH1 ports and set them in Zynq's I2C interface
+      uint8_t eth0_mac[6];
+      user_eeprom_get_mac_addr(0, eth0_mac);
+      zynq_set_ipmc_mac_s1(0, eth0_mac);
+
+      uint8_t eth1_mac[6];
+      user_eeprom_get_mac_addr(1, eth1_mac);
+      zynq_set_ipmc_mac_s1(1, eth0_mac);
+      
+      // uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
+      // uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
+      // zynq_set_ipmc_mac(mac);
 
       // // pim
       read_status_pim400(&reading);
