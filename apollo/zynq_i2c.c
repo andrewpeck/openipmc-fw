@@ -105,7 +105,7 @@ void zynq_set_ipmc_mac(uint8_t *mac) {
   }
 }
 
-void zynq_set_ipmc_mac_s1(uint8_t eth, uint8_t *mac) {
+void zynq_set_eth_mac(uint8_t eth, uint8_t *mac) {
   uint8_t base_adr = IPMC_ETH0_MAC_ADR_REG + eth * 6;
   for (int i=0; i<6; i++) {
     uint8_t adr = base_adr + i;
