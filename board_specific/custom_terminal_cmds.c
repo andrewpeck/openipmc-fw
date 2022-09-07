@@ -450,7 +450,7 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   return status;
 }
 
-static uint8_t apollo_set_mac_addr_in_eeprom() {
+static uint8_t apollo_write_eth_mac() {
   /*
    * Sets the MAC address field in EEPROM
    */
@@ -466,19 +466,17 @@ static uint8_t apollo_set_mac_addr_in_eeprom() {
   }
 
   // Set the MAC address in EEPROM
-  char status = user_eeprom_set_mac_addr(eth, mac_adr);
-  if (status == 0) {
-    mt_printf("Set the MAC address for eth%d:\r\n", eth);
-    for (int i=0; i<5; i++) {
-      mt_printf("%02X:", mac_adr[i]);
-    }
-    mt_printf("%02X\r\n", mac_adr[5]);
-    return status;
+  user_eeprom_set_mac_addr(eth, mac_adr);
+  mt_printf("Setting the MAC address for eth%d:\r\n", eth);
+  for (int i=0; i<5; i++) {
+    mt_printf("%02X:", mac_adr[i]);
   }
+  mt_printf("%02X\r\n", mac_adr[5]);
+  
+  user_eeprom_write();
+  mt_printf("EEPROM Read Back as:\r\n");
+  return (apollo_read_eeprom_cb());
 
-  // Something has gone wrong
-  mt_printf("Failed to set the MAC address for eth%d\n", eth);
-  return 1;
 }
 
 /*
@@ -520,5 +518,5 @@ void add_board_specific_terminal_commands( void )
 
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
-  CLI_AddCmd("eeprom_set_mac",    apollo_set_mac_addr_in_eeprom, 7, 0, "Set the MAC address field in EEPROM");
+  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
 }
