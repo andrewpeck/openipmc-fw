@@ -630,8 +630,6 @@ void apollo_write_zynq_i2c_constants () {
       // IP address of the IPMC, being read from the LWIP interface
       extern struct netif gnetif;
       ip4_addr_t* ipaddr  = netif_ip4_addr   ( &gnetif );
-      // ip4_addr_t* netmask = netif_ip4_netmask( &gnetif );
-      // ip4_addr_t* gw      = netif_ip4_gw     ( &gnetif );
 
       // Get the 4 individual bytes from the 32-bit IP address
       uint8_t ip[4];
@@ -639,7 +637,6 @@ void apollo_write_zynq_i2c_constants () {
         ip[i] = (ipaddr->addr >> i*8) & 0xFF;
       }
 
-      // uint8_t ip [4] = {192,168,21,ipmc_ios_read_haddress()};
       zynq_set_ipmc_ip(ip);
 
       // MAC address: Read it from EEProm for the ETH0 and ETH1 ports and set them in Zynq's I2C interface
