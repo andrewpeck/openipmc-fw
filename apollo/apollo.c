@@ -638,7 +638,7 @@ void apollo_write_zynq_i2c_constants () {
 
       uint8_t eth1_mac[6];
       user_eeprom_get_mac_addr(1, eth1_mac);
-      zynq_set_eth_mac(1, eth0_mac);
+      zynq_set_eth_mac(1, eth1_mac);
 
       // MAC address of the IPMC 
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
