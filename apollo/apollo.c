@@ -627,13 +627,9 @@ void apollo_write_zynq_i2c_constants () {
       // revision
       zynq_set_blade_rev(apollo_get_revision());
 
-      // FIXME, somehow retrieve the ip and mac from the ethernet_if instead of
-      // re-calculating it here
-
-      // IP address of the IPMC
+      // IP address of the IPMC, being read from the LWIP interface
       extern struct netif gnetif;
       ip4_addr_t* ipaddr  = netif_ip4_addr   ( &gnetif );
-      mt_printf("The 32-bit IP address received: %u \r\n", ipaddr->addr);
       // ip4_addr_t* netmask = netif_ip4_netmask( &gnetif );
       // ip4_addr_t* gw      = netif_ip4_gw     ( &gnetif );
 
@@ -641,7 +637,6 @@ void apollo_write_zynq_i2c_constants () {
       uint8_t ip[4];
       for (uint8_t i=0; i<4; i++) {
         ip[i] = (ipaddr->addr >> i*8) & 0xFF;
-        mt_printf("Bit %u: %u \r\n", i, ip[i]);
       }
 
       // uint8_t ip [4] = {192,168,21,ipmc_ios_read_haddress()};
