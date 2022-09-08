@@ -11,7 +11,6 @@ uint8_t zynq_get_boot_error ();
 void zynq_request_shutdown();
 
 void zynq_set_ipmc_mac(uint8_t* mac);
-void zynq_set_ipmc_mac_s1(uint8_t eth, uint8_t* mac);
 
 void zynq_set_blade_sn(uint8_t sn);
 void zynq_set_blade_slot(uint8_t slot);
