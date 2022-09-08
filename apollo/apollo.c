@@ -633,14 +633,14 @@ void apollo_write_zynq_i2c_constants () {
       // IP address of the IPMC
       extern struct netif gnetif;
       ip4_addr_t* ipaddr  = netif_ip4_addr   ( &gnetif );
-      mt_printf("The 32-bit IP address received: %u \r\n", ipaddr.addr);
+      mt_printf("The 32-bit IP address received: %u \r\n", ipaddr->addr);
       // ip4_addr_t* netmask = netif_ip4_netmask( &gnetif );
       // ip4_addr_t* gw      = netif_ip4_gw     ( &gnetif );
 
       // Get the 4 individual bytes from the 32-bit IP address
       uint8_t ip[4];
       for (uint8_t i=0; i<4; i++) {
-        ip[i] = (ipaddr.addr >> i*8) & 0xFF;
+        ip[i] = (ipaddr->addr >> i*8) & 0xFF;
         mt_printf("Bit %u: %u \r\n", i, ip[i]);
       }
 
