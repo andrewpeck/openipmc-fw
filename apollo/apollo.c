@@ -648,6 +648,17 @@ void apollo_write_zynq_i2c_constants () {
       user_eeprom_get_mac_addr(1, eth1_mac);
       zynq_set_eth_mac(1, eth1_mac);
 
+      // Compute the check-sums for the MAC addresses and set them in ZYNQ I2C interface
+      uint8_t checksum_eth0;
+      uint8_t checksum_eth1;
+      for (uint8_t i=0; i<6; i++) {
+        checksum_eth0 = (uint8_t) (checksum_eth0 + eth0_mac[i]);
+        checksum_eth1 = (uint8_t) (checksum_eth1 + eth1_mac[i]);
+      }
+
+      zynq_set_eth_checksum(0, checksum_eth0);
+      zynq_set_eth_checksum(1, checksum_eth1);
+
       // MAC address of the IPMC 
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};

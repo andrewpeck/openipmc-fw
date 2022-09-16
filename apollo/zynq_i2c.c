@@ -115,3 +115,9 @@ void zynq_set_eth_mac(uint8_t eth, uint8_t *mac) {
     zynq_s1_wr_reg(adr, mac[i]);
   }
 }
+
+void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum) {
+  // Write the checksum to the adjacent byte of the MAC address
+  uint8_t adr = (ZYNQ_ETH0_MAC_ADR_REG + eth * 8) + 6;
+  zynq_s1_wr_reg(adr, checksum);
+}
