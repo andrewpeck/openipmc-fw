@@ -649,8 +649,8 @@ void apollo_write_zynq_i2c_constants () {
       zynq_set_eth_mac(1, eth1_mac);
 
       // Compute the check-sums for the MAC addresses and set them in ZYNQ I2C interface
-      uint8_t checksum_eth0;
-      uint8_t checksum_eth1;
+      uint8_t checksum_eth0 = 0;
+      uint8_t checksum_eth1 = 0;
       for (uint8_t i=0; i<6; i++) {
         checksum_eth0 = (uint8_t) (checksum_eth0 + eth0_mac[i]);
         checksum_eth1 = (uint8_t) (checksum_eth1 + eth1_mac[i]);
