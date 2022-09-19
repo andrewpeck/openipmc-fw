@@ -22,6 +22,8 @@ static struct __attribute__((packed)) {
       uint8_t boot_mode;
       uint8_t dis_shutoff;
       uint8_t sdsel;
+      uint8_t mac_eth0_checksum;
+      uint8_t mac_eth1_checksum;
     } v0;
   };
 } eeprom = {.version = 0xFE};
@@ -92,6 +94,34 @@ char user_eeprom_set_serial_number(uint8_t sn) {
   if (eeprom.version == 0) {
     eeprom.v0.serial_number = sn;
     return 0;
+  }
+  return -1;
+}
+
+char user_eeprom_get_mac_eth_checksum(uint8_t eth, uint8_t* checksum) {
+  if (eeprom.version == 0) {
+    if (eth == 0) {
+      *(checksum) = eeprom.v0.mac_eth0_checksum;
+      return 0;
+    }
+    else if (eth == 1) {
+      *(checksum) = eeprom.v0.mac_eth1_checksum;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+char user_eeprom_set_mac_eth_checksum(uint8_t eth, uint8_t checksum) {
+  if (eeprom.version == 0) {
+    if (eth == 0) {
+      eeprom.v0.mac_eth0_checksum = checksum;
+      return 0;
+    }
+    else if (eth == 1) {
+      eeprom.v0.mac_eth1_checksum = checksum;
+      return 0;
+    }
   }
   return -1;
 }

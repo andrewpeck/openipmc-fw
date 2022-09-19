@@ -110,6 +110,8 @@ static uint8_t apollo_read_eeprom_cb() {
     uint8_t disable_shutoff;
     uint8_t eth0_mac_addr[6];
     uint8_t eth1_mac_addr[6];
+    uint8_t eth0_mac_checksum;
+    uint8_t eth1_mac_checksum;
 
     user_eeprom_get_revision_number(&rev);
     user_eeprom_get_serial_number(&id);
@@ -120,6 +122,9 @@ static uint8_t apollo_read_eeprom_cb() {
 
     user_eeprom_get_mac_addr(0, eth0_mac_addr);
     user_eeprom_get_mac_addr(1, eth1_mac_addr);
+
+    user_eeprom_get_mac_eth_checksum(0, eth0_mac_checksum);
+    user_eeprom_get_mac_eth_checksum(1, eth1_mac_checksum);
 
     if (prom_rev != 0x0) {
       mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
@@ -141,6 +146,9 @@ static uint8_t apollo_read_eeprom_cb() {
       mt_printf("%02X:", eth1_mac_addr[i]);
     }
     mt_printf("%02X\r\n", eth1_mac_addr[5]);
+
+    mt_printf("  eth0_chsum   = 0x%02X\r\n", eth0_mac_checksum);
+    mt_printf("  eth1_chsum   = 0x%02X\r\n", eth1_mac_checksum);
 
   } else {
     mt_printf("I2C Failure Reading from EEPROM\r\n");
@@ -452,17 +460,20 @@ static uint8_t apollo_zynq_i2c_rx_cb()
 
 static uint8_t apollo_write_eth_mac() {
   /*
-   * Sets the MAC address field in EEPROM
+   * Sets the MAC address field in EEPROM. Also computes the two's complement
+   of the checksum for the MAC address, and saves it on EEPROM.
    */
   mt_printf( "\r\n\n" );
 
   // First argument: Read the ETH port to set the MAC address for
   uint8_t eth = CLI_GetArgDec(0);
 
-  // Read the MAC address one by one from the command line
+  // Read the MAC address one by one from the command line (and compute the checksum)
   uint8_t mac_adr[6];
+  uint8_t checksum = 0;
   for (uint8_t i=0; i<6; i++) {
     mac_adr[i] = CLI_GetArgHex(i+1);
+    checksum = (uint8_t) (checksum + mac_adr[i]);
   }
 
   // Set the MAC address in EEPROM
@@ -473,6 +484,10 @@ static uint8_t apollo_write_eth_mac() {
   }
   mt_printf("%02X\r\n", mac_adr[5]);
   
+  // Set the checksum for this ETH port, after computing two's complement of the sum
+  uint8_t checksum_complement = (~checksum) + 1;
+  user_eeprom_set_mac_eth_checksum(eth, checksum_complement);
+
   user_eeprom_write();
   mt_printf("EEPROM Read Back as:\r\n");
   return (apollo_read_eeprom_cb());
