@@ -123,8 +123,8 @@ static uint8_t apollo_read_eeprom_cb() {
     user_eeprom_get_mac_addr(0, eth0_mac_addr);
     user_eeprom_get_mac_addr(1, eth1_mac_addr);
 
-    user_eeprom_get_mac_eth_checksum(0, eth0_mac_checksum);
-    user_eeprom_get_mac_eth_checksum(1, eth1_mac_checksum);
+    user_eeprom_get_mac_eth_checksum(0, &eth0_mac_checksum);
+    user_eeprom_get_mac_eth_checksum(1, &eth1_mac_checksum);
 
     if (prom_rev != 0x0) {
       mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);

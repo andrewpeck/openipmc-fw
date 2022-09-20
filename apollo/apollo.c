@@ -652,8 +652,8 @@ void apollo_write_zynq_i2c_constants () {
       uint8_t eth0_mac_checksum;
       uint8_t eth1_mac_checksum;
 
-      user_eeprom_get_mac_eth_checksum(0, eth0_mac_checksum);
-      user_eeprom_get_mac_eth_checksum(1, eth1_mac_checksum);
+      user_eeprom_get_mac_eth_checksum(0, &eth0_mac_checksum);
+      user_eeprom_get_mac_eth_checksum(1, &eth1_mac_checksum);
 
       zynq_set_eth_checksum(0, eth0_mac_checksum);
       zynq_set_eth_checksum(1, eth1_mac_checksum);
