@@ -41,6 +41,9 @@ char user_eeprom_set_revision_number(uint8_t rn);
 char user_eeprom_get_mac_addr(uint8_t eth, uint8_t * mac);
 char user_eeprom_set_mac_addr(uint8_t eth, uint8_t * mac);
 
+char user_eeprom_get_mac_eth_checksum(uint8_t eth, uint8_t* checksum);
+char user_eeprom_set_mac_eth_checksum(uint8_t eth, uint8_t checksum);
+
 char user_eeprom_set_boot_mode(uint8_t bm);
 char user_eeprom_get_boot_mode(uint8_t *bm);
 
