@@ -476,6 +476,8 @@ static uint8_t apollo_write_eth_mac() {
     checksum = (uint8_t) (checksum + mac_adr[i]);
   }
 
+  mt_prinf("Checksum computed: %u (0x%02X)\r\n", checksum, checksum);
+
   // Set the MAC address in EEPROM
   user_eeprom_set_mac_addr(eth, mac_adr);
   mt_printf("Setting the MAC address for eth%d:\r\n", eth);
@@ -486,6 +488,8 @@ static uint8_t apollo_write_eth_mac() {
   
   // Set the checksum for this ETH port, after computing two's complement of the sum
   uint8_t checksum_complement = (~checksum) + 1;
+  mt_prinf("Complement of checksum: %u (0x%02X)\r\n", checksum_complement, checksum_complement);
+
   user_eeprom_set_mac_eth_checksum(eth, checksum_complement);
 
   user_eeprom_write();
