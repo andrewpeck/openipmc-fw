@@ -126,8 +126,10 @@ static uint8_t apollo_read_eeprom_cb() {
     user_eeprom_get_mac_eth_checksum(0, &eth0_mac_checksum);
     user_eeprom_get_mac_eth_checksum(1, &eth1_mac_checksum);
 
-    if (prom_rev != 0x0) {
-      mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
+    // EEPROM versions 0 and 1 are valid now
+    // Version 1 has the MAC address checksums included
+    if ((prom_rev != 0x0) && (prom_rev != 0x1)) {
+      mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0/1`\r\n", prom_rev);
     }
     mt_printf("  prom version = 0x%02X\r\n", prom_rev);
     mt_printf("  bootmode     = 0x%02X\r\n", boot_mode);
