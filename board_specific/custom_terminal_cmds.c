@@ -149,8 +149,11 @@ static uint8_t apollo_read_eeprom_cb() {
     }
     mt_printf("%02X\r\n", eth1_mac_addr[5]);
 
-    mt_printf("  eth0_chsum   = 0x%02X\r\n", eth0_mac_checksum);
-    mt_printf("  eth1_chsum   = 0x%02X\r\n", eth1_mac_checksum);
+    // Show the MAC address checksum values for revision 1
+    if (prom_rev == 0x1) {
+      mt_printf("  eth0_chsum   = 0x%02X\r\n", eth0_mac_checksum);
+      mt_printf("  eth1_chsum   = 0x%02X\r\n", eth1_mac_checksum);
+    }
 
   } else {
     mt_printf("I2C Failure Reading from EEPROM\r\n");
