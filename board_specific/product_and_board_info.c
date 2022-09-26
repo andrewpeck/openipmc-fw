@@ -25,6 +25,10 @@ static char* product_part_model_number = "123456AB";
 static char* product_version           = "2.0";
 static char* product_fru_file_id       = "file.xml";
 
+static char* sm_sn[9]    = "SM000000";
+static char* sm_rev[9]   = "REV00000";
+static char* ipmc_id[9]  = "00000000";
+static char* ipmc_sha[9] = "00000000";
 
 /*
  * This function is called during the OpenIPMC initialization in order to get
@@ -45,10 +49,8 @@ void get_product_and_board_info( board_and_product_info_t* info )
     user_eeprom_get_serial_number(&sn);
   }
 
-  char sm_sn [9];
   snprintf(sm_sn, 9, "SM%05d", sn);
 
-  char sm_rev [9] = "REV00000";
   uint8_t rev = apollo_get_revision();
 
   if (rev==APOLLO_REV1)
@@ -60,10 +62,7 @@ void get_product_and_board_info( board_and_product_info_t* info )
 
   unsigned int id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
 
-  char ipmc_id [9];
   snprintf(ipmc_id, 9, "%08X", id);
-
-  char ipmc_sha [9];
   snprintf(ipmc_sha, 9, "%08X", HEAD_COMMIT_SHA1);
 
   info->board_mfg_date_time         =  board_mfg_date_time;
