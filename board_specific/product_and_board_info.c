@@ -25,10 +25,10 @@ static char* product_part_model_number = "123456AB";
 static char* product_version           = "2.0";
 static char* product_fru_file_id       = "file.xml";
 
-static char* sm_sn[9]    = "SM000000";
-static char* sm_rev[9]   = "REV00000";
-static char* ipmc_id[9]  = "00000000";
-static char* ipmc_sha[9] = "00000000";
+static char sm_sn[9]    = "SM000000";
+static char sm_rev[9]   = "REV00000";
+static char ipmc_id[9]  = "00000000";
+static char ipmc_sha[9] = "00000000";
 
 /*
  * This function is called during the OpenIPMC initialization in order to get
