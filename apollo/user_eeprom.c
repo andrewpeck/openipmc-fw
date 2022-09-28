@@ -23,6 +23,17 @@ static struct __attribute__((packed)) {
       uint8_t dis_shutoff;
       uint8_t sdsel;
     } v0;
+    struct __attribute__((packed)) {
+      uint8_t serial_number;
+      uint8_t revision_number;
+      uint8_t mac_eth0[6];
+      uint8_t mac_eth1[6];
+      uint8_t boot_mode;
+      uint8_t dis_shutoff;
+      uint8_t sdsel;
+      uint8_t mac_eth0_checksum;
+      uint8_t mac_eth1_checksum;
+    } v1;
   };
 } eeprom = {.version = 0xFE};
 
@@ -81,123 +92,267 @@ char user_eeprom_write(void) {
 }
 
 char user_eeprom_get_serial_number(uint8_t *sn) {
-  if (eeprom.version == 0) {
-    *(sn) = eeprom.v0.serial_number;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      *(sn) = eeprom.v0.serial_number;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_serial_number(uint8_t sn) {
-  if (eeprom.version == 0) {
-    eeprom.v0.serial_number = sn;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      eeprom.v0.serial_number = sn;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
+}
+
+char user_eeprom_get_mac_eth_checksum(uint8_t eth, uint8_t* checksum) {
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+      if (eth == 0) {
+        *(checksum) = eeprom.v1.mac_eth0_checksum;
+        ret = 0;
+        break;
+      }
+      else if (eth == 1) {
+        *(checksum) = eeprom.v1.mac_eth1_checksum;
+        ret = 0;
+        break;
+      }
+      // ETH can be either 0 or 1
+      else {
+        break;
+      }
+    
+    // Checksum entries do not exist on EEPROM revision 0
+    case 0:
+    default:
+      break;
+  }
+  return ret;
+}
+
+char user_eeprom_set_mac_eth_checksum(uint8_t eth, uint8_t checksum) {
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+      if (eth == 0) {
+        eeprom.v1.mac_eth0_checksum = checksum;
+        ret = 0;
+        break;
+      }
+      else if (eth == 1) {
+        eeprom.v1.mac_eth1_checksum = checksum;
+        ret = 0;
+        break;
+      }
+      // ETH can be either 0 or 1
+      else {
+        break;
+      }
+    
+    // Checksum entries do not exist on EEPROM revision 0
+    case 0:
+    default:
+      break;
+  }
+  return ret;
 }
 
 char user_eeprom_get_boot_mode(uint8_t *bm) {
-  if (eeprom.version == 0) {
-    *(bm) = eeprom.v0.boot_mode;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      *(bm) = eeprom.v0.boot_mode;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_boot_mode(uint8_t bm) {
-  if (eeprom.version == 0) {
-    eeprom.v0.boot_mode = bm;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      eeprom.v0.boot_mode = bm;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_get_sdsel(uint8_t *ds) {
-  if (eeprom.version == 0) {
-    *(ds) = eeprom.v0.sdsel;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      *(ds) = eeprom.v0.sdsel;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_sdsel(uint8_t sdsel) {
-  if (eeprom.version == 0) {
-    eeprom.v0.sdsel = sdsel;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      eeprom.v0.sdsel = sdsel;
+      ret = 0;
+      break;
+
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_get_disable_shutoff(uint8_t *ds) {
-  if (eeprom.version == 0) {
-    *(ds) = eeprom.v0.dis_shutoff;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      *(ds) = eeprom.v0.dis_shutoff;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_disable_shutoff(uint8_t ds) {
-  if (eeprom.version == 0) {
-    eeprom.v0.dis_shutoff = ds;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      eeprom.v0.dis_shutoff = ds;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_get_revision_number(uint8_t *rn) {
-  if (eeprom.version == 0) {
-    *(rn) = eeprom.v0.revision_number;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      *(rn) = eeprom.v0.revision_number;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_revision_number(uint8_t rn) {
-  if (eeprom.version == 0) {
-    eeprom.v0.revision_number = rn;
-    return 0;
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      eeprom.v0.revision_number = rn;
+      ret = 0;
+      break;
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_get_mac_addr(uint8_t eth, uint8_t *mac) {
-
-  if (eeprom.version == 0) {
-    if (eth == 0) {
-      for (int i = 0; i < 6; i++) {
-        mac[i] = eeprom.v0.mac_eth0[i];
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      if (eth == 0) {
+        for (int i = 0; i < 6; i++) {
+          mac[i] = eeprom.v0.mac_eth0[i];
+        }
+        ret = 0;
+        break;
+      } 
+      else if (eth == 1) {
+        for (int i = 0; i < 6; i++) {
+          mac[i] = eeprom.v0.mac_eth1[i];
+        }
+        ret = 0;
+        break;
       }
-      return 0;
-    } else if (eth == 1) {
-      for (int i = 0; i < 6; i++) {
-        mac[i] = eeprom.v0.mac_eth1[i];
+      // ETH can be either 0 or 1
+      else {
+        break;
       }
-      return 0;
-    }
+    
+    default:
+      break;
   }
-
-  return -1;
+  return ret;
 }
 
 char user_eeprom_set_mac_addr(uint8_t eth, uint8_t *mac) {
-
-  if (eeprom.version == 0) {
-
-    if (eth == 0) {
-      for (int i = 0; i < 6; i++) {
-        eeprom.v0.mac_eth0[i] = mac[i];
+  char ret = -1;
+  switch (eeprom.version) {
+    case 1:
+    case 0:
+      if (eth == 0) {
+        for (int i = 0; i < 6; i++) {
+          eeprom.v0.mac_eth0[i] = mac[i];
+        }
+        ret = 0;
+        break;
+      } 
+      else if (eth == 1) {
+        for (int i = 0; i < 6; i++) {
+          eeprom.v0.mac_eth1[i] = mac[i];
+        }
+        ret = 0;
+        break;
       }
-      return 0;
-
-    } else if (eth == 1) {
-      for (int i = 0; i < 6; i++) {
-        eeprom.v0.mac_eth1[i] = mac[i];
+      // ETH can be either 0 or 1
+      else {
+        break;
       }
-      return 0;
-    }
-
+    
+    default:
+      break;
   }
-  return -1;
+  return ret;
 }
 
 char user_eeprom_write_enable(void) {

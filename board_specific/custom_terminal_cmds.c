@@ -108,6 +108,10 @@ static uint8_t apollo_read_eeprom_cb() {
     uint8_t id;
     uint8_t sdsel;
     uint8_t disable_shutoff;
+    uint8_t eth0_mac_addr[6];
+    uint8_t eth1_mac_addr[6];
+    uint8_t eth0_mac_checksum;
+    uint8_t eth1_mac_checksum;
 
     user_eeprom_get_revision_number(&rev);
     user_eeprom_get_serial_number(&id);
@@ -116,14 +120,41 @@ static uint8_t apollo_read_eeprom_cb() {
     user_eeprom_get_sdsel(&sdsel);
     user_eeprom_get_disable_shutoff(&disable_shutoff);
 
-    if (prom_rev != 0x0) {
-      mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0`\r\n", prom_rev);
+    user_eeprom_get_mac_addr(0, eth0_mac_addr);
+    user_eeprom_get_mac_addr(1, eth1_mac_addr);
+
+    user_eeprom_get_mac_eth_checksum(0, &eth0_mac_checksum);
+    user_eeprom_get_mac_eth_checksum(1, &eth1_mac_checksum);
+
+    // EEPROM versions 0 and 1 are valid now
+    // Version 1 has the MAC address checksums included
+    if ((prom_rev != 0x0) && (prom_rev != 0x1)) {
+      mt_printf("WARNING! unknown prom version = 0x%02X; you should set the prom revision with `verwr 0/1`\r\n", prom_rev);
     }
     mt_printf("  prom version = 0x%02X\r\n", prom_rev);
     mt_printf("  bootmode     = 0x%02X\r\n", boot_mode);
     mt_printf("  sdsel        = 0x%02X\r\n", sdsel);
     mt_printf("  hw           = rev%d #%d\r\n", rev, id);
     mt_printf("  dis_shutoff  = 0x%02X\r\n", disable_shutoff);
+    mt_printf("  eth0_mac     = ");
+    
+    for (uint8_t i=0; i<5; i++) {
+      mt_printf("%02X:", eth0_mac_addr[i]);
+    }
+    mt_printf("%02X\r\n", eth0_mac_addr[5]);
+
+    mt_printf("  eth1_mac     = ");
+    for (uint8_t i=0; i<5; i++) {
+      mt_printf("%02X:", eth1_mac_addr[i]);
+    }
+    mt_printf("%02X\r\n", eth1_mac_addr[5]);
+
+    // Show the MAC address checksum values for revision 1
+    if (prom_rev == 0x1) {
+      mt_printf("  eth0_chsum   = 0x%02X\r\n", eth0_mac_checksum);
+      mt_printf("  eth1_chsum   = 0x%02X\r\n", eth1_mac_checksum);
+    }
+
   } else {
     mt_printf("I2C Failure Reading from EEPROM\r\n");
   }
@@ -432,6 +463,42 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   return status;
 }
 
+static uint8_t apollo_write_eth_mac() {
+  /*
+   * Sets the MAC address field in EEPROM. Also computes the two's complement
+   of the checksum for the MAC address, and saves it on EEPROM.
+   */
+  mt_printf( "\r\n\n" );
+
+  // First argument: Read the ETH port to set the MAC address for
+  uint8_t eth = CLI_GetArgDec(0);
+
+  // Read the MAC address one by one from the command line (and compute the checksum)
+  uint8_t mac_adr[6];
+  uint8_t checksum = 0;
+  for (uint8_t i=0; i<6; i++) {
+    mac_adr[i] = CLI_GetArgHex(i+1);
+    checksum = (uint8_t) (checksum + mac_adr[i]);
+  }
+
+  // Set the MAC address in EEPROM
+  user_eeprom_set_mac_addr(eth, mac_adr);
+  mt_printf("Setting the MAC address for eth%d:\r\n", eth);
+  for (int i=0; i<5; i++) {
+    mt_printf("%02X:", mac_adr[i]);
+  }
+  mt_printf("%02X\r\n", mac_adr[5]);
+  
+  // Set the checksum for this ETH port, after computing two's complement of the sum
+  uint8_t checksum_complement = (~checksum) + 1;
+  user_eeprom_set_mac_eth_checksum(eth, checksum_complement);
+
+  user_eeprom_write();
+  mt_printf("EEPROM Read Back as:\r\n");
+  return (apollo_read_eeprom_cb());
+
+}
+
 /*
  * This functions is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
@@ -470,4 +537,6 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("c2rd",       apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
 
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
+
+  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
 }

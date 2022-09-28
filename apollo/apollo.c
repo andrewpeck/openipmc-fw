@@ -13,6 +13,9 @@
 #include "stdint.h"
 #include "zynq_i2c.h"
 
+#include "lwip/netif.h"
+#include "lwip/ip4_addr.h"
+
 extern uint8_t shelf_address;
 extern uint8_t shelf_address_type;
 void mt_printf(const char* format, ...);
@@ -624,14 +627,38 @@ void apollo_write_zynq_i2c_constants () {
       // revision
       zynq_set_blade_rev(apollo_get_revision());
 
-      // FIXME, somehow retrieve the ip and mac from the ethernet_if instead of
-      // re-calculating it here
+      // IP address of the IPMC, being read from the LWIP interface
+      extern struct netif gnetif;
+      ip4_addr_t* ipaddr  = netif_ip4_addr   ( &gnetif );
 
-      // ip
-      uint8_t ip [4] = {192,168,21,ipmc_ios_read_haddress()};
+      // Get the 4 individual bytes from the 32-bit IP address
+      uint8_t ip[4];
+      for (uint8_t i=0; i<4; i++) {
+        ip[i] = (ipaddr->addr >> i*8) & 0xFF;
+      }
+
       zynq_set_ipmc_ip(ip);
 
-      // mac
+      // MAC address: Read it from EEProm for the ETH0 and ETH1 ports and set them in Zynq's I2C interface
+      uint8_t eth0_mac[6];
+      user_eeprom_get_mac_addr(0, eth0_mac);
+      zynq_set_eth_mac(0, eth0_mac);
+
+      uint8_t eth1_mac[6];
+      user_eeprom_get_mac_addr(1, eth1_mac);
+      zynq_set_eth_mac(1, eth1_mac);
+
+      // Check-sums for the MAC addresses
+      uint8_t eth0_mac_checksum;
+      uint8_t eth1_mac_checksum;
+
+      user_eeprom_get_mac_eth_checksum(0, &eth0_mac_checksum);
+      user_eeprom_get_mac_eth_checksum(1, &eth1_mac_checksum);
+
+      zynq_set_eth_checksum(0, eth0_mac_checksum);
+      zynq_set_eth_checksum(1, eth1_mac_checksum);
+
+      // MAC address of the IPMC 
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
       zynq_set_ipmc_mac(mac);
