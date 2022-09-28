@@ -92,7 +92,7 @@ char user_eeprom_write(void) {
 }
 
 char user_eeprom_get_serial_number(uint8_t *sn) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -101,14 +101,13 @@ char user_eeprom_get_serial_number(uint8_t *sn) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_serial_number(uint8_t sn) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -117,14 +116,13 @@ char user_eeprom_set_serial_number(uint8_t sn) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_mac_eth_checksum(uint8_t eth, uint8_t* checksum) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
       if (eth == 0) {
@@ -139,21 +137,19 @@ char user_eeprom_get_mac_eth_checksum(uint8_t eth, uint8_t* checksum) {
       }
       // ETH can be either 0 or 1
       else {
-        ret = -1;
         break;
       }
     
     // Checksum entries do not exist on EEPROM revision 0
     case 0:
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_mac_eth_checksum(uint8_t eth, uint8_t checksum) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
       if (eth == 0) {
@@ -168,21 +164,19 @@ char user_eeprom_set_mac_eth_checksum(uint8_t eth, uint8_t checksum) {
       }
       // ETH can be either 0 or 1
       else {
-        ret = -1;
         break;
       }
     
     // Checksum entries do not exist on EEPROM revision 0
     case 0:
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_boot_mode(uint8_t *bm) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -191,14 +185,13 @@ char user_eeprom_get_boot_mode(uint8_t *bm) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_boot_mode(uint8_t bm) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -207,14 +200,13 @@ char user_eeprom_set_boot_mode(uint8_t bm) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_sdsel(uint8_t *ds) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -223,14 +215,13 @@ char user_eeprom_get_sdsel(uint8_t *ds) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_sdsel(uint8_t sdsel) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -239,14 +230,13 @@ char user_eeprom_set_sdsel(uint8_t sdsel) {
       break;
 
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_disable_shutoff(uint8_t *ds) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -255,14 +245,13 @@ char user_eeprom_get_disable_shutoff(uint8_t *ds) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_disable_shutoff(uint8_t ds) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -271,14 +260,13 @@ char user_eeprom_set_disable_shutoff(uint8_t ds) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_revision_number(uint8_t *rn) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -287,14 +275,13 @@ char user_eeprom_get_revision_number(uint8_t *rn) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_revision_number(uint8_t rn) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -303,14 +290,13 @@ char user_eeprom_set_revision_number(uint8_t rn) {
       break;
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_get_mac_addr(uint8_t eth, uint8_t *mac) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -330,19 +316,17 @@ char user_eeprom_get_mac_addr(uint8_t eth, uint8_t *mac) {
       }
       // ETH can be either 0 or 1
       else {
-        ret = -1;
         break;
       }
     
     default:
-      ret = -1;
       break;
   }
   return ret;
 }
 
 char user_eeprom_set_mac_addr(uint8_t eth, uint8_t *mac) {
-  char ret;
+  char ret = -1;
   switch (eeprom.version) {
     case 1:
     case 0:
@@ -362,12 +346,10 @@ char user_eeprom_set_mac_addr(uint8_t eth, uint8_t *mac) {
       }
       // ETH can be either 0 or 1
       else {
-        ret = -1;
         break;
       }
     
     default:
-      ret = -1;
       break;
   }
   return ret;
