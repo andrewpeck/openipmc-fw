@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "board_and_product_info.h"
 #include "printf.h"
 
@@ -25,6 +27,10 @@ static char* product_part_model_number = "123456AB";
 static char* product_version           = "2.0";
 static char* product_fru_file_id       = "file.xml";
 
+static char sm_sn[]    = "SM000000";
+static char sm_rev[]   = "REV00000";
+static char ipmc_id[]  = "00000000";
+static char ipmc_sha[] = "00000000";
 
 /*
  * This function is called during the OpenIPMC initialization in order to get
@@ -45,26 +51,21 @@ void get_product_and_board_info( board_and_product_info_t* info )
     user_eeprom_get_serial_number(&sn);
   }
 
-  char sm_sn [9];
-  snprintf(sm_sn, 9, "SM%05d", sn);
+  snprintf(sm_sn, strlen(sm_sn)+1, "SM%05d", sn);
 
-  char sm_rev [9] = "REV00000";
   uint8_t rev = apollo_get_revision();
 
   if (rev==APOLLO_REV1)
-    snprintf(sm_rev, 9, "REV00001");
+    snprintf(sm_rev, strlen(sm_rev)+1, "REV00001");
   else if (rev==APOLLO_REV2)
-    snprintf(sm_rev, 9, "REV00002");
+    snprintf(sm_rev, strlen(sm_rev)+1, "REV00002");
   else if (rev==APOLLO_REV2A)
-    snprintf(sm_rev, 9, "REV0002A");
+    snprintf(sm_rev, strlen(sm_rev)+1, "REV0002A");
 
   unsigned int id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
 
-  char ipmc_id [9];
-  snprintf(ipmc_id, 9, "%08X", id);
-
-  char ipmc_sha [9];
-  snprintf(ipmc_sha, 9, "%08X", HEAD_COMMIT_SHA1);
+  snprintf(ipmc_id,  strlen(ipmc_id)+1,  "%08X", id);
+  snprintf(ipmc_sha, strlen(ipmc_sha)+1, "%08X", HEAD_COMMIT_SHA1);
 
   info->board_mfg_date_time         =  board_mfg_date_time;
   info->board_manufacturer          =  board_manufacturer;

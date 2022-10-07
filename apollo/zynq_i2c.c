@@ -11,6 +11,8 @@
 #define IPMC_MAC_ADR_REG 0x00
 #define IPMC_IP_ADR_REG 0x08
 
+#define ZYNQ_ETH0_MAC_ADR_REG 0x14
+
 //------------------------------------------------------------------------------
 // Generic rd/wr functions
 //------------------------------------------------------------------------------
@@ -101,4 +103,21 @@ void zynq_set_ipmc_mac(uint8_t *mac) {
   for (int i=0; i<6; i++) {
     zynq_s8_wr_reg(IPMC_MAC_ADR_REG+i, mac[i]);
   }
+}
+
+void zynq_set_eth_mac(uint8_t eth, uint8_t *mac) {
+  // Address of BYTE_0 for: 
+  // ETH0 port -> 0x14
+  // ETH1 port -> 0x1C
+  uint8_t base_adr = ZYNQ_ETH0_MAC_ADR_REG + eth * 8;
+  for (int i=0; i<6; i++) {
+    uint8_t adr = base_adr + i;
+    zynq_s1_wr_reg(adr, mac[i]);
+  }
+}
+
+void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum) {
+  // Write the checksum to the adjacent byte of the MAC address
+  uint8_t adr = (ZYNQ_ETH0_MAC_ADR_REG + eth * 8) + 6;
+  zynq_s1_wr_reg(adr, checksum);
 }
