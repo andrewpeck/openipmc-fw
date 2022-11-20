@@ -9,6 +9,7 @@
 #include "apollo_i2c.h"
 #include "cm_sensors.h"
 #include "sm_sensors.h"
+#include "ip_sensors.h"
 #include "pim400.h"
 #include "stdint.h"
 #include "zynq_i2c.h"
@@ -748,5 +749,13 @@ void create_board_specific_sensors() {
   create_linear_sensor (pim400_iout_consts, "PIM400 Current", &sensor_reading_iout_pim400);
   create_linear_sensor (pim400_voltage_consts, "PIM400 -48V_A", &sensor_reading_voltage_a_pim400);
   create_linear_sensor (pim400_voltage_consts, "PIM400 -48V_B", &sensor_reading_voltage_b_pim400);
+
+  //------------------------------------------------------------------------------
+  // IPMC IP address sensors
+  //------------------------------------------------------------------------------
+  create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 0",  &sensor_reading_ipmc_ip_addr_byte0);
+  create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 1",  &sensor_reading_ipmc_ip_addr_byte1);
+  create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 2",  &sensor_reading_ipmc_ip_addr_byte2);
+  create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 3",  &sensor_reading_ipmc_ip_addr_byte3);
 
 }
