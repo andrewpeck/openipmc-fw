@@ -713,13 +713,19 @@ void board_specific_activation_policy (uint8_t current_power_level,
   return;
 }
 
-// void payload_cold_reset(void) {
-//   PAYLOAD_RESET_SET_STATE(RESET);
-//   apollo_powerdown_sequence();
+/*
+ * Payload Cold Reset
+ *
+ * This function is called by OpenIPMC when a Cold Reset command is received
+ * from Shelf Manager
+ */
+void payload_cold_reset(void) {
+  PAYLOAD_RESET_SET_STATE(RESET);
+  apollo_powerdown_sequence();
 
-//   PAYLOAD_RESET_SET_STATE(SET);
-//   apollo_powerup_sequence();
-// }
+  PAYLOAD_RESET_SET_STATE(SET);
+  apollo_powerup_sequence();
+}
 
 void create_board_specific_sensors() {
 
