@@ -504,7 +504,7 @@ static uint8_t apollo_cm1_i2c_addr_scan_cb()
   mt_printf( "\r\n\n" );
 
   // Scan every possible address on the CM1 I2C bus
-  for (uint8_t addr=0x00; addr < 0xFF; addr++) {
+  for (uint8_t addr=0x00; addr < 0x7F; addr++) {
     uint8_t status = 0;
     uint8_t data;
     status |= cm1_i2c_rx(&data, addr);
