@@ -501,13 +501,22 @@ static uint8_t apollo_write_eth_mac() {
 
 static uint8_t apollo_cm1_i2c_addr_scan_cb()
 {
+  /*
+   * Do an I2C address scan over the CM1 I2C bus.
+   * Prints out a table representing which addresses respond with an ACK bit.
+   */
   mt_printf( "\r\n\n" );
 
   // Scan every possible address on the CM1 I2C bus
   for (uint8_t addr=0x00; addr < 0x7F; addr++) {
     uint8_t status = 0;
     uint8_t data;
-    status |= cm1_i2c_rx(&data, addr);
+
+    // Select the CM1 bus
+    status |= tca9546_sel_m1();
+
+    // Do a 1 byte read from the I2C address
+    status |= sense_i2c_receive(addr << 1, &data, 1, 100);
     mt_printf("Addr: %02X, Data: %02X, Status: %02X\r\n", addr, data, status);
   }
   

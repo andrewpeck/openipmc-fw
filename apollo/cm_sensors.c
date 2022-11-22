@@ -7,7 +7,7 @@
 #define FIREFLY 2
 #define REGULATOR 3
 #define MCU 4
-#define ADR 0x40
+#define ADR 0x50
 
 const linear_sensor_constants_t cm_fpga_temp_consts = {
     .sensor_type = TEMPERATURE,
