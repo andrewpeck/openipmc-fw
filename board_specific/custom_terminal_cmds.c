@@ -499,6 +499,19 @@ static uint8_t apollo_write_eth_mac() {
 
 }
 
+static uint8_t apollo_cm1_i2c_addr_scan_cb()
+{
+  mt_printf( "\r\n\n" );
+
+  // Scan every possible address on the CM1 I2C bus
+  for (uint8_t addr=0x00, addr < 0xFF, addr++) {
+    uint8_t status = 0;
+    uint8_t data;
+    status |= cm1_i2c_rx(&data, addr);
+    mt_printf("Addr: %02X, Data: %02X, Status: %02X\r\n", addr, data, status);
+  }
+}
+
 /*
  * This functions is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
@@ -539,4 +552,6 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
   CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
+
+  CLI_AddCmd("i2cscan",    apollo_cm1_i2c_addr_scan_cb, 0, 0, "Do a scan of I2C devices on the CM1 I2C bus");
 }
