@@ -7,7 +7,7 @@
 #define FIREFLY 2
 #define REGULATOR 3
 #define MCU 4
-#define ADR 0x50
+#define ADR 0x40
 
 const linear_sensor_constants_t cm_fpga_temp_consts = {
     .sensor_type = TEMPERATURE,
@@ -99,9 +99,11 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
     upper_nonrecoverable = cm_mcu_temp_consts.upper_nonrecoverable;
   }
 
+  // Do a 1-byte MemRead from the CM1 I2C target
   HAL_StatusTypeDef status = 0;
-  status |= cm1_i2c_tx(&rx_data, ADR);
-  status |= cm1_i2c_rx(&rx_data, ADR);
+  status |= cm1_i2c_mem_read(&rx_data, ADR, rx_data, 1);
+  // status |= cm1_i2c_tx(&rx_data, ADR);
+  // status |= cm1_i2c_rx(&rx_data, ADR);
 
 	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
