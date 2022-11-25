@@ -533,9 +533,9 @@ static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol, uint8
       
       // Attempt a 1-byte read from this address, timeout is 100ms
       uint8_t status = 0;
-      uint8_t data;
+      uint8_t data = 0x0;
 
-      status |= sense_i2c_mem_read(addr<<1, memAddr, 1, data, 1, 100);
+      status |= sense_i2c_mem_read(addr<<1, memAddr, 1, &data, 1, 100);
       // Successful transaction
       if (status == 0)
         mt_printf("  *  ");
