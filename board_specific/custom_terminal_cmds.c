@@ -499,6 +499,56 @@ static uint8_t apollo_write_eth_mac() {
 
 }
 
+static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol) 
+{
+  /*
+   * Helper function to perform the I2C address scan.
+   * Iterates over each row and column to construct the address as:
+   * addr = (row << 4) + col
+   * 
+   * Prints out the address scan result as a 2D table, where an "*" indicates
+   * that the transaction resulted with a 0 status code (OK). "-" indicates
+   * the transaction resulted with a non-zero status code.
+   */
+
+  mt_printf("> Starting I2C scan over CM1 bus...\r\n\n");
+
+  mt_printf("     |");
+  
+  // Print out the columns
+  for (uint8_t col=0x0; col<=maxCol; col++) {
+    mt_printf(" 0x%01X ", col);
+  }
+  mt_printf("\r\n");
+  
+  // Do the address scan and print out the results
+  for (uint8_t row=0x0; row<=maxRow; row++) {
+    mt_printf("0x%02X", row << 4);
+    for (uint8_t col=0x0; col<=maxCol; col++) {
+      // Compute the address value from row and col
+      uint8_t addr = (row << 4) + col;
+      
+      // Attempt a 1-byte read from this address, timeout is 100ms
+      uint8_t status = 0;
+      uint8_t data;
+
+      status |= sense_i2c_receive(addr << 1, &data, 1, 100);
+      // Successful transaction
+      if (status == 0)
+        mt_printf("  *  ");
+      // Something went wrong
+      else
+        mt_printf("  -  ");
+      
+      // Wait for 100ms before the next read
+      osDelay(100);
+    }
+    // Switch to new row
+    mt_printf("\r\n");
+  }
+  return 0;
+}
+
 static uint8_t apollo_cm1_i2c_addr_scan_cb()
 {
   /*
@@ -507,20 +557,26 @@ static uint8_t apollo_cm1_i2c_addr_scan_cb()
    */
   mt_printf( "\r\n\n" );
 
-  // Scan every possible address on the CM1 I2C bus
-  for (uint8_t addr=0x00; addr < 0x7F; addr++) {
-    uint8_t status = 0;
-    uint8_t data;
-
-    // Select the CM1 bus
-    status |= tca9546_sel_m1();
-
-    // Do a 1 byte read from the I2C address
-    status |= sense_i2c_receive(addr << 1, &data, 1, 100);
-    mt_printf("Addr: %02X, Data: %02X, Status: %02X\r\n", addr, data, status);
-  }
+  // Select the CM1 bus
+  HAL_StatusTypeDef status = HAL_OK;
+  status |= tca9546_sel_m1();
   
-  return 0;
+  // Could not pick the CM1 bus via the mux, return here
+  if (status != HAL_OK) {
+    mt_printf("Could not select the CM1 bus, exiting.\r\n");
+    return status;
+  }
+
+  /*
+   * Scan every possible address on the CM1 I2C bus.
+   * Print out a 2D table with the address information.
+   * 
+   * Max row is 0x7 and max col is 0xF, so that the max address
+   * we'll attempt to scan is 0x7F.
+   */
+  status |= apollo_cm1_i2c_do_addr_scan(0x7, 0xF);
+
+  return status;
 }
 
 /*
@@ -546,7 +602,8 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
   CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
 
-  CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
+  CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,           1, 0, "Configure Apollo I2C Mux");
+  CLI_AddCmd("i2cscan",    apollo_cm1_i2c_addr_scan_cb, 0, 0, "Do a scan of I2C devices on the CM1 I2C bus");
 
   CLI_AddCmd("zwr",        apollo_zynq_i2c_tx_cb,   3, 0, "Write Apollo Zynq I2C");
   CLI_AddCmd("zrd",        apollo_zynq_i2c_rx_cb,   2, 0, "Read Apollo Zynq I2C");
@@ -563,6 +620,4 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
   CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
-
-  CLI_AddCmd("i2cscan",    apollo_cm1_i2c_addr_scan_cb, 0, 0, "Do a scan of I2C devices on the CM1 I2C bus");
 }
