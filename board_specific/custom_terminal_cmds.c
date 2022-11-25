@@ -523,7 +523,7 @@ static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol)
   
   // Do the address scan and print out the results
   for (uint8_t row=0x0; row<=maxRow; row++) {
-    mt_printf("0x%02X", row << 4);
+    mt_printf("0x%02X |", row << 4);
     for (uint8_t col=0x0; col<=maxCol; col++) {
       // Compute the address value from row and col
       uint8_t addr = (row << 4) + col;
