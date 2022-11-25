@@ -499,12 +499,15 @@ static uint8_t apollo_write_eth_mac() {
 
 }
 
-static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol) 
+static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol, uint8_t memAddr) 
 {
   /*
    * Helper function to perform the I2C address scan.
    * Iterates over each row and column to construct the address as:
    * addr = (row << 4) + col
+   * 
+   * This function tries to read from the memAddr register from the 
+   * given slave I2C device.
    * 
    * Prints out the address scan result as a 2D table, where an "*" indicates
    * that the transaction resulted with a 0 status code (OK). "-" indicates
@@ -532,7 +535,7 @@ static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol)
       uint8_t status = 0;
       uint8_t data;
 
-      status |= sense_i2c_receive(addr << 1, &data, 1, 100);
+      status |= sense_i2c_mem_read(addr<<1, memAddr, 1, data, 1, 100);
       // Successful transaction
       if (status == 0)
         mt_printf("  *  ");
@@ -568,13 +571,14 @@ static uint8_t apollo_cm1_i2c_addr_scan_cb()
   }
 
   /*
-   * Scan every possible address on the CM1 I2C bus.
+   * Scan every possible address on the CM1 I2C bus, and try to read
+   * 1-byte from register 0x10 from each I2C device.
    * Print out a 2D table with the address information.
    * 
    * Max row is 0x7 and max col is 0xF, so that the max address
    * we'll attempt to scan is 0x7F.
    */
-  status |= apollo_cm1_i2c_do_addr_scan(0x7, 0xF);
+  status |= apollo_cm1_i2c_do_addr_scan(0x7, 0xF, 0x10);
 
   return status;
 }
