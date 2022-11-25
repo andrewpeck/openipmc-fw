@@ -549,6 +549,12 @@ static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol, uint8
     // Switch to new row
     mt_printf("\r\n");
   }
+
+  // Print information for the table
+  mt_printf("\r\n");
+  mt_printf("(*): I2C MemRead status code zero\r\n");
+  mt_printf("(-): I2C MemRead status code non-zero \r\n\r\n");
+
   return 0;
 }
 
