@@ -535,6 +535,10 @@ static uint8_t apollo_cm1_i2c_do_addr_scan(uint8_t maxRow, uint8_t maxCol, uint8
       uint8_t status = 0;
       uint8_t data = 0x0;
 
+      // Select the CM1 bus
+      status |= tca9546_sel_m1();
+
+      // Do the 8-bit MemRead transaction
       status |= sense_i2c_mem_read(addr<<1, memAddr, 1, &data, 1, 100);
       // Successful transaction
       if (status == 0)
@@ -566,16 +570,8 @@ static uint8_t apollo_cm1_i2c_addr_scan_cb()
    */
   mt_printf( "\r\n\n" );
 
-  // Select the CM1 bus
   HAL_StatusTypeDef status = HAL_OK;
-  status |= tca9546_sel_m1();
   
-  // Could not pick the CM1 bus via the mux, return here
-  if (status != HAL_OK) {
-    mt_printf("Could not select the CM1 bus, exiting.\r\n");
-    return status;
-  }
-
   /*
    * Scan every possible address on the CM1 I2C bus, and try to read
    * 1-byte from register 0x10 from each I2C device.
