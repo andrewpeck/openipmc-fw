@@ -585,6 +585,49 @@ static uint8_t apollo_cm1_i2c_addr_scan_cb()
   return status;
 }
 
+static uint8_t apollo_cm1_i2c_mem_read_cb()
+{
+  /*
+   * Function to do a MemRead on the CM1 bus, from the given I2C device 
+   * (first argument to the CLI command) and it's given register address
+   * (second argument to the CLI command).
+   */
+
+  mt_printf( "\r\n\n" );
+
+  HAL_StatusTypeDef status = HAL_OK;
+
+  // Pick the CM1 bus
+  status |= tca9546_sel_m1();
+
+  // Could not pick the CM1 bus, return from the function here
+  if (status != HAL_OK) {
+    mt_printf("> Could not select the CM1 bus, exiting.\r\n");
+    return status;
+  }
+
+  // If everything went alright so far, try to do the read
+  uint8_t slaveAddr = CLI_GetArgHex(0);
+  uint8_t memAddr = CLI_GetArgHex(1);
+  mt_printf("> Mux set to 0x2, attempting a MemRead at addr=0x%02X, reg=0x%02X\r\n", slaveAddr, memAddr);
+
+  // Attempt an 8-bit read from the specified register of the specified
+  // I2C device, timeout is 100 ms. Note that the I2C device address is 
+  // left-shifted by 1 due to 7-bit addressing.
+  uint8_t data;
+  status |= sense_i2c_mem_read(slaveAddr<<1, memAddr, 1, &data, 1, 100);
+
+  // Successful transaction
+  if (status == 0)
+    mt_printf("> Data read: 0x%02X \r\n", data);
+
+  // Something went wrong
+  else
+    mt_printf("> I2C failure, status: 0x%02X\r\n", status);
+
+  return status;
+}
+
 /*
  * This functions is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
@@ -610,6 +653,7 @@ void add_board_specific_terminal_commands( void )
 
   CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,           1, 0, "Configure Apollo I2C Mux");
   CLI_AddCmd("i2cscan",    apollo_cm1_i2c_addr_scan_cb, 0, 0, "Do a scan of I2C devices on the CM1 I2C bus");
+  CLI_AddCmd("i2cread",    apollo_cm1_i2c_mem_read_cb,  2, 0, "Read from a register of an I2C device on CM1 bus");
 
   CLI_AddCmd("zwr",        apollo_zynq_i2c_tx_cb,   3, 0, "Write Apollo Zynq I2C");
   CLI_AddCmd("zrd",        apollo_zynq_i2c_rx_cb,   2, 0, "Read Apollo Zynq I2C");
