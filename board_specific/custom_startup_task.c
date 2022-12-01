@@ -158,6 +158,26 @@ void custom_startup_task( void )
                             255, 255,   0,  0,        // Network Mask
                             192, 168,   1,  4);       // Gateway
 
+
+  /*
+   * User can choose when the OpenIPMC is started. If any OpenIPMC
+   * board-specific hook/callback requires some previous code to run,
+   * it must be done before this point.
+   * 
+   * This function will set block_openipmc_initialization = 0, so that
+   * the FRU state task listening to this variable will launch IPMC bootup
+   * sequence, hence booting up Zynq and powering up ESM as well.
+   */
+  openipmc_start();
+
+  // For rev1 boards, enabling the ESM is tied to enabling the 12V
+  // so keep the network off until the ESM comes up and resets
+  if (apollo_get_revision() == APOLLO_REV1) {
+    // Wait for Zynq to come up, check every 1s
+    while (0==apollo_get_zynq_en()) {}
+    osDelay(1000);
+  }
+
   // send esm reset
   //------------------------------------------------------------------------------
   // WARNING:
@@ -168,21 +188,7 @@ void custom_startup_task( void )
   mt_printf(" > Resetting ESM...\r\n");
   while (0==apollo_get_esm_pwr_good()) {}
 
-  // for rev1 boards, enabling the esm is tied to enabling the 12V
-  // so keep the network off until the ESM comes up and resets
-  if (apollo_get_revision() == APOLLO_REV1) {
-    while (0==apollo_get_zynq_en()) {}
-    osDelay(1000);
-  }
-
   osDelay(100);
-
-  /*
-   * User can choose when the OpenIPMC is started. If any OpenIPMC
-   * board-specific hook/callback requires some previous code to run,
-   * it must be done before this point.
-   */
-  openipmc_start();
 
   eth_ctrls_dhcp_enable();
 
