@@ -122,14 +122,15 @@ void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum) {
   zynq_s1_wr_reg(adr, checksum);
 }
 
-void zynq_set_eth_mac_write_done(uint8_t eth, uint8_t value)
-/*
- * Write a 0/1 value to Zynq's I2C registers indicating that MAC address
- * and checksum values are written to the proper I2C registers.
- */
+void zynq_set_s1_i2c_writes_done()
+  /*
+   * Write a 1 value to Zynq's I2C register indicating that all the I2C
+   * writes to the S1 I2C slave are complete.
+   */
 {
-  // Write this flag to the last byte of the ETH0_MAC and ETH1_MAC registers
-  // (each reserving 8-bytes of memory)
-  uint8_t adr = (ZYNQ_ETH0_MAC_ADR_REG + eth * 8) + 7;
-  zynq_s1_wr_reg(adr, value);
+  uint8_t rd = zynq_s1_rd_reg(ZYNQ_I2C_DONE_REG);
+
+  // The mask of the I2C_DONE register is 0x8 
+  rd = rd | 0x8;
+  zynq_s1_wr_reg(ZYNQ_I2C_DONE_REG, rd);
 }
