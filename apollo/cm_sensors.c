@@ -7,7 +7,7 @@
 #define FIREFLY 2
 #define REGULATOR 3
 #define MCU 4
-#define ADR 0x40
+#define I2C_CM_MCU_ADR 0x40
 
 const linear_sensor_constants_t cm_fpga_temp_consts = {
     .sensor_type = TEMPERATURE,
@@ -67,41 +67,43 @@ const linear_sensor_constants_t cm_mcu_temp_consts = {
 
 sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
 
+  uint8_t mem_addr = 0xFF;
   uint8_t rx_data = 0xFF;
-  uint8_t upper_critical=255;
-  uint8_t upper_noncritical=255;
-  uint8_t upper_nonrecoverable=255;
+  uint8_t upper_critical = 255;
+  uint8_t upper_noncritical = 255;
+  uint8_t upper_nonrecoverable = 255;
 
+  // Based on the sensor we're looking for, set the I2C register address to read
   if (sensor == FPGA0) {
-    rx_data = 0x12;
+    mem_addr = 0x12;
     upper_noncritical = cm_fpga_temp_consts.upper_noncritical;
     upper_critical = cm_fpga_temp_consts.upper_critical;
     upper_nonrecoverable = cm_fpga_temp_consts.upper_nonrecoverable;
   } else if (sensor == FPGA1) {
-    rx_data = 0x14;
+    mem_addr = 0x14;
     upper_noncritical = cm_fpga_temp_consts.upper_noncritical;
     upper_critical = cm_fpga_temp_consts.upper_critical;
     upper_nonrecoverable = cm_fpga_temp_consts.upper_nonrecoverable;
   } else if (sensor == FIREFLY) {
-    rx_data = 0x16;
+    mem_addr = 0x16;
     upper_noncritical = cm_firefly_temp_consts.upper_noncritical;
     upper_critical = cm_firefly_temp_consts.upper_critical;
     upper_nonrecoverable = cm_firefly_temp_consts.upper_nonrecoverable;
   } else if (sensor == REGULATOR) {
-    rx_data = 0x18;
+    mem_addr = 0x18;
     upper_noncritical = cm_regulator_temp_consts.upper_noncritical;
     upper_critical = cm_regulator_temp_consts.upper_critical;
     upper_nonrecoverable = cm_regulator_temp_consts.upper_nonrecoverable;
   } else if (sensor == MCU) {
-    rx_data = 0x10;
+    mem_addr = 0x10;
     upper_noncritical = cm_mcu_temp_consts.upper_noncritical;
     upper_critical = cm_mcu_temp_consts.upper_critical;
     upper_nonrecoverable = cm_mcu_temp_consts.upper_nonrecoverable;
   }
 
+  // Perform the MemRead to the given I2C device address 
   HAL_StatusTypeDef status = 0;
-  status |= cm1_i2c_tx(&rx_data, ADR);
-  status |= cm1_i2c_rx(&rx_data, ADR);
+  status |= cm1_i2c_mem_read(&rx_data, I2C_CM_MCU_ADR, mem_addr);
 
 	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
