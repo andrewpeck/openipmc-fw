@@ -659,6 +659,9 @@ void apollo_write_zynq_i2c_constants () {
       zynq_set_eth_checksum(0, eth0_mac_checksum);
       zynq_set_eth_checksum(1, eth1_mac_checksum);
 
+      // All writes to S1 slave are complete
+      zynq_set_s1_i2c_writes_done();
+
       // MAC address of the IPMC 
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
