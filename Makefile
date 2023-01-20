@@ -1,16 +1,10 @@
 .PHONY: clean
 
-hpm: headers
-	make -C openipmc-fw/CM7/ hpm
-
-headers:
-	@echo "Generating headers"
-	@cd openipmc-fw/CM7/Core && sh Src/header_gen.sh && cd - > /dev/null
-	@touch openipmc-fw/CM7/Core/Src/terminal_impl.c
-	@touch openipmc-fw/CM7/Core/Src/openipmc_inits.c
+hpm:
+	make -C openipmc-fw/ hpm
 
 clean:
-	make -C openipmc-fw/CM7/ clean
+	make -C openipmc-fw/ clean
 
 load_usb:
 	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw/CM7/openipmc-fw_CM7.bin
