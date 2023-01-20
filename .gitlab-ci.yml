@@ -14,5 +14,5 @@ build-job:
   artifacts:
     paths:
       - openipmc-fw/CM7/openipmc-fw_CM7.bin
-      - openipmc-fw/CM7/upgrade.hpm
+      - openipmc-fw/CM7/upgrade_CM7.hpm
     expire_in: 1 month
