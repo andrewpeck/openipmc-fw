@@ -10,6 +10,7 @@ before_script:
 build-job:
   stage: build
   script:
+    - make clean
     - make -j8 hpm
   artifacts:
     paths:
