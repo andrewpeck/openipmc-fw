@@ -134,3 +134,12 @@ void zynq_set_s1_i2c_writes_done()
   rd = rd | 0x8;
   zynq_s1_wr_reg(ZYNQ_I2C_DONE_REG, rd);
 }
+
+uint8_t zynq_get_temperature()
+/*
+ * Function to read the temperature value from Zynq S1 I2C slave.
+ */
+{
+  uint8_t reg_adr = 0x24;
+  return zynq_rd_reg(reg_adr, ZYNQ_I2C_SLAVE1_ADDR);
+}

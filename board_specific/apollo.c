@@ -13,6 +13,7 @@
 #include "pim400.h"
 #include "stdint.h"
 #include "zynq_i2c.h"
+#include "zynq_temp_sensor.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -736,9 +737,10 @@ void create_board_specific_sensors() {
   // SM
   //------------------------------------------------------------------------------
 
-  create_linear_sensor (sm_tcn_temp_consts, "SM Top Temperature", &sensor_reading_sm_tcn_top);
-  create_linear_sensor (sm_tcn_temp_consts, "SM Mid Temperature", &sensor_reading_sm_tcn_mid);
-  create_linear_sensor (sm_tcn_temp_consts, "SM Bot Temperature", &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Top Temperature",  &sensor_reading_sm_tcn_top);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Mid Temperature",  &sensor_reading_sm_tcn_mid);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Bot Temperature",  &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_zynq_temp_consts, "SM Zynq Temperature", &sensor_reading_zynq_temp );
 
   //------------------------------------------------------------------------------
   // CM
