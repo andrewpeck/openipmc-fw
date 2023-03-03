@@ -121,3 +121,25 @@ void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum) {
   uint8_t adr = (ZYNQ_ETH0_MAC_ADR_REG + eth * 8) + 6;
   zynq_s1_wr_reg(adr, checksum);
 }
+
+void zynq_set_s1_i2c_writes_done()
+  /*
+   * Write a 1 value to Zynq's I2C register indicating that all the I2C
+   * writes to the S1 I2C slave are complete.
+   */
+{
+  uint8_t rd = zynq_s1_rd_reg(ZYNQ_I2C_DONE_REG);
+
+  // The mask of the I2C_DONE register is 0x8 
+  rd = rd | 0x8;
+  zynq_s1_wr_reg(ZYNQ_I2C_DONE_REG, rd);
+}
+
+uint8_t zynq_get_temperature()
+/*
+ * Function to read the temperature value from Zynq S1 I2C slave.
+ */
+{
+  uint8_t reg_adr = 0x24;
+  return zynq_rd_reg(reg_adr, ZYNQ_I2C_SLAVE1_ADDR);
+}

@@ -13,6 +13,7 @@
 #include "pim400.h"
 #include "stdint.h"
 #include "zynq_i2c.h"
+#include "zynq_temp_sensor.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -659,6 +660,9 @@ void apollo_write_zynq_i2c_constants () {
       zynq_set_eth_checksum(0, eth0_mac_checksum);
       zynq_set_eth_checksum(1, eth1_mac_checksum);
 
+      // All writes to S1 slave are complete
+      zynq_set_s1_i2c_writes_done();
+
       // MAC address of the IPMC 
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
@@ -733,9 +737,10 @@ void create_board_specific_sensors() {
   // SM
   //------------------------------------------------------------------------------
 
-  create_linear_sensor (sm_tcn_temp_consts, "SM Top Temperature", &sensor_reading_sm_tcn_top);
-  create_linear_sensor (sm_tcn_temp_consts, "SM Mid Temperature", &sensor_reading_sm_tcn_mid);
-  create_linear_sensor (sm_tcn_temp_consts, "SM Bot Temperature", &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Top Temperature",  &sensor_reading_sm_tcn_top);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Mid Temperature",  &sensor_reading_sm_tcn_mid);
+  create_linear_sensor (sm_tcn_temp_consts,  "SM Bot Temperature",  &sensor_reading_sm_tcn_bot);
+  create_linear_sensor (sm_zynq_temp_consts, "SM Zynq Temperature", &sensor_reading_zynq_temp );
 
   //------------------------------------------------------------------------------
   // CM

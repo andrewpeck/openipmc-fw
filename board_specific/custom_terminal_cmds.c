@@ -82,7 +82,7 @@ static uint8_t apollo_boot_status_cb()
   else if (mode == APOLLO_BOOT_NAND)
     mt_printf("Boot mode = %d (%s)\r\n", mode, "NAND");
   else if (mode == APOLLO_BOOT_JTAG)
-    mt_printf("Boot mode = %d (%s)\r\n", mode, "JTAG");
+    mt_printf("Boot mode = %d (%s)\r\n", mode, "JTAG/EMMC");
 
   mt_printf("state = %s\r\n", get_apollo_status());
 

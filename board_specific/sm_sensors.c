@@ -82,6 +82,7 @@ sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_readi
 }
 
 
+// Sensor constants for the SM temperature sensors
 const linear_sensor_constants_t sm_tcn_temp_consts =
 {
   .sensor_type=TEMPERATURE,

@@ -8,6 +8,7 @@ uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr);
 
 uint8_t zynq_get_i2c_done ();
 uint8_t zynq_get_boot_error ();
+uint8_t zynq_get_temperature();
 void zynq_request_shutdown();
 
 void zynq_set_ipmc_mac(uint8_t* mac);
@@ -19,5 +20,7 @@ void zynq_set_ipmc_ip(uint8_t* ip);
 
 void zynq_set_eth_mac(uint8_t eth, uint8_t *mac);
 void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum);
+
+void zynq_set_s1_i2c_writes_done();
 
 #endif // ZYNQ_I2C_H_
