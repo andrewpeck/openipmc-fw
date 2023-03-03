@@ -10,7 +10,7 @@
  * Sensor type and unit definitions for the IP sensors.
  */
 #define LAN_SENSOR 0x27
-#define BYTE 0x70
+#define BYTE 0x46
 
 
 sensor_reading_status_t sensor_reading_ipmc_ip_addr(uint8_t byte, sensor_reading_t *sensor_reading);
