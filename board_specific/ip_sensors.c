@@ -1,8 +1,8 @@
 #include "ip_sensors.h"
 
 const linear_sensor_constants_t ipmc_ip_consts = {
-    .sensor_type = IPMB0_SENSOR,
-    .unit_type = UNSPECIFIED_UNIT,
+    .sensor_type = LAN_SENSOR,
+    .unit_type = BYTE,
     .lower_nonrecoverable = 0,
     .lower_noncritical = 0,
     .lower_critical = 0,
