@@ -19,18 +19,30 @@ const linear_sensor_constants_t sm_zynq_temp_consts =
 };
 
 sensor_reading_status_t sensor_reading_zynq_temp(sensor_reading_t *sensor_reading) {
+    /*
+     * Function implementing the Zynq temperature sensor.
+     */
     uint8_t temp_reading = zynq_get_temperature();
+
+    sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
     // If there was an error in the I2C transaction, reading will be returned as 0
     if (temp_reading > 0) {
         sensor_reading->raw_value = temp_reading;
-        sensor_reading->present_state = 0;
-        return SENSOR_READING_OK;
     }
     else {
         sensor_reading->raw_value = 0;
-        sensor_reading->present_state = 0;
-        return SENSOR_READING_UNAVAILABLE;
+        sensor_status = SENSOR_READING_UNAVAILABLE;
     }
+
+    sensor_reading->present_state = 0;
+
+    set_sensor_upper_state(sensor_reading,
+                           sm_zynq_temp_consts.upper_noncritical,
+                           sm_zynq_temp_consts.upper_critical,
+                           sm_zynq_temp_consts.upper_nonrecoverable);
+
+    return sensor_status;
+
 }
 
