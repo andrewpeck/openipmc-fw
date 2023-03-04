@@ -1,6 +1,23 @@
 #include "sm_sensors.h"
 #include <assert.h>
 
+// Sensor constants for the SM temperature sensors
+const linear_sensor_constants_t sm_tcn_temp_consts =
+{
+  .sensor_type=TEMPERATURE,
+  .unit_type=DEGREES_C,
+  .lower_nonrecoverable=0,
+  .lower_noncritical=0,
+  .lower_critical=0,
+  .upper_noncritical=38,
+  .upper_critical=40,
+  .upper_nonrecoverable=50,
+  .m=1,
+  .b=0,
+  .re=0,
+  .be=0
+};
+
 HAL_StatusTypeDef read_sm_tcn_raw (uint8_t sensor, uint8_t* data) {
 
   HAL_StatusTypeDef status = HAL_OK;
@@ -57,15 +74,23 @@ sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *
 
   uint8_t temp = reading;
 
+  sensor_reading_status_t sensor_status = SENSOR_READING_OK;
+
   if (status == HAL_OK) {
     sensor_reading->raw_value = temp;
-    sensor_reading->present_state = 0;
-    return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 1;
-    sensor_reading->present_state = 0;
-    return(SENSOR_READING_UNAVAILABLE);
+    sensor_status = SENSOR_READING_UNAVAILABLE;
   }
+  
+  sensor_reading->present_state = 0;
+
+  set_sensor_upper_state(sensor_reading,
+                         sm_tcn_temp_consts.upper_noncritical,
+                         sm_tcn_temp_consts.upper_critical,
+                         sm_tcn_temp_consts.upper_nonrecoverable);
+                         
+  return sensor_status;
 
 }
 
@@ -81,20 +106,3 @@ sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_readi
   return(sensor_reading_sm_tcn(TCN_BOT, sensor_reading));
 }
 
-
-// Sensor constants for the SM temperature sensors
-const linear_sensor_constants_t sm_tcn_temp_consts =
-{
-  .sensor_type=TEMPERATURE,
-  .unit_type=DEGREES_C,
-  .lower_nonrecoverable=0,
-  .lower_noncritical=0,
-  .lower_critical=0,
-  .upper_noncritical=38,
-  .upper_critical=40,
-  .upper_nonrecoverable=50,
-  .m=1,
-  .b=0,
-  .re=0,
-  .be=0
-};
