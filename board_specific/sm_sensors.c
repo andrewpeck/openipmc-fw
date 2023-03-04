@@ -90,6 +90,7 @@ sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *
                          sm_tcn_temp_consts.upper_critical,
                          sm_tcn_temp_consts.upper_nonrecoverable);
                          
+  return sensor_status;
 
 }
 
