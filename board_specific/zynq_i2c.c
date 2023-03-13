@@ -13,6 +13,8 @@
 
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14
 
+#define IPMC_FW_HASH_REG 0x29
+
 //------------------------------------------------------------------------------
 // Generic rd/wr functions
 //------------------------------------------------------------------------------
@@ -96,6 +98,15 @@ void zynq_set_blade_rev(uint8_t rev) {
 void zynq_set_ipmc_ip(uint8_t *ip) {
   for (int i=0; i<4; i++) {
     zynq_s8_wr_reg(IPMC_IP_ADR_REG+i, ip[i]);
+  }
+}
+
+void zynq_set_ipmc_fw_hash(uint8_t *hash) {
+  /*
+   * Writes the IPMC FW hash to the Zynq registers, 8 bits at a time. 
+   */
+  for (int i=0; i<4; i++) {
+    zynq_s1_wr_reg(IPMC_FW_HASH_REG+i, hash[i]);
   }
 }
 
