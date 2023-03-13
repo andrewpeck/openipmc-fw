@@ -13,7 +13,7 @@
 
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14
 
-#define IPMC_FW_HASH_REG 0x29
+#define IPMC_FW_HASH_REG 0x2c
 
 //------------------------------------------------------------------------------
 // Generic rd/wr functions
