@@ -678,6 +678,13 @@ void apollo_write_zynq_i2c_constants () {
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
       zynq_set_ipmc_mac(mac);
 
+      // Send the 32-bit UID of the IPMC to Zynq
+      uint8_t ipmc_uid[4];
+      for (uint8_t i=0; i<4; i++) {
+        ipmc_uid[i] = (id >> i*8) & 0xFF;
+      }
+      zynq_set_ipmc_uid(ipmc_uid);
+
       // // pim
       read_status_pim400(&reading);
       zynq_wr_reg(0x00, reading, 0x66);

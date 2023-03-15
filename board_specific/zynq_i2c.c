@@ -8,10 +8,13 @@
 
 #define ZYNQ_I2C_DONE_REG 0
 
+// Read/write targets for SLAVE8 target on the Zynq
 #define IPMC_MAC_ADR_REG 0x00
 #define IPMC_IP_ADR_REG 0x08
 #define IPMC_FW_HASH_REG 0x10
+#define IPMC_UID_REG 0x14
 
+// Read/write targets for SLAVE1 target on the Zynq
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14
 
 
@@ -107,6 +110,16 @@ void zynq_set_ipmc_fw_hash(uint8_t *hash) {
    */
   for (int i=0; i<4; i++) {
     zynq_s8_wr_reg(IPMC_FW_HASH_REG+i, hash[i]);
+  }
+}
+
+void zynq_set_ipmc_uid(uint8_t *uid) {
+  /*
+   * Send the unique device ID for this IPMC to Zynq.
+   * Device ID is 32-bits, send 8-bit at a time.
+   */
+  for (int i=0; i<4; i++) {
+    zynq_s8_wr_reg(IPMC_UID_REG+i, uid[i]);
   }
 }
 
