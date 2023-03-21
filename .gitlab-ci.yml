@@ -5,7 +5,7 @@ variables:
 
 before_script:
   - apt-get update
-  - apt-get --yes install libssl-dev zlib1g-dev openssh-client
+  - apt-get --yes install libssl-dev zlib1g-dev
 
 build-job:
   stage: build
