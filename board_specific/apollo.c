@@ -14,6 +14,7 @@
 #include "stdint.h"
 #include "zynq_i2c.h"
 #include "zynq_temp_sensor.h"
+#include "head_commit_sha1.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -629,6 +630,15 @@ void apollo_write_zynq_i2c_constants () {
       // revision
       zynq_set_blade_rev(apollo_get_revision());
 
+      // FW hash of the IPMC
+      // This is 32-bits, so split into 8-bit chunks.
+      uint8_t ipmc_fw_hash[4];
+      for (uint8_t i=0; i<4; i++) {
+        ipmc_fw_hash[i] = (HEAD_COMMIT_SHA1 >> i*8) & 0xFF;
+      }
+
+      zynq_set_ipmc_fw_hash(ipmc_fw_hash);
+
       // IP address of the IPMC, being read from the LWIP interface
       extern struct netif gnetif;
       ip4_addr_t* ipaddr  = netif_ip4_addr   ( &gnetif );
@@ -667,6 +677,13 @@ void apollo_write_zynq_i2c_constants () {
       uint32_t id = HAL_GetUIDw0() + HAL_GetUIDw1() + HAL_GetUIDw2();
       uint8_t mac [6] = {0x00, 0x80, 0xe1, (id >> 16)&0xFF, (id >> 8)&0xFF, (id >> 0)&0xFF};
       zynq_set_ipmc_mac(mac);
+
+      // Send the 32-bit UID of the IPMC to Zynq
+      uint8_t ipmc_uid[4];
+      for (uint8_t i=0; i<4; i++) {
+        ipmc_uid[i] = (id >> i*8) & 0xFF;
+      }
+      zynq_set_ipmc_uid(ipmc_uid);
 
       // // pim
       read_status_pim400(&reading);
