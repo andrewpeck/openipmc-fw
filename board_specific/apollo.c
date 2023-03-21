@@ -10,6 +10,7 @@
 #include "cm_sensors.h"
 #include "sm_sensors.h"
 #include "ip_sensors.h"
+#include "picmg_address_info.h"
 #include "pim400.h"
 #include "stdint.h"
 #include "zynq_i2c.h"
@@ -22,6 +23,10 @@
 extern uint8_t shelf_address;
 extern uint8_t shelf_address_type;
 void mt_printf(const char* format, ...);
+
+// Shelf and slot ID of the Service Module
+picmg_address_info_data_t fru_addr_data;
+picmg_shelf_address_info_data_t shelf_addr_data;
 
 uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
@@ -598,6 +603,11 @@ void apollo_powerup_sequence () {
     apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
     return;
   }
+
+  // Get shelf and slot ID from the shelf manager
+  mt_printf(" > Retrieving shelf and slot ID from shelf manager\r\n");
+  picmg_get_address_info(&fru_addr_data);
+  picmg_get_shelf_address_info(&shelf_addr_data);
 
   // write zynq constants
   //------------------------------------------------------------------------------
