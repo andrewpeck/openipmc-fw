@@ -314,7 +314,7 @@ void apollo_set_shelf_id() {
     uint8_t shelf_id_num_used_bytes = shelf_addr_data.len;
 
     for (uint8_t i=0; i < shelf_id_num_used_bytes; i++) {
-      shelf_id_data[i] = shelf_addr_data[i];
+      shelf_id_data[i] = shelf_addr_data.data[i];
     }
 
     // Pad the remaining data with NULL (0x00)
