@@ -17,7 +17,7 @@
 
 // Read/write target addresses for SLAVE6 target on the Zybq
 #define IPMC_SITE_NUMBER_ADDR 0x0
-#define IPMC_SHELF_ID_ADDR 0x1
+#define IPMC_SHELF_ID_ADDR 0x4
 
 // Read/write targets for SLAVE1 target on the Zynq
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14

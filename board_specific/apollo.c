@@ -287,18 +287,28 @@ uint8_t apollo_get_zynq_done_generic () {
 }
 
 void apollo_set_site_number() {
+  /*
+   * Send the site number obtained from shelf manager to the S6 I2C target on the Zynq.
+   * If the site number retrieval fails, prints a message to the console.
+   */
   picmg_address_info_data_t fru_addr_data;
   int addr_status;
   addr_status = picmg_get_address_info(&fru_addr_data);
   if (addr_status == PICMG_ADDRESS_INFO_ERR_OK) {
     zynq_set_site_number(fru_addr_data.site_number);
   }
+  // Failed to retrieve site number from the shelf manager
   else {
     mt_printf(" > Failed to retrieve FRU address data.\r\n");
   }
 }
 
 void apollo_set_shelf_id() {
+  /*
+   * Send the shelf ID data (20 bytes) to the S6 I2C target on the Zynq.
+   * The unused bytes are set to 0x00.
+   * If the shelf ID retrieval fails, prints a message to the console.
+   */
   picmg_shelf_address_info_data_t shelf_addr_data;
   int addr_status;
   addr_status = picmg_get_shelf_address_info(&shelf_addr_data);
@@ -323,6 +333,7 @@ void apollo_set_shelf_id() {
     }
     zynq_set_shelf_id(shelf_id_data);
   }
+  // Failed to retrieve shelf ID from the shelf manager
   else {
     mt_printf(" > Failed to retrieve shelf ID data.\r\n");
   }
