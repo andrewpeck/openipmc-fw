@@ -17,6 +17,11 @@ void zynq_set_blade_sn(uint8_t sn);
 void zynq_set_blade_slot(uint8_t slot);
 void zynq_set_blade_rev(uint8_t rev);
 void zynq_set_ipmc_ip(uint8_t* ip);
+void zynq_set_ipmc_fw_hash(uint8_t* hash);
+void zynq_set_ipmc_uid(uint8_t *uid);
+
+void zynq_set_site_number(uint8_t site_number);
+void zynq_set_shelf_id(uint8_t *shelf_id);
 
 void zynq_set_eth_mac(uint8_t eth, uint8_t *mac);
 void zynq_set_eth_checksum(uint8_t eth, uint8_t checksum);
