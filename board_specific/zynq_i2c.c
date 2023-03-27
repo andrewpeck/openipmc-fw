@@ -4,6 +4,7 @@
 // https://apollo-lhc.gitlab.io/IPMC/ipmc-sensors/#zynq-i2c-slave-interface
 
 #define ZYNQ_I2C_SLAVE1_ADDR 0x60
+#define ZYNQ_I2C_SLAVE6_ADDR 0x65
 #define ZYNQ_I2C_SLAVE8_ADDR 0x67
 
 #define ZYNQ_I2C_DONE_REG 0
@@ -13,6 +14,10 @@
 #define IPMC_IP_ADR_REG 0x08
 #define IPMC_FW_HASH_REG 0x10
 #define IPMC_UID_REG 0x14
+
+// Read/write target addresses for SLAVE6 target on the Zybq
+#define IPMC_SITE_NUMBER_ADDR 0x0
+#define IPMC_SHELF_ID_ADDR 0x4
 
 // Read/write targets for SLAVE1 target on the Zynq
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14
@@ -60,12 +65,20 @@ uint8_t zynq_s8_wr_reg(uint8_t adr, uint8_t data) {
   return zynq_wr_reg(adr, data, ZYNQ_I2C_SLAVE8_ADDR);
 }
 
+uint8_t zynq_s6_wr_reg(uint8_t adr, uint8_t data) {
+  return zynq_wr_reg(adr, data, ZYNQ_I2C_SLAVE6_ADDR);
+}
+
 uint8_t zynq_s1_rd_reg(uint8_t adr) {
   return zynq_rd_reg(adr, ZYNQ_I2C_SLAVE1_ADDR);
 }
 
 uint8_t zynq_s8_rd_reg(uint8_t adr) {
   return zynq_rd_reg(adr, ZYNQ_I2C_SLAVE8_ADDR);
+}
+
+uint8_t zynq_s6_rd_reg(uint8_t adr) {
+  return zynq_rd_reg(adr, ZYNQ_I2C_SLAVE6_ADDR);
 }
 
 //------------------------------------------------------------------------------
@@ -166,4 +179,21 @@ uint8_t zynq_get_temperature()
 {
   uint8_t reg_adr = 0x24;
   return zynq_rd_reg(reg_adr, ZYNQ_I2C_SLAVE1_ADDR);
+}
+
+void zynq_set_site_number(uint8_t site_number) {
+  /*
+   * Write IPMC site number to S6.
+   */
+  zynq_s6_wr_reg(IPMC_SITE_NUMBER_ADDR, site_number);
+}
+
+void zynq_set_shelf_id(uint8_t *shelf_id) {
+  /*
+   * Write shelf ID data to S6 target device. The shelf ID data is 20 bytes,
+   * we'll do the write one byte at a time.
+   */
+  for (int i=0; i<20; i++) {
+    zynq_s6_wr_reg(IPMC_SHELF_ID_ADDR+i, shelf_id[i]);
+  }
 }

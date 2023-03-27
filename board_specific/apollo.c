@@ -10,6 +10,7 @@
 #include "cm_sensors.h"
 #include "sm_sensors.h"
 #include "ip_sensors.h"
+#include "picmg_address_info.h"
 #include "pim400.h"
 #include "stdint.h"
 #include "zynq_i2c.h"
@@ -283,6 +284,59 @@ uint8_t apollo_get_zynq_done_generic () {
     return zynq_get_i2c_done();
   else
     return apollo_get_zynq_up();
+}
+
+void apollo_set_site_number() {
+  /*
+   * Send the site number obtained from shelf manager to the S6 I2C target on the Zynq.
+   * If the site number retrieval fails, prints a message to the console.
+   */
+  picmg_address_info_data_t fru_addr_data;
+  int addr_status;
+  addr_status = picmg_get_address_info(&fru_addr_data);
+  if (addr_status == PICMG_ADDRESS_INFO_ERR_OK) {
+    zynq_set_site_number(fru_addr_data.site_number);
+  }
+  // Failed to retrieve site number from the shelf manager
+  else {
+    mt_printf(" > Failed to retrieve FRU address data.\r\n");
+  }
+}
+
+void apollo_set_shelf_id() {
+  /*
+   * Send the shelf ID data (20 bytes) to the S6 I2C target on the Zynq.
+   * The unused bytes are set to 0x00.
+   * If the shelf ID retrieval fails, prints a message to the console.
+   */
+  picmg_shelf_address_info_data_t shelf_addr_data;
+  int addr_status;
+  addr_status = picmg_get_shelf_address_info(&shelf_addr_data);
+  /*
+   * Shelf ID data is 20 bytes maximum. Check the length of data (i.e. number of bytes)
+   * and assign NULL value (0x00) to unused bytes. 
+   */
+  if (addr_status == PICMG_GET_SHELF_ADDRESS_ERR_OK) {
+    uint8_t shelf_id_num_bytes = 20;
+    uint8_t shelf_id_data[shelf_id_num_bytes];
+
+    // Number of actually used bytes
+    uint8_t shelf_id_num_used_bytes = shelf_addr_data.len;
+
+    for (uint8_t i=0; i < shelf_id_num_used_bytes; i++) {
+      shelf_id_data[i] = shelf_addr_data.data[i];
+    }
+
+    // Pad the remaining data with NULL (0x00)
+    for (uint8_t i=shelf_id_num_used_bytes; i < shelf_id_num_bytes; i++) {
+      shelf_id_data[i] = 0x00;
+    }
+    zynq_set_shelf_id(shelf_id_data);
+  }
+  // Failed to retrieve shelf ID from the shelf manager
+  else {
+    mt_printf(" > Failed to retrieve shelf ID data.\r\n");
+  }
 }
 
 void apollo_powerdown_sequence() {
@@ -684,6 +738,10 @@ void apollo_write_zynq_i2c_constants () {
         ipmc_uid[i] = (id >> i*8) & 0xFF;
       }
       zynq_set_ipmc_uid(ipmc_uid);
+
+      // Obtain and write shelf & slot ID
+      apollo_set_site_number();
+      apollo_set_shelf_id();
 
       // // pim
       read_status_pim400(&reading);
