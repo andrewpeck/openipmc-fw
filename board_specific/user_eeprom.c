@@ -1,8 +1,10 @@
 #include <apollo.h>
-#include <mgm_i2c.h>
 #include <stdint.h>
 #include <string.h>
 #include <user_eeprom.h>
+
+#include <h7i2c_bare.h>
+#include <h7i2c_rtos.h>
 
 #define MEM_ADDR 0x50<<1
 #define ID_PAGE 0x58
@@ -53,15 +55,15 @@ char user_eeprom_read(void) {
 
   uint8_t addr[] = {0x00, 0x00};
 
-  HAL_StatusTypeDef status = mgm_i2c_transmit(MEM_ADDR, addr, 2, 100);
+  h7i2c_i2c_ret_code_t status = h7i2c_i2c_write(H7I2C_I2C4, MEM_ADDR, 2, addr, 100);
 
-  if (status != HAL_OK) {
+  if (status != H7I2C_RET_CODE_OK) {
     return -1;
   }
 
-  status = mgm_i2c_receive(MEM_ADDR, (uint8_t *)&eeprom, sizeof(eeprom), 1000);
+  status = h7i2c_i2c_read(H7I2C_I2C4, MEM_ADDR, sizeof(eeprom), (uint8_t *)&eeprom, 1000);
 
-  if (status != HAL_OK) {
+  if (status != H7I2C_RET_CODE_OK) {
     return -2;
   }
 
@@ -81,10 +83,11 @@ char user_eeprom_write(void) {
   memcpy(&buffer[2], (uint8_t *)&eeprom, sizeof(eeprom));
 
   user_eeprom_write_enable();
-  HAL_StatusTypeDef status;
-  status = mgm_i2c_transmit(MEM_ADDR, buffer, sizeof(buffer), 1000);
+  h7i2c_i2c_ret_code_t status;
+  status = h7i2c_i2c_write(H7I2C_I2C4, MEM_ADDR, sizeof(buffer), buffer, 1000);
   user_eeprom_write_disable();
-  if (status != HAL_OK) {
+  
+  if (status != H7I2C_RET_CODE_OK) {
     return -1;
   }
 

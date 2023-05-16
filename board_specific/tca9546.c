@@ -7,24 +7,24 @@ uint8_t config_last = 0x00;
 // TODO: should keep track of the current switch state and only change if it
 // needs to
 
-HAL_StatusTypeDef tca9546_config(uint8_t mask) {
+h7i2c_i2c_ret_code_t tca9546_config(uint8_t mask) {
   if (mask != config_last) {
     config_last = mask;
     const uint8_t tca9546_adr = 0x70 << 1;
     uint8_t tx_data = mask & 0xf;
-    return sense_i2c_transmit(tca9546_adr, &tx_data, 1, 2000);
+    return h7i2c_i2c_write(H7I2C_I2C3, tca9546_adr, 1, &tx_data, 2000);
   }
   else {
-    return HAL_OK;
+    return H7I2C_RET_CODE_OK;
   }
 
 }
 
-HAL_StatusTypeDef tca9546_sel_local () {
+h7i2c_i2c_ret_code_t tca9546_sel_local () {
   return tca9546_config (0x1);
 }
 
-HAL_StatusTypeDef tca9546_sel_m1() {
+h7i2c_i2c_ret_code_t tca9546_sel_m1() {
   if (GET_12V_STATE == 1) {
     return tca9546_config(0x2);
   } else {
@@ -32,7 +32,7 @@ HAL_StatusTypeDef tca9546_sel_m1() {
   }
 }
 
-HAL_StatusTypeDef tca9546_sel_m2() {
+h7i2c_i2c_ret_code_t tca9546_sel_m2() {
   if (GET_12V_STATE == 1) {
     return tca9546_config(0x4);
   } else {
@@ -40,7 +40,7 @@ HAL_StatusTypeDef tca9546_sel_m2() {
   }
 }
 
-HAL_StatusTypeDef tca9546_sel_zynq() {
+h7i2c_i2c_ret_code_t tca9546_sel_zynq() {
   if (GET_12V_STATE == 1) {
     return tca9546_config(0x8);
   } else {

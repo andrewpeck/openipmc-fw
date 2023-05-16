@@ -99,13 +99,13 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
     upper_nonrecoverable = cm_mcu_temp_consts.upper_nonrecoverable;
   }
 
-  HAL_StatusTypeDef status = 0;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= cm1_i2c_tx(&rx_data, ADR);
   status |= cm1_i2c_rx(&rx_data, ADR);
 
 	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
-  if (status == HAL_OK) {
+  if (status == H7I2C_RET_CODE_OK) {
 
     if (rx_data == 0xFF) { // device not powered or present
       sensor_reading->raw_value = 2;

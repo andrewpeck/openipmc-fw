@@ -13,6 +13,7 @@
 #include "zynq_i2c.h"
 #include "tca9546.h"
 #include "pim400.h"
+#include "h7i2c_bare.h"
 
 /*
  * Multitask version for the original CLI_GetIntState() provided by terminal.
@@ -222,7 +223,7 @@ static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
   uint8_t adr = CLI_GetArgHex(0);
   uint8_t data = CLI_GetArgHex(1);
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
 
   if (cm==1) {
     status |= cm1_i2c_tx(&adr, 0x40);
@@ -234,7 +235,7 @@ static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
     status |= cm2_i2c_rx(&data, 0x40);
   }
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("CM%d I2C RX adr=0x%02X data=0x%02X\r\n", cm, adr, data);
   else
     mt_printf("I2C Failure\r\n");
@@ -255,7 +256,7 @@ static uint8_t apollo_cm_i2c_tx_cb(uint8_t cm)
   uint8_t adr = CLI_GetArgHex(0);
   uint8_t data = CLI_GetArgHex(1);
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
 
   if (cm==1) {
     status |= cm1_i2c_tx(&adr, 0x40);
@@ -267,7 +268,7 @@ static uint8_t apollo_cm_i2c_tx_cb(uint8_t cm)
     status |= cm2_i2c_tx(&data, 0x40);
   }
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("CM%d I2C TX adr=0x%02X data=0x%02X\r\n", cm, adr, data);
   else
     mt_printf("I2C Failure\r\n");
@@ -292,10 +293,10 @@ static uint8_t apollo_zynq_i2c_tx_cb()
 
   uint8_t wr_data [] = {adr, data} ;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= zynq_i2c_tx_n (wr_data,  0x60+slave, 2);
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("Zynq I2C TX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
   else
     mt_printf("I2C Failure\r\n");
@@ -309,24 +310,24 @@ static uint8_t apollo_local_i2c_tx_cb()
   uint8_t adr = CLI_GetArgHex(0);
   uint8_t data = CLI_GetArgHex(1);
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= local_i2c_tx (&data,  adr);
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("Local I2C adr=0x%02X data=0x%02X\r\n", adr, data);
   else
     mt_printf("I2C Failure\r\n");
   return status;
 }
 
-void print_hal_status (HAL_StatusTypeDef status) {
-  if (status==HAL_OK)
+void print_hal_status (h7i2c_i2c_ret_code_t status) {
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("HAL OK\r\n");
-  else if (status==HAL_ERROR)
+  else if (status==H7I2C_RET_CODE_ERROR)
     mt_printf("HAL ERROR\r\n");
-  else if (status==HAL_BUSY)
+  else if (status==H7I2C_RET_CODE_BUSY)
     mt_printf("HAL BUSY\r\n");
-  else if (status==HAL_TIMEOUT)
+  else if (status==H7I2C_RET_CODE_TIMEOUT)
     mt_printf("HAL TIMEOUT\r\n");
 }
 
@@ -335,10 +336,11 @@ static uint8_t apollo_i2c_mux_cb()
   mt_printf( "\r\n\n" );
 
   uint8_t mask = CLI_GetArgHex(0) & 0xF;
-  HAL_StatusTypeDef status = HAL_OK;
+  
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= tca9546_config (mask);
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("I2C Mux Configured for 0x%1X\r\n", mask);
   else
     mt_printf("I2C Mux Failure\r\n");
@@ -355,13 +357,13 @@ static uint8_t apollo_read_pim_cb() {
   uint8_t va;
   uint8_t vb;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= read_temp_pim400  (&temp);
   status |= read_iout_pim400  (&iout);
   status |= read_voltage_pim400  (&va, 0);
   status |= read_voltage_pim400  (&vb, 1);
 
-  if (status==HAL_OK) {
+  if (status==H7I2C_RET_CODE_OK) {
     mt_printf("Temp=%d C\r\n", 2*temp-50);
     mt_printf("Iout=%f A\r\n", (94 * iout)/1000.0 );
     mt_printf("Va=%d V\r\n", (325*va)/1000);
@@ -378,9 +380,9 @@ static uint8_t apollo_read_tcn_cb() {
 
   for (int i=0; i<3; i++) {
     uint8_t rd;
-    HAL_StatusTypeDef status = HAL_OK;
+    h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
     status = read_sm_tcn(i, &rd);
-    if (status==HAL_OK) {
+    if (status==H7I2C_RET_CODE_OK) {
       if (i==TCN_TOP)
         mt_printf("Top=%d C\r\n", rd);
       if (i==TCN_MID)
@@ -434,10 +436,10 @@ static uint8_t apollo_local_i2c_rx_cb() {
   uint8_t adr = CLI_GetArgHex(0);
   uint8_t data = 0x00;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= local_i2c_rx(&data, adr);
 
-  if (status == HAL_OK)
+  if (status == H7I2C_RET_CODE_OK)
     mt_printf("Local I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
   else
     mt_printf("I2C Failure\r\n");
@@ -452,11 +454,11 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   uint8_t adr   = CLI_GetArgHex(1);
   uint8_t data  = 0xFF;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= zynq_i2c_tx (&adr,  0x60+slave);
   status |= zynq_i2c_rx (&data, 0x60+slave);
 
-  if (status==HAL_OK)
+  if (status==H7I2C_RET_CODE_OK)
     mt_printf("Zynq I2C RX reg_adr=0x%02X data=0x%02X\r\n", adr, data);
   else
     mt_printf("I2C Failure\r\n");

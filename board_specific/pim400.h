@@ -6,11 +6,14 @@
 #include "sensor_helper.h"
 #include "main.h"
 
-HAL_StatusTypeDef read_vholdup_pim400 (uint8_t* reading);
-HAL_StatusTypeDef read_status_pim400 (uint8_t* reading);
-HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading);
-HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading);
-HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply);
+#include "h7i2c_rtos.h"
+#include "h7i2c_bare.h"
+
+h7i2c_i2c_ret_code_t read_vholdup_pim400 (uint8_t* reading);
+h7i2c_i2c_ret_code_t read_status_pim400 (uint8_t* reading);
+h7i2c_i2c_ret_code_t read_temp_pim400 (uint8_t* reading);
+h7i2c_i2c_ret_code_t read_iout_pim400 (uint8_t* reading);
+h7i2c_i2c_ret_code_t read_voltage_pim400 (uint8_t* reading, uint8_t supply);
 
 sensor_reading_status_t sensor_reading_temp_pim400(sensor_reading_t *sensor_reading);
 sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t *sensor_reading);

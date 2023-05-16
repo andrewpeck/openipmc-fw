@@ -4,25 +4,33 @@
 
 // addr gets shifted by 1 for 7 bit vs. 8 bit addressing
 
+/*
+ * Macros below define transmit and receive functions for the I2C bus connected to I2C3 peripheral.
+ * 
+ * Each function first writes to the multiplexer (TCA9546A) to pick the correct bus for the transaction.
+ * This refers to the SEL() call in the below macros.
+ * 
+ * The second step is the actual read/write transaction once the correct bus is picked.
+ */
 #define CREATE_APOLLO_I2C_TX(FNAME, SEL) \
-    HAL_StatusTypeDef FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
-      HAL_StatusTypeDef stat = 0; \
+    h7i2c_i2c_ret_code_t FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
+      h7i2c_i2c_ret_code_t stat = 0; \
       stat = SEL (); \
-      stat = stat | sense_i2c_transmit(adr<<1, data, bytes, 100); \
+      stat = stat | h7i2c_i2c_write(H7I2C_I2C3, adr<<1, bytes, data, 100); \
       return stat; \
     } \
-    HAL_StatusTypeDef FNAME (uint8_t *data, uint8_t adr) { \
+    h7i2c_i2c_ret_code_t FNAME (uint8_t *data, uint8_t adr) { \
       return FNAME ## _n (data, adr, 1); \
     } 
 
 #define CREATE_APOLLO_I2C_RX(FNAME, SEL) \
-    HAL_StatusTypeDef FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
-      HAL_StatusTypeDef stat = 0; \
+    h7i2c_i2c_ret_code_t FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
+      h7i2c_i2c_ret_code_t stat = 0; \
       stat = SEL (); \
-      stat = stat | sense_i2c_receive(adr<<1, data, bytes, 100); \
+      stat = stat | h7i2c_i2c_read(H7I2C_I2C3, adr<<1, bytes, data, 100); \
       return stat; \
     } \
-    HAL_StatusTypeDef FNAME (uint8_t *data, uint8_t adr) { \
+    h7i2c_i2c_ret_code_t FNAME (uint8_t *data, uint8_t adr) { \
       return FNAME ## _n (data, adr, 1); \
     } 
 
