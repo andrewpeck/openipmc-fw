@@ -11,10 +11,10 @@
 
 HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading);
 HAL_StatusTypeDef read_sm_tcn_raw (uint8_t sensor, uint8_t* data);
-sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
 extern const linear_sensor_constants_t sm_tcn_temp_consts;
 
 #endif /* SM_SENSORS_H */

@@ -65,7 +65,7 @@ const linear_sensor_constants_t cm_mcu_temp_consts = {
     .re = 0,
     .be = 0};
 
-sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data = 0xFF;
   uint8_t upper_critical=255;
@@ -125,31 +125,35 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
 
   sensor_reading->present_state = 0;
 
-  set_sensor_upper_state (sensor_reading,
-                          upper_noncritical,
-                          upper_critical,
-                          upper_nonrecoverable);
+  /* Compare the sensor value with the thresholds. If necessary,
+    update the present state of this sensor. */
+    set_sensor_upper_state(sensor_reading,
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
 
   return (sensor_status);
 }
 
-sensor_reading_status_t sensor_reading_cm1_temp(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_cm_temp(FPGA0, sensor_reading));
+
+sensor_reading_status_t sensor_reading_cm1_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_cm_temp(FPGA0, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_cm2_temp(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_cm_temp(FPGA1, sensor_reading));
+sensor_reading_status_t sensor_reading_cm2_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_cm_temp(FPGA1, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_cm_firefly_temp(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_cm_temp(FIREFLY, sensor_reading));
+sensor_reading_status_t sensor_reading_cm_firefly_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_cm_temp(FIREFLY, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_cm_temp(REGULATOR, sensor_reading));
+sensor_reading_status_t sensor_reading_cm_regulator_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_cm_temp(REGULATOR, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_cm_mcu_temp(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_cm_temp(MCU, sensor_reading));
+sensor_reading_status_t sensor_reading_cm_mcu_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_cm_temp(MCU, sensor_reading, sensor_thresholds);
 }
 

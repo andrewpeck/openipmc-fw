@@ -66,7 +66,7 @@ HAL_StatusTypeDef read_sm_tcn (uint8_t sensor, uint8_t* reading) {
 
 }
 
-sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   HAL_StatusTypeDef status = HAL_OK;
   uint8_t reading;
@@ -85,24 +85,28 @@ sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *
   
   sensor_reading->present_state = 0;
 
-  set_sensor_upper_state(sensor_reading,
-                         sm_tcn_temp_consts.upper_noncritical,
-                         sm_tcn_temp_consts.upper_critical,
-                         sm_tcn_temp_consts.upper_nonrecoverable);
+  /* Compare the sensor value with the thresholds. If necessary,
+    update the present state of this sensor. */
+    set_sensor_upper_state(sensor_reading,
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
+
                          
   return sensor_status;
 
 }
 
-sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_sm_tcn(TCN_TOP, sensor_reading));
+sensor_reading_status_t sensor_reading_sm_tcn_top(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_sm_tcn(TCN_TOP, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_sm_tcn(TCN_MID, sensor_reading));
+sensor_reading_status_t sensor_reading_sm_tcn_mid(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_sm_tcn(TCN_MID, sensor_reading, sensor_thresholds);
 }
 
-sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_sm_tcn(TCN_BOT, sensor_reading));
+sensor_reading_status_t sensor_reading_sm_tcn_bot(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return sensor_reading_sm_tcn(TCN_BOT, sensor_reading, sensor_thresholds);
 }
 
