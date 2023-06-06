@@ -1,11 +1,5 @@
 #include "zynq_i2c.h"
 
-// Documentation here:
-// https://apollo-lhc.gitlab.io/IPMC/ipmc-sensors/#zynq-i2c-slave-interface
-
-#define ZYNQ_I2C_SLAVE1_ADDR 0x60
-#define ZYNQ_I2C_SLAVE6_ADDR 0x65
-#define ZYNQ_I2C_SLAVE8_ADDR 0x67
 
 #define ZYNQ_I2C_DONE_REG 0
 

@@ -16,6 +16,7 @@
 #include "zynq_i2c.h"
 #include "zynq_temp_sensor.h"
 #include "head_commit_sha1.h"
+#include "atlas_temp_sensors.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -843,5 +844,13 @@ void create_board_specific_sensors() {
   create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 1",  &sensor_reading_ipmc_ip_addr_byte1);
   create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 2",  &sensor_reading_ipmc_ip_addr_byte2);
   create_linear_sensor (ipmc_ip_consts,  "IPMC IP Byte 3",  &sensor_reading_ipmc_ip_addr_byte3);
+
+  //------------------------------------------------------------------------------
+  // Temperature sensors for ATLAS
+  //------------------------------------------------------------------------------
+  create_linear_sensor(atlas_temp_sensor_consts,  "Board Temperature", &sensor_reading_atlas_board_temp);
+  create_linear_sensor(atlas_temp_sensor_consts,  "FF Temperature",    &sensor_reading_atlas_firefly_temp);
+  create_linear_sensor(atlas_temp_sensor_consts,  "FPGA Temperature",  &sensor_reading_atlas_fpga_temp);
+  create_linear_sensor(atlas_temp_sensor_consts,  "PM Temperature",    &sensor_reading_atlas_pm_temp);
 
 }

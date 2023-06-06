@@ -3,6 +3,19 @@
 
 #include "apollo_i2c.h"
 
+// Documentation here:
+// https://apollo-lhc.gitlab.io/IPMC/ipmc-sensors/#zynq-i2c-slave-interface
+
+/* Addresses of different I2C targets on the SM Zynq. */
+#define ZYNQ_I2C_SLAVE1_ADDR 0x60
+#define ZYNQ_I2C_SLAVE2_ADDR 0x61
+#define ZYNQ_I2C_SLAVE3_ADDR 0x62
+#define ZYNQ_I2C_SLAVE4_ADDR 0x63
+#define ZYNQ_I2C_SLAVE5_ADDR 0x64
+#define ZYNQ_I2C_SLAVE6_ADDR 0x65
+#define ZYNQ_I2C_SLAVE7_ADDR 0x66
+#define ZYNQ_I2C_SLAVE8_ADDR 0x67
+
 uint8_t zynq_wr_reg(uint8_t adr, uint8_t data, uint8_t slave_addr);
 uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr);
 
