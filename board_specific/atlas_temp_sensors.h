@@ -18,6 +18,9 @@ sensor_reading_status_t sensor_reading_atlas_firefly_temp(sensor_reading_t *sens
 sensor_reading_status_t sensor_reading_atlas_fpga_temp(sensor_reading_t *sensor_reading);
 sensor_reading_status_t sensor_reading_atlas_pm_temp(sensor_reading_t *sensor_reading);
 
-extern const linear_sensor_constants_t atlas_temp_sensor_consts;
+extern const linear_sensor_constants_t atlas_temp_sensor_board_consts;
+extern const linear_sensor_constants_t atlas_temp_sensor_firefly_consts;
+extern const linear_sensor_constants_t atlas_temp_sensor_fpga_consts;
+extern const linear_sensor_constants_t atlas_temp_sensor_pm_consts;
 
 #endif /* ATLAS_TEMP_SENSORS_H */

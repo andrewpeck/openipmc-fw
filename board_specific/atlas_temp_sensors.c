@@ -2,7 +2,7 @@
 #include <assert.h> 
 
 /* Sensor constans for the ATLAS temperature sensors */
-const linear_sensor_constants_t atlas_temp_sensor_consts =
+const linear_sensor_constants_t atlas_temp_sensor_board_consts =
 {
   .sensor_type=TEMPERATURE,
   .unit_type=DEGREES_C,
@@ -10,7 +10,52 @@ const linear_sensor_constants_t atlas_temp_sensor_consts =
   .lower_noncritical=0,
   .lower_critical=0,
   .upper_noncritical=50,
-  .upper_critical=65,
+  .upper_critical=60,
+  .upper_nonrecoverable=70,
+  .m=1,
+  .b=0,
+  .re=0,
+  .be=0
+};
+const linear_sensor_constants_t atlas_temp_sensor_firefly_consts =
+{
+  .sensor_type=TEMPERATURE,
+  .unit_type=DEGREES_C,
+  .lower_nonrecoverable=0,
+  .lower_noncritical=0,
+  .lower_critical=0,
+  .upper_noncritical=50,
+  .upper_critical=55,
+  .upper_nonrecoverable=60,
+  .m=1,
+  .b=0,
+  .re=0,
+  .be=0
+};
+const linear_sensor_constants_t atlas_temp_sensor_fpga_consts =
+{
+  .sensor_type=TEMPERATURE,
+  .unit_type=DEGREES_C,
+  .lower_nonrecoverable=0,
+  .lower_noncritical=0,
+  .lower_critical=0,
+  .upper_noncritical=70,
+  .upper_critical=80,
+  .upper_nonrecoverable=90,
+  .m=1,
+  .b=0,
+  .re=0,
+  .be=0
+};
+const linear_sensor_constants_t atlas_temp_sensor_pm_consts =
+{
+  .sensor_type=TEMPERATURE,
+  .unit_type=DEGREES_C,
+  .lower_nonrecoverable=0,
+  .lower_noncritical=0,
+  .lower_critical=0,
+  .upper_noncritical=60,
+  .upper_critical=70,
   .upper_nonrecoverable=80,
   .m=1,
   .b=0,
@@ -24,20 +69,35 @@ sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *s
     /* Register address and the slave address to read from. */
     uint8_t reg_addr = 0;
     uint8_t slave_addr = 0;
-
+    uint8_t rx_data = 0xFF;
+    uint8_t upper_critical=255;
+    uint8_t upper_noncritical=255;
+    uint8_t upper_nonrecoverable=255;
     assert((sensor==BOARD) || (sensor==FIREFLY) || (sensor==FPGA) || (sensor==PM));
 
     if (sensor == BOARD) {
         slave_addr = ZYNQ_I2C_SLAVE2_ADDR;
+        upper_critical = atlas_temp_sensor_board_consts.upper_critical;
+        upper_noncritical = atlas_temp_sensor_board_consts.upper_noncritical;
+        upper_nonrecoverable = atlas_temp_sensor_board_consts.upper_nonrecoverable;
     }
     else if (sensor == FIREFLY) {
         slave_addr = ZYNQ_I2C_SLAVE3_ADDR;
+        upper_critical = atlas_temp_sensor_firefly_consts.upper_critical;
+        upper_noncritical = atlas_temp_sensor_firefly_consts.upper_noncritical;
+        upper_nonrecoverable = atlas_temp_sensor_firefly_consts.upper_nonrecoverable;
     }
     else if (sensor == FPGA) {
         slave_addr = ZYNQ_I2C_SLAVE4_ADDR;
+        upper_critical = atlas_temp_sensor_fpga_consts.upper_critical;
+        upper_noncritical = atlas_temp_sensor_fpga_consts.upper_noncritical;
+        upper_nonrecoverable = atlas_temp_sensor_fpga_consts.upper_nonrecoverable;
     }
     else if (sensor == PM) {
         slave_addr = ZYNQ_I2C_SLAVE5_ADDR;
+        upper_critical = atlas_temp_sensor_pm_consts.upper_critical;
+        upper_noncritical = atlas_temp_sensor_pm_consts.upper_noncritical;
+        upper_nonrecoverable = atlas_temp_sensor_pm_consts.upper_nonrecoverable;
     }
 
     /* Read the temperature value from the correct I2C slave device. */
@@ -45,7 +105,16 @@ sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *s
 
     sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
-    if (temperature > 0) {
+    if (temperature == 0xFF) { // device not powered or present
+        sensor_reading->raw_value = 2;
+        sensor_status = SENSOR_READING_UNAVAILABLE;
+    }
+    else if (temperature == 0xFE) { // stale
+    //  sensor_reading->raw_value = 0xFE;
+        sensor_reading->raw_value = temperature;
+        sensor_status = SENSOR_READING_UNAVAILABLE;
+    } 
+    else if (temperature > 0) {
         sensor_reading->raw_value = temperature;
     }
     /* Read failed. */
@@ -58,9 +127,9 @@ sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *s
 
     /* Update the present state of the sensor if an upper threshold is reached. */
     set_sensor_upper_state(sensor_reading,
-                           atlas_temp_sensor_consts.upper_noncritical,
-                           atlas_temp_sensor_consts.upper_critical,
-                           atlas_temp_sensor_consts.upper_nonrecoverable);
+                           upper_noncritical,
+                           upper_critical,
+                           upper_nonrecoverable);
 
     return sensor_status;
 
