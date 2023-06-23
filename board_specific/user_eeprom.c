@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <user_eeprom.h>
+#include <apollo_i2c.h>
 
 #include <h7i2c_bare.h>
 #include <h7i2c_rtos.h>
@@ -55,13 +56,13 @@ char user_eeprom_read(void) {
 
   uint8_t addr[] = {0x00, 0x00};
 
-  h7i2c_i2c_ret_code_t status = h7i2c_i2c_write(H7I2C_I2C4, MEM_ADDR, 2, addr, 100);
+  h7i2c_i2c_ret_code_t status = h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, MEM_ADDR, 2, addr, 100);
 
   if (status != H7I2C_RET_CODE_OK) {
     return -1;
   }
 
-  status = h7i2c_i2c_read(H7I2C_I2C4, MEM_ADDR, sizeof(eeprom), (uint8_t *)&eeprom, 1000);
+  status = h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, MEM_ADDR, sizeof(eeprom), (uint8_t *)&eeprom, 1000);
 
   if (status != H7I2C_RET_CODE_OK) {
     return -2;
@@ -84,7 +85,7 @@ char user_eeprom_write(void) {
 
   user_eeprom_write_enable();
   h7i2c_i2c_ret_code_t status;
-  status = h7i2c_i2c_write(H7I2C_I2C4, MEM_ADDR, sizeof(buffer), buffer, 1000);
+  status = h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, MEM_ADDR, sizeof(buffer), buffer, 1000);
   user_eeprom_write_disable();
   
   if (status != H7I2C_RET_CODE_OK) {

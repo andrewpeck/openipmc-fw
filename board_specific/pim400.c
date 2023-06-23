@@ -4,6 +4,7 @@
 //OpenIPMC includes
 #include "pim400.h"
 #include "apollo.h"
+#include "apollo_i2c.h"
 #include "dimm_gpios.h"
 #include "power_manager.h"
 #include "sdr_definitions.h"
@@ -17,8 +18,8 @@ h7i2c_i2c_ret_code_t read_status_pim400 (uint8_t* reading) {
   reg_adr = PIM400_STATUS_REG;
 
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-  status |= h7i2c_i2c_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
-  status |= h7i2c_i2c_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -28,8 +29,8 @@ h7i2c_i2c_ret_code_t read_vholdup_pim400 (uint8_t* reading) {
   reg_adr = PIM400_VHOLDUP_REG;
 
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;  
-  status |= h7i2c_i2c_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
-  status |= h7i2c_i2c_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -39,8 +40,8 @@ h7i2c_i2c_ret_code_t read_temp_pim400 (uint8_t* reading) {
   reg_adr = PIM400_TEMP_REG;
 
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-  status |= h7i2c_i2c_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
-  status |= h7i2c_i2c_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -78,8 +79,8 @@ h7i2c_i2c_ret_code_t read_iout_pim400 (uint8_t* reading) {
   reg_adr = PIM400_IOUT_REG;
 
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-  status |= h7i2c_i2c_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
-  status |= h7i2c_i2c_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -120,8 +121,8 @@ h7i2c_i2c_ret_code_t read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
     reg_adr = PIM400_VBF_REG;
 
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-  status |= h7i2c_i2c_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
-  status |= h7i2c_i2c_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }

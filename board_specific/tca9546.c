@@ -1,6 +1,7 @@
 #include "sense_i2c.h"
 #include "tca9546.h"
 #include "apollo.h"
+#include "apollo_i2c.h"
 
 uint8_t config_last = 0x00;
 
@@ -12,7 +13,7 @@ h7i2c_i2c_ret_code_t tca9546_config(uint8_t mask) {
     config_last = mask;
     const uint8_t tca9546_adr = 0x70 << 1;
     uint8_t tx_data = mask & 0xf;
-    return h7i2c_i2c_write(H7I2C_I2C3, tca9546_adr, 1, &tx_data, 2000);
+    return h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C3, tca9546_adr, 1, &tx_data, 2000);
   }
   else {
     return H7I2C_RET_CODE_OK;
