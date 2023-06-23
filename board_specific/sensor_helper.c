@@ -7,9 +7,20 @@
 
 void create_linear_sensor (const linear_sensor_constants_t params,
                            char* id_string,
-                           sensor_reading_status_t (*get_sensor_reading_func)(sensor_reading_t*)) {
+                           sensor_reading_status_t (*get_sensor_reading_func)(sensor_reading_t*, sensor_thres_values_t*)) {
 
-  const uint8_t threshold_mask =
+  /* Mask representing which thresholds are settable and readable. */
+  const uint8_t threshold_mask_set =
+    (params.upper_nonrecoverable > 0 ? UPPER_NON_RECOVERABLE  : 0x00) |
+    (params.upper_critical       > 0 ? UPPER_CRITICAL         : 0x00) |
+    (params.upper_noncritical    > 0 ? UPPER_NON_CRITICAL     : 0x00) |
+    (params.lower_nonrecoverable > 0 ? LOWER_NON_RECOVERABLE  : 0x00) |
+    (params.lower_critical       > 0 ? LOWER_CRITICAL         : 0x00) |
+    (params.lower_noncritical    > 0 ? LOWER_NON_CRITICAL     : 0x00);
+  
+  /* Mask representing which thresholds are readable. If the above mask already is 0x1
+  for the given threshold type, then this is redundant. */
+  const uint8_t threshold_mask_read =
     (params.upper_nonrecoverable > 0 ? UPPER_NON_RECOVERABLE  : 0x00) |
     (params.upper_critical       > 0 ? UPPER_CRITICAL         : 0x00) |
     (params.upper_noncritical    > 0 ? UPPER_NON_CRITICAL     : 0x00) |
@@ -25,17 +36,32 @@ void create_linear_sensor (const linear_sensor_constants_t params,
       params.upper_critical,        // 4 = upper critical
       params.upper_nonrecoverable}; // 5 = upper non recoverable
 
-  // y = [ M*x + (B * 10^Be ) ] * 10^Re
-  create_generic_analog_sensor_1(params.sensor_type,
-                                 params.unit_type,
-                                 params.m,  // m
-                                 params.b,  // b
-                                 params.be, // be
-                                 params.re, // re
-                                 threshold_mask,
-                                 threshold_list,
-                                 id_string,
-                                 get_sensor_reading_func );
+  /* 
+   * Struct of parameters for this sensor. This will be passed to 
+   * create_generic_analog_sensor_1() function call to create the entry
+   * for this sensor.
+   * 
+   * (m, b) and (b_exp, r_exp) below refer to the following transformation on the input:
+   * y = [ m*x + (b * 10^b_exp ) ] * 10^r_exp
+   * 
+   */
+  analog_sensor_1_init_t sensor_params = {
+    .sensor_type=params.sensor_type,
+    .base_unit_type=params.unit_type,
+    .m=params.m,
+    .b=params.b,
+    .b_exp=params.be,
+    .r_exp=params.re,
+    .threshold_mask_set=threshold_mask_set,   /* > 0 means that this threshold is settable AND readable via ipmitool. */
+    .threshold_mask_read=threshold_mask_read, /* If set == 0 (above), read > 0 means that this threshold is readable. */
+    .threshold_list=threshold_list,
+    .id_string=id_string,
+    .get_sensor_reading_func=get_sensor_reading_func,
+    .sensor_action_req=NULL /* Currently, we don't support sensor action callbacks specific to Apollo usage. */
+  };
+
+  create_generic_analog_sensor_1(&sensor_params);
+
 }
 
 void set_sensor_upper_state(sensor_reading_t *sensor_reading,
