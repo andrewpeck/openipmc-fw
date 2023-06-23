@@ -69,6 +69,7 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
 
   uint8_t rx_data = 0xFF;
 
+  /* Figure out the register address we want to read from the CM MCU. */
   if (sensor == FPGA0) {
     rx_data = 0x12;
   } else if (sensor == FPGA1) {
@@ -81,6 +82,10 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
     rx_data = 0x10;
   }
 
+  /* 
+   * Do the I2C transaction. First, write the register address to the CM MCU,
+   * and then read the data in that register back.
+   */
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= cm1_i2c_tx(&rx_data, ADR);
   status |= cm1_i2c_rx(&rx_data, ADR);
@@ -115,7 +120,7 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
         sensor_thresholds->upper_non_recoverable_threshold
     );
 
-  return (sensor_status);
+  return sensor_status;
 }
 
 
