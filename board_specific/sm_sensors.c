@@ -55,17 +55,16 @@ sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *
   uint8_t reading;
   status = read_sm_tcn(sensor, &reading);
 
-  uint8_t temp = reading;
+  sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
   if (status == H7I2C_RET_CODE_OK) {
-    sensor_reading->raw_value = temp;
-    sensor_reading->present_state = 0;
-    return(SENSOR_READING_OK);
+    sensor_reading->raw_value = reading;
   } else {
     sensor_reading->raw_value = 1;
-    sensor_reading->present_state = 0;
-    return(SENSOR_READING_UNAVAILABLE);
+    sensor_status = SENSOR_READING_UNAVAILABLE;
   }
+
+  sensor_reading->present_state = 0;
   
   /* Compare the sensor value with the thresholds. If necessary,
     update the present state of this sensor. */
@@ -75,7 +74,6 @@ sensor_reading_status_t sensor_reading_sm_tcn(uint8_t sensor, sensor_reading_t *
         sensor_thresholds->upper_non_recoverable_threshold
     );
 
-                         
   return sensor_status;
 
 }
