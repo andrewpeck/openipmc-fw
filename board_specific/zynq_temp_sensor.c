@@ -18,7 +18,7 @@ const linear_sensor_constants_t sm_zynq_temp_consts =
   .be=0
 };
 
-sensor_reading_status_t sensor_reading_zynq_temp(sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_zynq_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     /*
      * Function implementing the Zynq temperature sensor.
      */
@@ -37,10 +37,13 @@ sensor_reading_status_t sensor_reading_zynq_temp(sensor_reading_t *sensor_readin
 
     sensor_reading->present_state = 0;
 
+    /* Compare the sensor value with the thresholds. If necessary,
+    update the present state of this sensor. */
     set_sensor_upper_state(sensor_reading,
-                           sm_zynq_temp_consts.upper_noncritical,
-                           sm_zynq_temp_consts.upper_critical,
-                           sm_zynq_temp_consts.upper_nonrecoverable);
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
 
     return sensor_status;
 
