@@ -45,36 +45,41 @@ CREATE_APOLLO_I2C_RX (cm2_i2c_rx,   tca9546_sel_m2);
 CREATE_APOLLO_I2C_RX (zynq_i2c_rx,  tca9546_sel_zynq);
 
 /*
- * I2C read/write wrapper functions, which also clear the error state.
+ * Function to check the error state of the I2C peripheral, and clear it if necessary.
  */
-h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) {
+h7i2c_i2c_ret_code_t h7i2c_i2c_check_and_clear_error_state(h7i2c_periph_t peripheral) {
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-
   /* Clear the error state if this peripheral is in error state. */
   if (h7i2c_is_in_error(peripheral)) {
     status = h7i2c_clear_error_state(peripheral);
-
-    if (status != H7I2C_RET_CODE_OK) {
-      return status;
-    }
   }
 
-  /* If OK, nw do the read. */
-  return h7i2c_i2c_read(peripheral, dev_address, data_size, data_buf, timeout);
+  return status;
 }
 
-h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_write(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) {
-  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
-
-  /* Clear the error state if this peripheral is in error state. */
-  if (h7i2c_is_in_error(peripheral)) {
-    status = h7i2c_clear_error_state(peripheral);
-
-    if (status != H7I2C_RET_CODE_OK) {
-      return status;
-    }
+/*
+ * Macro to define I2C read/write functions using the h7i2c-baremetal-driver, 
+ * where DRIVER_IO_FUNC refers to the actual read/write function given us by the driver.
+ *
+ * These read/write functions do the following:
+ * 1) Check if the I2C peripheral is in error state, and if necessary, clear it.
+ * 2) Do the read/write.
+ * 3) Check the peripheral again after the read/write, and if necessary, clear the error state.
+ */
+#define CREATE_H7I2C_READ_WRITE_FUNC(FNAME, DRIVER_IO_FUNC) \
+  h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) { \
+    h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK; \
+    status = h7i2c_i2c_check_and_clear_error_state(peripheral); \
+    if (status != H7I2C_RET_CODE_OK) { \
+      return status; \
+    } \
+    status = DRIVER_IO_FUNC(peripheral, dev_address, data_size, data_buf, timeout); \
+    if (status != H7I2C_RET_CODE_OK) { \
+      return status; \
+    } \
+    status = h7i2c_i2c_check_and_clear_error_state(peripheral); \
+    return status; \
   }
 
-  /* If OK, nw do the read. */
-  return h7i2c_i2c_write(peripheral, dev_address, data_size, data_buf, timeout);
-}
+CREATE_H7I2C_READ_WRITE_FUNC(h7i2c_i2c_clear_error_state_and_read, h7i2c_i2c_read);
+CREATE_H7I2C_READ_WRITE_FUNC(h7i2c_i2c_clear_error_state_and_write, h7i2c_i2c_write);
