@@ -67,7 +67,7 @@ h7i2c_i2c_ret_code_t h7i2c_i2c_check_and_clear_error_state(h7i2c_periph_t periph
  * 3) Check the peripheral again after the read/write, and if necessary, clear the error state.
  */
 #define CREATE_H7I2C_READ_WRITE_FUNC(FNAME, DRIVER_IO_FUNC) \
-  h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) { \
+  h7i2c_i2c_ret_code_t FNAME (h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) { \
     h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK; \
     status = h7i2c_i2c_check_and_clear_error_state(peripheral); \
     if (status != H7I2C_RET_CODE_OK) { \
