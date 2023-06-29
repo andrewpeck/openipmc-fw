@@ -34,18 +34,18 @@ sensor_reading_status_t sensor_reading_ipmc_ip_addr(uint8_t byte, sensor_reading
 /*
  * IPMC sensor readings per each byte of the IP address.
  */
-sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte0(sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte0(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     return sensor_reading_ipmc_ip_addr(0, sensor_reading);
 }
 
-sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte1(sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte1(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     return sensor_reading_ipmc_ip_addr(1, sensor_reading);
 }
 
-sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte2(sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte2(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     return sensor_reading_ipmc_ip_addr(2, sensor_reading);
 }
 
-sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte3(sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_ipmc_ip_addr_byte3(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     return sensor_reading_ipmc_ip_addr(3, sensor_reading);
 }

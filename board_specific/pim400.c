@@ -45,7 +45,7 @@ HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading) {
   return status;
 }
 
-sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading) {
+sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data;
 
@@ -58,9 +58,11 @@ sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_rea
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_temp_consts.upper_noncritical,
-                            pim400_temp_consts.upper_critical,
-                            pim400_temp_consts.upper_nonrecoverable);
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
+
     return(SENSOR_READING_OK);
   } else {
     sensor_reading->raw_value = 0;
@@ -81,7 +83,7 @@ HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading) {
   return status;
 }
 
-sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_reading) {
+sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data;
   HAL_StatusTypeDef status = read_iout_pim400 (&rx_data);
@@ -92,9 +94,10 @@ sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_read
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_iout_consts.upper_noncritical,
-                            pim400_iout_consts.upper_critical,
-                            pim400_iout_consts.upper_nonrecoverable);
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
 
     return(SENSOR_READING_OK);
   } else {
@@ -122,7 +125,7 @@ HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
   return status;
 }
 
-sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data;
   HAL_StatusTypeDef status = read_voltage_pim400 (&rx_data, supply);
@@ -134,9 +137,10 @@ sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_rea
     sensor_reading->present_state = 0;
 
     set_sensor_upper_state (sensor_reading,
-                            pim400_voltage_consts.upper_noncritical,
-                            pim400_voltage_consts.upper_critical,
-                            pim400_voltage_consts.upper_nonrecoverable);
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold
+    );
 
     return(SENSOR_READING_OK);
   } else {
@@ -146,10 +150,10 @@ sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_rea
   }
 }
 
-sensor_reading_status_t sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_voltage_pim400(0, sensor_reading));
+sensor_reading_status_t sensor_reading_voltage_a_pim400(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return(sensor_reading_voltage_pim400(0, sensor_reading, sensor_thresholds));
 }
 
-sensor_reading_status_t sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading) {
-  return(sensor_reading_voltage_pim400(1, sensor_reading));
+sensor_reading_status_t sensor_reading_voltage_b_pim400(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+  return(sensor_reading_voltage_pim400(1, sensor_reading, sensor_thresholds));
 }
