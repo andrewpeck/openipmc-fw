@@ -848,9 +848,9 @@ void create_board_specific_sensors() {
   //------------------------------------------------------------------------------
   // Temperature sensors for ATLAS
   //------------------------------------------------------------------------------
-  create_linear_sensor(atlas_temp_sensor_board_consts,  "Board Temperature", &sensor_reading_atlas_board_temp);
+  create_linear_sensor(atlas_temp_sensor_board_consts,    "Board Temperature", &sensor_reading_atlas_board_temp);
   create_linear_sensor(atlas_temp_sensor_firefly_consts,  "FF Temperature",    &sensor_reading_atlas_firefly_temp);
-  create_linear_sensor(atlas_temp_sensor_fpga_consts,  "FPGA Temperature",  &sensor_reading_atlas_fpga_temp);
-  create_linear_sensor(atlas_temp_sensor_pm_consts,  "PM Temperature",    &sensor_reading_atlas_pm_temp);
+  create_linear_sensor(atlas_temp_sensor_fpga_consts,     "FPGA Temperature",  &sensor_reading_atlas_fpga_temp);
+  create_linear_sensor(atlas_temp_sensor_pm_consts,       "PM Temperature",    &sensor_reading_atlas_pm_temp);
 
 }

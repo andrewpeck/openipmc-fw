@@ -11,12 +11,12 @@
 #define PM 3
 
 
-sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
 
-sensor_reading_status_t sensor_reading_atlas_board_temp(sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_atlas_firefly_temp(sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_atlas_fpga_temp(sensor_reading_t *sensor_reading);
-sensor_reading_status_t sensor_reading_atlas_pm_temp(sensor_reading_t *sensor_reading);
+sensor_reading_status_t sensor_reading_atlas_board_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_atlas_firefly_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_atlas_fpga_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
+sensor_reading_status_t sensor_reading_atlas_pm_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
 
 extern const linear_sensor_constants_t atlas_temp_sensor_board_consts;
 extern const linear_sensor_constants_t atlas_temp_sensor_firefly_consts;

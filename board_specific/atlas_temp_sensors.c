@@ -63,41 +63,27 @@ const linear_sensor_constants_t atlas_temp_sensor_pm_consts =
   .be=0
 };
 
-sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *sensor_reading) {
+sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
     HAL_StatusTypeDef status = HAL_OK;
 
     /* Register address and the slave address to read from. */
     uint8_t reg_addr = 0;
     uint8_t slave_addr = 0;
     uint8_t rx_data = 0xFF;
-    uint8_t upper_critical=255;
-    uint8_t upper_noncritical=255;
-    uint8_t upper_nonrecoverable=255;
+
     assert((sensor==BOARD) || (sensor==FIREFLY) || (sensor==FPGA) || (sensor==PM));
 
     if (sensor == BOARD) {
         slave_addr = ZYNQ_I2C_SLAVE2_ADDR;
-        upper_critical = atlas_temp_sensor_board_consts.upper_critical;
-        upper_noncritical = atlas_temp_sensor_board_consts.upper_noncritical;
-        upper_nonrecoverable = atlas_temp_sensor_board_consts.upper_nonrecoverable;
     }
     else if (sensor == FIREFLY) {
         slave_addr = ZYNQ_I2C_SLAVE3_ADDR;
-        upper_critical = atlas_temp_sensor_firefly_consts.upper_critical;
-        upper_noncritical = atlas_temp_sensor_firefly_consts.upper_noncritical;
-        upper_nonrecoverable = atlas_temp_sensor_firefly_consts.upper_nonrecoverable;
     }
     else if (sensor == FPGA) {
         slave_addr = ZYNQ_I2C_SLAVE4_ADDR;
-        upper_critical = atlas_temp_sensor_fpga_consts.upper_critical;
-        upper_noncritical = atlas_temp_sensor_fpga_consts.upper_noncritical;
-        upper_nonrecoverable = atlas_temp_sensor_fpga_consts.upper_nonrecoverable;
     }
     else if (sensor == PM) {
         slave_addr = ZYNQ_I2C_SLAVE5_ADDR;
-        upper_critical = atlas_temp_sensor_pm_consts.upper_critical;
-        upper_noncritical = atlas_temp_sensor_pm_consts.upper_noncritical;
-        upper_nonrecoverable = atlas_temp_sensor_pm_consts.upper_nonrecoverable;
     }
 
     /* Read the temperature value from the correct I2C slave device. */
@@ -127,23 +113,23 @@ sensor_reading_status_t sensor_reading_atlas(uint8_t sensor, sensor_reading_t *s
 
     /* Update the present state of the sensor if an upper threshold is reached. */
     set_sensor_upper_state(sensor_reading,
-                           upper_noncritical,
-                           upper_critical,
-                           upper_nonrecoverable);
+        sensor_thresholds->upper_non_critical_threshold,
+        sensor_thresholds->upper_critical_threshold,
+        sensor_thresholds->upper_non_recoverable_threshold);
 
     return sensor_status;
 
 }
 
-sensor_reading_status_t sensor_reading_atlas_board_temp(sensor_reading_t *sensor_reading) {
-    return sensor_reading_atlas(BOARD, sensor_reading);
+sensor_reading_status_t sensor_reading_atlas_board_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+    return sensor_reading_atlas(BOARD, sensor_reading, sensor_thresholds);
 }
-sensor_reading_status_t sensor_reading_atlas_firefly_temp(sensor_reading_t *sensor_reading) {
-    return sensor_reading_atlas(FIREFLY, sensor_reading);
+sensor_reading_status_t sensor_reading_atlas_firefly_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+    return sensor_reading_atlas(FIREFLY, sensor_reading, sensor_thresholds);
 }
-sensor_reading_status_t sensor_reading_atlas_fpga_temp(sensor_reading_t *sensor_reading) {
-    return sensor_reading_atlas(FPGA, sensor_reading);
+sensor_reading_status_t sensor_reading_atlas_fpga_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+    return sensor_reading_atlas(FPGA, sensor_reading, sensor_thresholds);
 }
-sensor_reading_status_t sensor_reading_atlas_pm_temp(sensor_reading_t *sensor_reading) {
-    return sensor_reading_atlas(PM, sensor_reading);
+sensor_reading_status_t sensor_reading_atlas_pm_temp(sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
+    return sensor_reading_atlas(PM, sensor_reading, sensor_thresholds);
 }
