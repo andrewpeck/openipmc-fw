@@ -14,6 +14,8 @@ build-job:
     - make -j8 hpm
   artifacts:
     paths:
+      - openipmc-fw/CM4/openipmc-fw_CM4.bin
+      - openipmc-fw/CM4/upgrade_CM4.hpm
       - openipmc-fw/CM7/openipmc-fw_CM7.bin
       - openipmc-fw/CM7/upgrade_CM7.hpm
     expire_in: 1 month
