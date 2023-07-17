@@ -3,17 +3,26 @@ image: "hardwario/gcc-arm-embedded:8-2018-q4-major"
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-before_script:
-  - apt-get update
-  - apt-get --yes install libssl-dev zlib1g-dev
-
 build-job:
   stage: build
+  before_script:
+    - echo "Starting build stage. CI environment follows:"
+    - export
+    - echo BUILD_JOB_ID=$CI_JOB_ID >> build.env
+    - echo BUILD_COMMIT_SHA=$CI_COMMIT_SHA >> build.env
+    - apt-get update
+    - apt-get --yes install libssl-dev zlib1g-dev
   script:
-    - make clean
-    - make -j8 hpm
+    - make -j8 batch
   artifacts:
     paths:
-      - openipmc-fw/CM7/openipmc-fw_CM7.bin
-      - openipmc-fw/CM7/upgrade_CM7.hpm
+      - openipmc-fw_BL7.bin
+      - openipmc-fw_CM4.bin
+      - openipmc-fw_CM7.bin
+      - openipmc-fw_full.bin
+      - upgrade_CM4.hpm
+      - upgrade_CM7.hpm
+      - upgrade_BL7.hpm
+    reports:
+      dotenv: build.env
     expire_in: 1 month
