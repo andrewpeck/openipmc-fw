@@ -14,6 +14,8 @@
 #include "tca9546.h"
 #include "pim400.h"
 
+#include "h7i2c_bare.h"
+
 /*
  * Multitask version for the original CLI_GetIntState() provided by terminal.
  *
@@ -499,6 +501,21 @@ static uint8_t apollo_write_eth_mac() {
 
 }
 
+static uint8_t apollo_disable_i2c_interface_cb() {
+  uint8_t peripheral_id = CLI_GetArgDec(0);
+
+  switch (peripheral_id) {
+    case 3:
+      h7i2c_deinit(H7I2C_I2C3);
+    case 4:
+      h7i2c_deinit(H7I2C_I2C4);
+    default:
+      return 1;
+  }
+
+  return 0;
+}
+
 /*
  * This functions is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
@@ -539,4 +556,6 @@ void add_board_specific_terminal_commands( void )
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
   CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
+
+  CLI_AddCmd("i2cdisable", apollo_disable_i2c_interface_cb, 1, 0, "Disable the I2C3 or I2C4 interface.");
 }

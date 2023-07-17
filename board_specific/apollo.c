@@ -806,6 +806,74 @@ void payload_cold_reset(void) {
   apollo_powerup_sequence();
 }
 
+/* 
+ * Functions handling the cold/warm/graceful reset requests of the payload (Apollo).
+ */
+
+/* Cold reset. */
+void reply_begin_payload_cold_reset(uint8_t* compl_code) {
+  /* We reply OK as this functon is implemented. */
+  compl_code = 0x00;
+}
+
+/* Cold reset implementation: Cut the 12V power, and then re-enable it + power-up ApolloSM. */
+void impl_begin_payload_cold_reset() {
+  mt_printf("Cold reset of Zynq is requested.\r\n");
+  
+  /* Disable Zynq enable line. */
+  mt_printf(" > Cold reset: Disabling Zynq enable line\r\n");
+  apollo_set_zynq_en(0);
+  osDelay(500);
+
+  /* Disable and re-enable 12V power. */
+  mt_printf(" > Cold reset: Disabling 12V power\r\n");
+  EN_12V_SET_STATE(RESET);
+  osDelay(1000);
+
+  mt_printf(" > Cold reset: Enabling 12V power\r\n");
+  EN_12V_SET_STATE(SET);
+
+  /* Finally, launch the Apollo power-up sequence. */
+  mt_printf(" > Cold reset: Starting Apollo power-up sequence\r\n");
+  apollo_powerup_sequence();
+}
+
+/* Warm reset. */
+void reply_begin_payload_warm_reset(uint8_t* compl_code) {
+  /* We reply OK as this functon is implemented. */
+  compl_code = 0x00;
+}
+
+/* Warm reset implementation. */
+void impl_begin_payload_warm_reset() {
+  PAYLOAD_RESET_SET_STATE(RESET);
+  apollo_powerdown_sequence();
+
+  PAYLOAD_RESET_SET_STATE(SET);
+  apollo_powerup_sequence();
+}
+
+/* Graceful reboot. */
+void reply_begin_payload_graceful_reboot(uint8_t* compl_code) {
+  /* We reply OK as this functon is implemented. */
+  compl_code = 0x00;
+}
+
+/* Graceful reboot implementation. */
+void impl_begin_payload_graceful_reboot() {
+  PAYLOAD_RESET_SET_STATE(RESET);
+  apollo_powerdown_sequence();
+
+  PAYLOAD_RESET_SET_STATE(SET);
+  apollo_powerup_sequence();
+}
+
+
+/* 
+ * Implementation of board-specific sensors. 
+ * The create_linear_sensor() calls register Apollo sensors to Sensor Data Record (SDR) 
+ * with the respective callback functions.
+ */
 void create_board_specific_sensors() {
 
   //------------------------------------------------------------------------------
