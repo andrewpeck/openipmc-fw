@@ -22,6 +22,7 @@ build-job:
     - apt-get --yes install libssl-dev zlib1g-dev
   script:
     - make -j8 batch
+  # Keep the binary files (for USB/STM32 upload) and HPM files (remote ipmitool-based upload)
   artifacts:
     paths:
       - openipmc-fw_BL7.bin
@@ -31,6 +32,7 @@ build-job:
       - upgrade_CM4.hpm
       - upgrade_CM7.hpm
       - upgrade_BL7.hpm
+      - upgrade_FULL.hpm
     reports:
       dotenv: build.env
     expire_in: 1 month

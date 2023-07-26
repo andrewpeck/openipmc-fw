@@ -35,7 +35,9 @@ full_image: hpm
 	 cp openipmc-fw_BL7.bin openipmc-fw-full-image-builder/ && \
 	 cd openipmc-fw-full-image-builder && \
 	 $(MAKE) full_image && \
-	 cp openipmc-fw_full.bin ../
+	 cp openipmc-fw_full.bin ../ && \
+	 $(MAKE) full_hpm_image && \
+	 cp upgrade_FULL.hpm ../
 
 # Clean all build products from submodules, and also from the root directory of the project.
 clean:
