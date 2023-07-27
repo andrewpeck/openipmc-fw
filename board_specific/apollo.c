@@ -24,17 +24,6 @@ extern uint8_t shelf_address;
 extern uint8_t shelf_address_type;
 void mt_printf(const char* format, ...);
 
-/*
- * Enable the I2C3 and I2C4 peripherals to use the h7i2c-baremetal-driver.
- */
-#undef H7I2C_PERIPH_ENABLE_I2C3
-#undef H7I2C_PERIPH_ENABLE_I2C4
-#undef H7I2C_USE_FREERTOS_IMPL
-
-#define H7I2C_PERIPH_ENABLE_I2C3 1
-#define H7I2C_PERIPH_ENABLE_I2C4 1
-#define H7I2C_USE_FREERTOS_IMPL 1
-
 uint8_t apollo_abormal_shutdown = 0;
 uint8_t apollo_startup_started  = 0;
 uint8_t apollo_startup_done     = 0;
