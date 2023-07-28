@@ -4,43 +4,44 @@
 //OpenIPMC includes
 #include "pim400.h"
 #include "apollo.h"
+#include "apollo_i2c.h"
 #include "dimm_gpios.h"
-#include "mgm_i2c.h"
 #include "power_manager.h"
 #include "sdr_definitions.h"
+
 
 // https://library.industrialsolutions.abb.com/publibrary/checkout/PIM400?TNR=Data%20Sheets|PIM400|PDF
 // https://www.mouser.com/datasheet/2/167/PIM400_DS-1920379.pdf
 //
-HAL_StatusTypeDef read_status_pim400 (uint8_t* reading) {
+h7i2c_i2c_ret_code_t read_status_pim400 (uint8_t* reading) {
   uint8_t reg_adr;
   reg_adr = PIM400_STATUS_REG;
 
-  HAL_StatusTypeDef status = HAL_OK;
-  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
-  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
 
-HAL_StatusTypeDef read_vholdup_pim400 (uint8_t* reading) {
+h7i2c_i2c_ret_code_t read_vholdup_pim400 (uint8_t* reading) {
   uint8_t reg_adr;
   reg_adr = PIM400_VHOLDUP_REG;
 
-  HAL_StatusTypeDef status = HAL_OK;
-  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
-  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;  
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
 
-HAL_StatusTypeDef read_temp_pim400 (uint8_t* reading) {
+h7i2c_i2c_ret_code_t read_temp_pim400 (uint8_t* reading) {
   uint8_t reg_adr;
   reg_adr = PIM400_TEMP_REG;
 
-  HAL_StatusTypeDef status = HAL_OK;
-  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
-  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -49,10 +50,10 @@ sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_rea
 
   uint8_t rx_data;
 
-  HAL_StatusTypeDef status = read_temp_pim400 (&rx_data);
+  h7i2c_i2c_ret_code_t status = read_temp_pim400 (&rx_data);
 
   // temperature = 1.961 C / bit  - 50C
-  if (status == HAL_OK) {
+  if (status == H7I2C_RET_CODE_OK) {
     sensor_reading->raw_value = rx_data;
 
     sensor_reading->present_state = 0;
@@ -73,23 +74,24 @@ sensor_reading_status_t sensor_reading_temp_pim400 (sensor_reading_t* sensor_rea
 
 }
 
-HAL_StatusTypeDef read_iout_pim400 (uint8_t* reading) {
+h7i2c_i2c_ret_code_t read_iout_pim400 (uint8_t* reading) {
   uint8_t reg_adr;
   reg_adr = PIM400_IOUT_REG;
 
-  HAL_StatusTypeDef status = HAL_OK;
-  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100 ); // (adr , data, size, timeout)
-  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100 ); // (adr , data, size, timeout)
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
+
   return status;
 }
 
 sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data;
-  HAL_StatusTypeDef status = read_iout_pim400 (&rx_data);
+  h7i2c_i2c_ret_code_t status = read_iout_pim400 (&rx_data);
 
   // current = 0.094 A / bit
-  if (status == HAL_OK) {
+  if (status == H7I2C_RET_CODE_OK) {
     sensor_reading->raw_value = rx_data;
     sensor_reading->present_state = 0;
 
@@ -108,7 +110,7 @@ sensor_reading_status_t sensor_reading_iout_pim400(sensor_reading_t* sensor_read
 
 }
 
-HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
+h7i2c_i2c_ret_code_t read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
 
   assert(supply == 0 || supply == 1);
 
@@ -118,9 +120,9 @@ HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
   else
     reg_adr = PIM400_VBF_REG;
 
-  HAL_StatusTypeDef status = HAL_OK;
-  status |= mgm_i2c_transmit(PIM400_I2C_ADR, &reg_adr, 1, 100); // (adr , data, size, timeout)
-  status |= mgm_i2c_receive (PIM400_I2C_ADR,  reading, 1, 100); // (adr , data, size, timeout)
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+  status |= h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C4, PIM400_I2C_ADR, 1, &reg_adr, 100);  
+  status |= h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C4, PIM400_I2C_ADR, 1, reading, 100);  
 
   return status;
 }
@@ -128,10 +130,10 @@ HAL_StatusTypeDef read_voltage_pim400 (uint8_t* reading, uint8_t supply) {
 sensor_reading_status_t sensor_reading_voltage_pim400(uint8_t supply, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
   uint8_t rx_data;
-  HAL_StatusTypeDef status = read_voltage_pim400 (&rx_data, supply);
+  h7i2c_i2c_ret_code_t status = read_voltage_pim400 (&rx_data, supply);
 
   // current = 0.325 V / bit
-  if (status == HAL_OK) {
+  if (status == H7I2C_RET_CODE_OK) {
     sensor_reading->raw_value = rx_data;
 
     sensor_reading->present_state = 0;

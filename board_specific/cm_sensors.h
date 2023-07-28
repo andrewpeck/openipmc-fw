@@ -2,6 +2,7 @@
 #define CM_SENSORS_H
 
 #include "sensor_helper.h"
+#include "h7i2c_bare.h"
 #include "apollo_i2c.h"
 
 sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds);
