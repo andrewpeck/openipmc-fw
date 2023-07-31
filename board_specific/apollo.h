@@ -112,22 +112,6 @@ char* get_apollo_status () ;
 
 uint8_t apollo_get_handle_open ();
 
-/* 
- * Payload resets: Cold, warm and graceful. 
- * These functions implement the completion code for the reset requests. 
- */
-void reply_begin_payload_cold_reset(uint8_t* compl_code);
-void reply_begin_payload_warm_reset(uint8_t* compl_code);
-void reply_begin_payload_graceful_reboot(uint8_t* compl_code);
-
-/* 
- * Functions where the resets are actually implemented. 
- * These override the __weak functions from the OpenIPMC core FW. 
- */
-void impl_begin_payload_cold_reset();
-void impl_begin_payload_warm_reset();
-void impl_begin_payload_graceful_reboot();
-
 #define APOLLO_STATUS_PU_INIT_IO  0
 #define APOLLO_STATUS_PU_SET_BOOT_MODE  1
 #define APOLLO_STATUS_PU_SET_UART_ADR  2
