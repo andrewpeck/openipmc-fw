@@ -16,6 +16,7 @@
 #include "zynq_i2c.h"
 #include "zynq_temp_sensor.h"
 #include "head_commit_sha1.h"
+#include "apollo_i2c_mutex.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -31,6 +32,9 @@ uint8_t apollo_boot_mode        = APOLLO_BOOT_SD;
 uint8_t apollo_sdsel            = APOLLO_SDSEL_MIDBOARD;
 
 uint8_t apollo_status       = 0;
+
+/* Mutex for the I2C transactions using the I2C3 bus. */
+uint8_t apollo_i2c3_mutex = APOLLO_I2C3_MUTEX_UNLOCKED;
 
 uint8_t apollo_get_handle_open () {
   if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
