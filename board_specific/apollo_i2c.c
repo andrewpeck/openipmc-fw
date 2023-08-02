@@ -27,7 +27,7 @@ static h7i2c_i2c_ret_code_t apollo_do_i2c3_transaction(uint8_t* data, uint8_t ad
     status_mux = tca9546_sel_zynq();
     break;
   default:
-    break;
+    return H7I2C_RET_CODE_INVALID_ARGS;
   }
 
   /* Check if the write to the mux went through. */
@@ -40,11 +40,14 @@ static h7i2c_i2c_ret_code_t apollo_do_i2c3_transaction(uint8_t* data, uint8_t ad
   if (transaction_type == I2C3_WRITE_TRANSACTION) {
     status_io = h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C3, adr<<1, bytes, data, 100);
   }
-  else {
+  else if (transaction_type == I2C3_READ_TRANSACTION) {
     status_io = h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C3, adr<<1, bytes, data, 100);
   }
+  else {
+    return H7I2C_RET_CODE_INVALID_ARGS;
+  }
 
-  /* Release the mutex and return. */
+  /* Release the mutex for the I2C3 bus and return. */
   apollo_i2c3_mutex_release();
   return status_io;
 }
@@ -140,6 +143,8 @@ static h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_do_transaction(h7i2c
 
   /* Before the read/write, check if peripheral is in error state. And if so, clear it. */
   status = h7i2c_i2c_check_and_clear_error_state(peripheral);
+  
+  /* If we could not clear the error state, do not proceed and return with the return code from the driver. */
   if (status != H7I2C_RET_CODE_OK) {
     return status;
   }
@@ -148,8 +153,11 @@ static h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_do_transaction(h7i2c
   if (transaction_type == I2C3_WRITE_TRANSACTION) {
     status = h7i2c_i2c_write(peripheral, dev_address, data_size, data_buf, timeout);
   }
-  else {
+  else if (transaction_type == I2C3_READ_TRANSACTION) {
     status = h7i2c_i2c_read(peripheral, dev_address, data_size, data_buf, timeout);
+  }
+  else {
+    return H7I2C_RET_CODE_INVALID_ARGS;
   }
 
   /* Clear the error state in the peripheral again and return the status of the last transaction. */
