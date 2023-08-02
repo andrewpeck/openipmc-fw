@@ -63,9 +63,9 @@ void impl_begin_payload_warm_reset() {
   mt_printf("Warm reset of Zynq is requested\r\n");
 
   /* Launch power down sequence with 1 second timeout. */
-  mt_printf(" > Launching Apollo power-down sequence with 1s timeout\r\n");
+  mt_printf(" > Launching Apollo power-down sequence with 30s timeout\r\n");
   PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence(1);
+  apollo_powerdown_sequence(30);
 
   osDelay(500);
 
@@ -89,9 +89,9 @@ void impl_begin_payload_graceful_reboot() {
   mt_printf("Graceful reboot of Zynq is requested\r\n");
 
   /* Launch power down sequence with 10 seconds timeout. */
-  mt_printf(" > Launching Apollo power-down sequence with 10s timeout\r\n");
+  mt_printf(" > Launching Apollo power-down sequence with 5 minute timeout\r\n");
   PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence(10);
+  apollo_powerdown_sequence(300);
 
   osDelay(500);
 
