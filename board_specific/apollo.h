@@ -104,7 +104,7 @@ void apollo_write_zynq_i2c_constants ();
 void apollo_esm_reset();
 void apollo_init_gpios ();
 void apollo_init_bootmode ();
-void apollo_powerdown_sequence (uint8_t seconds);
+void apollo_powerdown_sequence (uint8_t seconds=10);
 void apollo_powerup_sequence ();
 void apollo_sense_reset();
 
