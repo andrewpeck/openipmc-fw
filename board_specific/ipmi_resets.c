@@ -89,8 +89,8 @@ void reply_begin_payload_graceful_reboot(uint8_t* compl_code) {
 void impl_begin_payload_graceful_reboot() {
   mt_printf("Graceful reboot of Zynq is requested\r\n");
 
-  /* Launch power down sequence with 300 seconds timeout. */
-  const uint8_t timeout = 300;
+  /* Launch power down sequence with 255 seconds timeout. */
+  const uint8_t timeout = 255;
   mt_printf(" > Launching Apollo power-down sequence with %u seconds timeout\r\n", timeout);
   PAYLOAD_RESET_SET_STATE(RESET);
   apollo_powerdown_sequence(timeout);
