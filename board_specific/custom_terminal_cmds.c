@@ -31,7 +31,7 @@ static uint8_t apollo_restart_cb()
   if (apollo_get_revision() == APOLLO_REV1) {
     mt_printf( "Restarting blade, network will disconnect\r\n\n" );
   }
-  apollo_powerdown_sequence();
+  apollo_powerdown_sequence(10);
   osDelay(1000);
   apollo_powerup_sequence();
   return TE_OK;
@@ -42,7 +42,7 @@ static uint8_t apollo_powerdown_cb()
   mt_printf( "\r\n\n" );
 
   if (apollo_get_revision() != APOLLO_REV1) {
-    apollo_powerdown_sequence();
+    apollo_powerdown_sequence(10);
   } else {
     mt_printf( "Powerdown not supported in Rev1.. please restart instead\r\n\n" );
   }

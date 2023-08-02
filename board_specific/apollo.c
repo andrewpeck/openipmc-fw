@@ -66,7 +66,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
 
       // somebody opened the handle
       if (apollo_get_handle_open()) {
-        apollo_powerdown_sequence();
+        apollo_powerdown_sequence(10);
         apollo_startup_started = 0;
         apollo_abormal_shutdown=APOLLO_ERR_OPEN_HANDLE;
         return 1;
@@ -76,7 +76,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     // timeout, shutdown! (if dis_shutoff is 0)
     apollo_startup_started=0;
     apollo_abormal_shutdown=err;
-    apollo_powerdown_sequence();
+    apollo_powerdown_sequence(10);
     return 1;
   }
 }
@@ -788,25 +788,11 @@ void apollo_write_zynq_i2c_constants () {
 void board_specific_activation_policy (uint8_t current_power_level,
                                        uint8_t new_power_level) {
   if (new_power_level == 0) {
-    apollo_powerdown_sequence();
+    apollo_powerdown_sequence(10);
   } else {
     apollo_powerup_sequence();
   }
   return;
-}
-
-/*
- * Payload Cold Reset
- *
- * This function is called by OpenIPMC when a Cold Reset command is received
- * from Shelf Manager
- */
-void payload_cold_reset(void) {
-  PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence();
-
-  PAYLOAD_RESET_SET_STATE(SET);
-  apollo_powerup_sequence();
 }
 
 /* 
