@@ -28,8 +28,8 @@ void reply_begin_payload_cold_reset(uint8_t* compl_code) {
   compl_code = 0x00;
 }
 
-/* 
- * Cold reset implementation: Cut the 12V power, and launch Apollo power-up sequence. 
+/** 
+ * @brief Cold reset implementation: Cut the 12V power, and launch Apollo power-up sequence. 
  */
 void impl_begin_payload_cold_reset() {
   mt_printf("Cold reset of Zynq is requested\r\n");
@@ -55,17 +55,18 @@ void reply_begin_payload_warm_reset(uint8_t* compl_code) {
   compl_code = 0x00;
 }
 
-/* 
- * Warm reset implementation: Launch the Apollo power-down sequence and wait for Zynq to
- * shut down for 1 second (otherwise turn the power off), and launch power-up sequence after.
+/** 
+ * @brief Warm reset implementation: Launch the Apollo power-down sequence and wait for Zynq to
+ *        shut down for 30 seconds (otherwise turn the power off), and launch power-up sequence after.
  */
 void impl_begin_payload_warm_reset() {
   mt_printf("Warm reset of Zynq is requested\r\n");
 
-  /* Launch power down sequence with 1 second timeout. */
-  mt_printf(" > Launching Apollo power-down sequence with 30s timeout\r\n");
+  /* Launch power down sequence with 30 seconds timeout. */
+  const uint8_t timeout = 30;
+  mt_printf(" > Launching Apollo power-down sequence with %us timeout\r\n", timeout);
   PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence(30);
+  apollo_powerdown_sequence(timeout);
 
   osDelay(500);
 
@@ -81,17 +82,18 @@ void reply_begin_payload_graceful_reboot(uint8_t* compl_code) {
   compl_code = 0x00;
 }
 
-/* 
- * Graceful reboot implementation: Launch the Apollo power-down sequence and wait for Zynq to
- * shut down for 10 seconds (otherwise turn the power off), and launch power-up sequence after.
+/** 
+ * @brief Graceful reboot implementation: Launch the Apollo power-down sequence and wait for Zynq to
+ *        shut down for 300 seconds (otherwise turn the power off), and launch power-up sequence after.
  */
 void impl_begin_payload_graceful_reboot() {
   mt_printf("Graceful reboot of Zynq is requested\r\n");
 
-  /* Launch power down sequence with 10 seconds timeout. */
-  mt_printf(" > Launching Apollo power-down sequence with 5 minute timeout\r\n");
+  /* Launch power down sequence with 300 seconds timeout. */
+  const uint8_t timeout = 300;
+  mt_printf(" > Launching Apollo power-down sequence with %u seconds timeout\r\n", timeout);
   PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence(300);
+  apollo_powerdown_sequence(timeout);
 
   osDelay(500);
 

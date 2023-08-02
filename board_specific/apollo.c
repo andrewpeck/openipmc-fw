@@ -339,7 +339,12 @@ void apollo_set_shelf_id() {
   }
 }
 
-void apollo_powerdown_sequence() {
+/**
+ * @brief Power-down sequence of the Apollo Service Module.
+ * 
+ * @param seconds    Number of seconds to wait for Zynq to shut down before timing out and cutting power. 
+ */
+void apollo_powerdown_sequence(uint8_t seconds) {
 
   apollo_startup_done = 0;
   apollo_startup_started = 0;
@@ -353,8 +358,6 @@ void apollo_powerdown_sequence() {
   // wait for zynq to shut down
   mt_printf(" > Waiting for Zynq to shut down\r\n");
   apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
-
-  const uint8_t seconds = 10;
 
   for (int8_t i = 0; i < seconds * 10; i++) {
     if (apollo_get_zynq_done_generic() == 0) {
