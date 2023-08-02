@@ -3,68 +3,120 @@
 #include "tca9546.h"
 
 /*
- * Macros below define transmit and receive functions for the I2C bus connected to I2C3 peripheral.
- * 
- * Each function first gets the mutex for the I2C3 bus, and then writes to the multiplexer
- * (TCA9546A) to pick the correct bus for the I2C transaction. This refers to the SEL() call 
- * in the macros below.
- * 
- * The second step is the actual read/write transaction once the correct bus is picked. Please note
- * that the target I2C address is shifted by 1 bit due to 7-bit addressing.
+ * Underlying function to call for an I2C read/write transaction over the I2C3 bus.
  */
-#define CREATE_APOLLO_I2C_TX(FNAME, SEL) \
-    h7i2c_i2c_ret_code_t FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
-      h7i2c_i2c_ret_code_t stat = 0; \
-      /* Take the mutex for I2C3 bus. If we fail to get the mutex, return BUSY status code. */ \
-      if (apollo_i2c3_mutex_lock(100) != 0) { return H7I2C_RET_CODE_BUSY; } \
-      /* If we got the mutex, write to the multiplexer to specify the I2C bus for the transaction. */ \
-      stat = SEL (); \
-      if (stat != H7I2C_RET_CODE_OK) { \
-        return stat; \
-      } \
-      /* Do the actual write. */ \
-      stat = stat | h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C3, adr<<1, bytes, data, 100); \
-      /* Release the mutex. */ \
-      apollo_i2c3_mutex_release(); \
-      return stat; \
-    } \
-    /* Single-byte version of the write function. */ \
-    h7i2c_i2c_ret_code_t FNAME (uint8_t *data, uint8_t adr) { \
-      return FNAME ## _n (data, adr, 1); \
-    } 
+static h7i2c_i2c_ret_code_t apollo_do_i2c3_transaction(uint8_t* data, uint8_t adr, uint16_t bytes, i2c3_bus_type_t i2c3_bus, i2c3_transaction_type_t transaction_type) {
+  /* Take the mutex for I2C3 bus. If we fail to get the mutex, return BUSY status code. */
+  if (apollo_i2c3_mutex_lock(100) != 0) { return H7I2C_RET_CODE_BUSY; }
 
-#define CREATE_APOLLO_I2C_RX(FNAME, SEL) \
-    h7i2c_i2c_ret_code_t FNAME ## _n (uint8_t *data, uint8_t adr, uint16_t bytes) { \
-      h7i2c_i2c_ret_code_t stat = 0; \
-      /* Take the mutex for I2C3 bus. If we fail to get the mutex, return BUSY status code. */ \
-      if (apollo_i2c3_mutex_lock(100) != 0) { return H7I2C_RET_CODE_BUSY; } \
-      /* If we got the mutex, write to the multiplexer to specify the I2C bus for the transaction. */ \
-      stat = SEL (); \
-      if (stat != H7I2C_RET_CODE_OK) { \
-        return stat; \
-      } \
-      /* Do the actual read. */ \
-      stat = stat | h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C3, adr<<1, bytes, data, 100); \
-      /* Release the mutex. */ \
-      apollo_i2c3_mutex_release(); \
-      return stat; \
-    } \
-    /* Single-byte version of the read function. */ \
-    h7i2c_i2c_ret_code_t FNAME (uint8_t *data, uint8_t adr) { \
-      return FNAME ## _n (data, adr, 1); \
-    } 
+  /* Write to the mux to pick the correct I2C bus. */
+  h7i2c_i2c_ret_code_t status_mux = H7I2C_RET_CODE_OK;
 
-/* Define I2C write functions. */
-CREATE_APOLLO_I2C_TX (local_i2c_tx, tca9546_sel_local);
-CREATE_APOLLO_I2C_TX (cm1_i2c_tx,   tca9546_sel_m1);
-CREATE_APOLLO_I2C_TX (cm2_i2c_tx,   tca9546_sel_m2);
-CREATE_APOLLO_I2C_TX (zynq_i2c_tx,  tca9546_sel_zynq);
+  switch (i2c3_bus)
+  {
+  case I2C3_BUS_LOCAL:
+    status_mux = tca9546_sel_local();
+    break;
+  case I2C3_BUS_CM1:
+    status_mux = tca9546_sel_m1();
+    break;
+  case I2C3_BUS_CM2:
+    status_mux = tca9546_sel_m2();
+    break;
+  case I2C3_BUS_ZYNQ:
+    status_mux = tca9546_sel_zynq();
+    break;
+  default:
+    break;
+  }
 
-/* Define I2C read functions. */
-CREATE_APOLLO_I2C_RX (local_i2c_rx, tca9546_sel_local);
-CREATE_APOLLO_I2C_RX (cm1_i2c_rx,   tca9546_sel_m1);
-CREATE_APOLLO_I2C_RX (cm2_i2c_rx,   tca9546_sel_m2);
-CREATE_APOLLO_I2C_RX (zynq_i2c_rx,  tca9546_sel_zynq);
+  /* Check if the write to the mux went through. */
+  if (status_mux != H7I2C_RET_CODE_OK) {
+    return status_mux;
+  }
+
+  /* Do the actual write or read. */
+  h7i2c_i2c_ret_code_t status_io = H7I2C_RET_CODE_OK;
+  if (transaction_type == I2C3_WRITE_TRANSACTION) {
+    status_io = h7i2c_i2c_clear_error_state_and_write(H7I2C_I2C3, adr<<1, bytes, data, 100);
+  }
+  else {
+    status_io = h7i2c_i2c_clear_error_state_and_read(H7I2C_I2C3, adr<<1, bytes, data, 100);
+  }
+
+  /* Release the mutex and return. */
+  apollo_i2c3_mutex_release();
+  return status_io;
+}
+
+/*
+ * The reads/write functions (over the I2C3 bus) for the use of rest of the software are
+ * defined below. Each read/write function has a multi-byte and a single-byte flavor.
+ */
+
+/* Reads over the local I2C bus. */
+h7i2c_i2c_ret_code_t local_i2c_rx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_LOCAL, I2C3_READ_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t local_i2c_rx(uint8_t *data, uint8_t adr) {
+  return local_i2c_rx_n(data, adr, 1);
+}
+
+/* Writes over the local I2C bus. */
+h7i2c_i2c_ret_code_t local_i2c_tx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_LOCAL, I2C3_WRITE_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t local_i2c_tx(uint8_t *data, uint8_t adr) {
+  return local_i2c_tx_n(data, adr, 1);
+}
+
+/* Reads over the CM1 bus. */
+h7i2c_i2c_ret_code_t cm1_i2c_rx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_CM1, I2C3_READ_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t cm1_i2c_rx(uint8_t *data, uint8_t adr) {
+  return cm1_i2c_rx_n(data, adr, 1);
+}
+
+/* Writes over the CM1 bus. */
+h7i2c_i2c_ret_code_t cm1_i2c_tx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_CM1, I2C3_WRITE_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t cm1_i2c_tx(uint8_t *data, uint8_t adr) {
+  return cm1_i2c_tx_n(data, adr, 1);
+}
+
+/* Reads over the CM2 bus. */
+h7i2c_i2c_ret_code_t cm2_i2c_rx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_CM2, I2C3_READ_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t cm2_i2c_rx(uint8_t *data, uint8_t adr) {
+  return cm2_i2c_rx_n(data, adr, 1);
+}
+
+/* Writes over the CM1 bus. */
+h7i2c_i2c_ret_code_t cm2_i2c_tx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_CM2, I2C3_WRITE_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t cm2_i2c_tx(uint8_t *data, uint8_t adr) {
+  return cm2_i2c_tx_n(data, adr, 1);
+}
+
+/* Reads over the Zynq bus. */
+h7i2c_i2c_ret_code_t zynq_i2c_rx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_ZYNQ, I2C3_READ_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t zynq_i2c_rx(uint8_t *data, uint8_t adr) {
+  return zynq_i2c_rx_n(data, adr, 1);
+}
+
+/* Writes over the Zynq bus. */
+h7i2c_i2c_ret_code_t zynq_i2c_tx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
+  return apollo_do_i2c3_transaction(data, adr, bytes, I2C3_BUS_ZYNQ, I2C3_WRITE_TRANSACTION);
+}
+h7i2c_i2c_ret_code_t zynq_i2c_tx(uint8_t *data, uint8_t adr) {
+  return zynq_i2c_tx_n(data, adr, 1);
+}
 
 /*
  * Function to check the error state of the I2C peripheral, and clear it if necessary.
@@ -80,28 +132,35 @@ h7i2c_i2c_ret_code_t h7i2c_i2c_check_and_clear_error_state(h7i2c_periph_t periph
 }
 
 /*
- * Macro to define I2C read/write functions using the h7i2c-baremetal-driver, 
- * where DRIVER_IO_FUNC refers to the actual read/write function given us by the driver.
- *
- * These read/write functions do the following:
- * 1) Check if the I2C peripheral is in error state, and if necessary, clear it.
- * 2) Do the read/write.
- * 3) Check the peripheral again after the read/write, and if necessary, clear the error state.
+ * Wrapper function that checks and clears the error state in the I2C3 peripheral 
+ * and does the read/write transaction.
  */
-#define CREATE_H7I2C_READ_WRITE_FUNC(FNAME, DRIVER_IO_FUNC) \
-  h7i2c_i2c_ret_code_t FNAME (h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) { \
-    h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK; \
-    status = h7i2c_i2c_check_and_clear_error_state(peripheral); \
-    if (status != H7I2C_RET_CODE_OK) { \
-      return status; \
-    } \
-    status = DRIVER_IO_FUNC(peripheral, dev_address, data_size, data_buf, timeout); \
-    if (status != H7I2C_RET_CODE_OK) { \
-      return status; \
-    } \
-    status = h7i2c_i2c_check_and_clear_error_state(peripheral); \
-    return status; \
+static h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_do_transaction(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout, i2c3_transaction_type_t transaction_type) {
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+
+  /* Before the read/write, check if peripheral is in error state. And if so, clear it. */
+  status = h7i2c_i2c_check_and_clear_error_state(peripheral);
+  if (status != H7I2C_RET_CODE_OK) {
+    return status;
   }
 
-CREATE_H7I2C_READ_WRITE_FUNC(h7i2c_i2c_clear_error_state_and_read, h7i2c_i2c_read);
-CREATE_H7I2C_READ_WRITE_FUNC(h7i2c_i2c_clear_error_state_and_write, h7i2c_i2c_write);
+  /* Do the read/write. */
+  if (transaction_type == I2C3_WRITE_TRANSACTION) {
+    status = h7i2c_i2c_write(peripheral, dev_address, data_size, data_buf, timeout);
+  }
+  else {
+    status = h7i2c_i2c_read(peripheral, dev_address, data_size, data_buf, timeout);
+  }
+
+  /* Clear the error state in the peripheral again and return the status of the last transaction. */
+  h7i2c_i2c_check_and_clear_error_state(peripheral);
+  return status;
+}
+
+h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) {
+  return h7i2c_i2c_clear_error_state_and_do_transaction(peripheral, dev_address, data_size, data_buf, timeout, I2C3_READ_TRANSACTION);
+}
+
+h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_write(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout) {
+  return h7i2c_i2c_clear_error_state_and_do_transaction(peripheral, dev_address, data_size, data_buf, timeout, I2C3_WRITE_TRANSACTION);
+}

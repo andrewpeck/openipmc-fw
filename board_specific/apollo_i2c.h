@@ -1,8 +1,21 @@
 #ifndef APOLLO_I2C_H
 #define APOLLO_I2C_H
 
-#include "sense_i2c.h"
 #include "h7i2c_bare.h"
+
+/* Enum representing the bus we are picking for the transaction. */
+typedef enum {
+    I2C3_BUS_LOCAL,
+    I2C3_BUS_CM1,
+    I2C3_BUS_CM2,
+    I2C3_BUS_ZYNQ
+} i2c3_bus_type_t;
+
+/* Enum representing if the I2C transaction over the I2C3 bus is a read or write. */
+typedef enum {
+    I2C3_READ_TRANSACTION,
+    I2C3_WRITE_TRANSACTION
+} i2c3_transaction_type_t;
 
 // single byte flavors of i2c tx/rx
 h7i2c_i2c_ret_code_t local_i2c_tx (uint8_t *data, uint8_t adr);
