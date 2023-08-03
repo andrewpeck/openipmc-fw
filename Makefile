@@ -57,8 +57,10 @@ clean:
 	@rm -f upgrade_FULL.hpm
 	@rm -f openipmc-fw_binaries.tar.gz
 
-load_usb:
-	dfu-util -s 0x08000000 -d 0483:df11 -a 0 -D ./openipmc-fw/CM7/openipmc-fw_CM7.bin
+# Load firmware and option bytes via dfu-util, using a microUSB connection
+dfu_load:
+	@cd openipmc-fw-full-image-builder/ && \
+	 $(MAKE) dfu_load
 
 load_st:
 	st-flash --freq 1000 --reset write ./openipmc-fw/CM7/openipmc-fw_CM7.bin 0x08000000
