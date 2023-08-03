@@ -50,10 +50,11 @@ clean:
 	@rm -f openipmc-fw_BL7.bin
 	@rm -f openipmc-fw_CM4.bin
 	@rm -f openipmc-fw_CM7.bin
+	@rm -f openipmc-fw_full.bin
 	@rm -f upgrade_BL7.hpm
 	@rm -f upgrade_CM4.hpm
 	@rm -f upgrade_CM7.hpm
-	@rm -f openipmc-fw_full.bin
+	@rm -f upgrade_FULL.hpm
 	@rm -f openipmc-fw_binaries.tar.gz
 
 load_usb:
