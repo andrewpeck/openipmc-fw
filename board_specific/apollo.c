@@ -16,7 +16,7 @@
 #include "zynq_i2c.h"
 #include "zynq_temp_sensor.h"
 #include "head_commit_sha1.h"
-#include "apollo_i2c_mutex.h"
+#include "apollo_sensor_bus_mutex.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -34,7 +34,7 @@ uint8_t apollo_sdsel            = APOLLO_SDSEL_MIDBOARD;
 uint8_t apollo_status       = 0;
 
 /* Mutex for the I2C transactions using the I2C3 bus. */
-uint8_t apollo_i2c3_mutex = APOLLO_I2C3_MUTEX_UNLOCKED;
+uint8_t apollo_sensor_bus_mutex = APOLLO_SENSOR_BUS_MUTEX_UNLOCKED;
 
 uint8_t apollo_get_handle_open () {
   if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
@@ -381,7 +381,7 @@ void apollo_powerdown_sequence() {
    * Lock the I2C3 bus so that no other process (i.e., sensor manager task) 
    * will try to talk to the Zynq in the transition process.
    */
-  apollo_i2c3_mutex_lock(100);
+  apollo_sensor_bus_mutex_lock(100);
 
   // disable zynq
   mt_printf(" > Disabling Zynq Enable Line\r\n");
@@ -402,7 +402,7 @@ void apollo_powerdown_sequence() {
   mt_printf(" > Shutdown done\r\n");
 
   /* Release the I2C3 mutex. */
-  apollo_i2c3_mutex_release();
+  apollo_sensor_bus_mutex_release();
 
   return;
 }
@@ -593,7 +593,7 @@ void apollo_powerup_sequence () {
    * Lock the I2C3 bus so that no other process (i.e., sensor manager task) 
    * will try to talk to the Zynq in the transition process.
    */
-  apollo_i2c3_mutex_lock(100);
+  apollo_sensor_bus_mutex_lock(100);
 
   // set zynq enable
   //------------------------------------------------------------------------------
@@ -638,7 +638,7 @@ void apollo_powerup_sequence () {
     if (apollo_timeout_counter (apollo_get_fpga_done, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_FPGA)) {
       apollo_status = APOLLO_STATUS_PU_TIMEOUT_FPGA_DONE;
       /* Release the mutex on the I2C3 bus if we're shutting back down. */
-      apollo_i2c3_mutex_release();
+      apollo_sensor_bus_mutex_release();
       return;
     }
 
@@ -673,12 +673,12 @@ void apollo_powerup_sequence () {
   if (apollo_timeout_counter(apollo_get_zynq_done_generic, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
     apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
     /* Release the mutex on the I2C3 bus if we're shutting back down. */
-    apollo_i2c3_mutex_release();
+    apollo_sensor_bus_mutex_release();
     return;
   }
 
   /* Release the mutex on the I2C3 bus. */
-  apollo_i2c3_mutex_release();
+  apollo_sensor_bus_mutex_release();
 
   // Write zynq constants
   //------------------------------------------------------------------------------

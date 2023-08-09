@@ -1,5 +1,5 @@
 #include "apollo_i2c.h"
-#include "apollo_i2c_mutex.h"
+#include "apollo_sensor_bus_mutex.h"
 #include "tca9546.h"
 
 /*
@@ -7,7 +7,7 @@
  */
 static h7i2c_i2c_ret_code_t apollo_do_i2c3_transaction(uint8_t* data, uint8_t adr, uint16_t bytes, i2c3_bus_type_t i2c3_bus, i2c3_transaction_type_t transaction_type) {
   /* Take the mutex for I2C3 bus. If we fail to get the mutex, return BUSY status code. */
-  if (apollo_i2c3_mutex_lock(100) != 0) { return H7I2C_RET_CODE_BUSY; }
+  if (apollo_sensor_bus_mutex_lock(100) != 0) { return H7I2C_RET_CODE_BUSY; }
 
   /* Write to the mux to pick the correct I2C bus. */
   h7i2c_i2c_ret_code_t status_mux = H7I2C_RET_CODE_OK;
@@ -48,7 +48,7 @@ static h7i2c_i2c_ret_code_t apollo_do_i2c3_transaction(uint8_t* data, uint8_t ad
   }
 
   /* Release the mutex for the I2C3 bus and return. */
-  apollo_i2c3_mutex_release();
+  apollo_sensor_bus_mutex_release();
   return status_io;
 }
 
