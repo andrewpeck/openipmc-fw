@@ -90,12 +90,11 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
    * Do the I2C transaction. First, write the register address to the CM MCU,
    * and then read the data in that register back.
    */
-  const h7i2c_i2c_ret_code_t status_tx = cm1_i2c_tx(&tx_data, CM_MCU_ADR);
-  const h7i2c_i2c_ret_code_t status_rx = cm1_i2c_rx(&rx_data, CM_MCU_ADR);
+  const h7i2c_i2c_ret_code_t status = cm1_i2c_tx_and_rx(&tx_data, &rx_data, CM_MCU_ADR);
 
 	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
-  if ((status_rx == H7I2C_RET_CODE_OK) && (status_tx == H7I2C_RET_CODE_OK)) {
+  if (status == H7I2C_RET_CODE_OK) {
 
     if (rx_data == 0xFF) { // device not powered or present
       sensor_reading->raw_value = 2;

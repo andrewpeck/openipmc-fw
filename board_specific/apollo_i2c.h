@@ -48,6 +48,10 @@ h7i2c_i2c_ret_code_t cm2_i2c_rx_n (uint8_t *data, uint8_t adr, uint16_t bytes);
 h7i2c_i2c_ret_code_t zynq_i2c_tx_n (uint8_t *data, uint8_t adr, uint16_t bytes);
 h7i2c_i2c_ret_code_t zynq_i2c_rx_n (uint8_t *data, uint8_t adr, uint16_t bytes);
 
+/* I2C write-then-read functions over CM1 bus with a repeated start condition. */
+h7i2c_i2c_ret_code_t cm1_i2c_tx_and_rx(uint8_t *wr_data, uint8_t *rd_data, uint8_t adr);
+h7i2c_i2c_ret_code_t cm1_i2c_tx_and_rx_n(uint8_t *wr_data, uint8_t *rd_data, uint16_t wr_bytes, uint16_t rd_bytes, uint8_t adr);
+
 /* 
  * Wrapper for I2C reads and writes with h7i2c-baremetal-driver. 
  * These functions first check if the peripheral is in an error state, and if so they clear the error state.
@@ -58,6 +62,6 @@ h7i2c_i2c_ret_code_t h7i2c_i2c_check_and_clear_error_state(h7i2c_periph_t periph
 
 h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout);
 h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_write(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t data_size, uint8_t *data_buf, uint32_t timeout);
-
+h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_write_then_read(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t wr_data_size, uint16_t rd_data_size, uint8_t *wr_data_buf, uint8_t *rd_data_buf, uint32_t timeout);
 
 #endif /* APOLLO_I2C_H */
