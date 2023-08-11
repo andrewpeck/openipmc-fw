@@ -109,6 +109,7 @@ h7i2c_i2c_ret_code_t cm1_i2c_tx(uint8_t *data, uint8_t adr) {
   return cm1_i2c_tx_n(data, adr, 1);
 }
 
+/* CM1 bus: Write and then read with a repeated start condition in the middle. */
 h7i2c_i2c_ret_code_t cm1_i2c_tx_and_rx_n(uint8_t *wr_data, uint8_t *rd_data, uint16_t wr_bytes, uint16_t rd_bytes, uint8_t adr) {
   return apollo_do_i2c_transaction_on_sensor_bus(wr_data, rd_data, wr_bytes, rd_bytes, adr, SENSOR_BUS_CM1);
 }
@@ -130,6 +131,14 @@ h7i2c_i2c_ret_code_t cm2_i2c_tx_n(uint8_t *data, uint8_t adr, uint16_t bytes) {
 }
 h7i2c_i2c_ret_code_t cm2_i2c_tx(uint8_t *data, uint8_t adr) {
   return cm2_i2c_tx_n(data, adr, 1);
+}
+
+/* CM2 bus: Write and then read with a repeated start condition in the middle. */
+h7i2c_i2c_ret_code_t cm2_i2c_tx_and_rx_n(uint8_t *wr_data, uint8_t *rd_data, uint16_t wr_bytes, uint16_t rd_bytes, uint8_t adr) {
+  return apollo_do_i2c_transaction_on_sensor_bus(wr_data, rd_data, wr_bytes, rd_bytes, adr, SENSOR_BUS_CM2);
+}
+h7i2c_i2c_ret_code_t cm2_i2c_tx_and_rx(uint8_t *wr_data, uint8_t *rd_data, uint8_t adr) {
+  return cm2_i2c_tx_and_rx_n(wr_data, rd_data, 1, 1, adr);
 }
 
 /* Reads over the Zynq bus. */
