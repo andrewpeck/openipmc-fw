@@ -220,19 +220,22 @@ static uint8_t apollo_boot_mode_cb()
 static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
 {
   mt_printf( "\r\n\n" );
+  /* The register address to read from is the first argument to the CLI command. */
   uint8_t adr = CLI_GetArgHex(0);
   uint8_t data = CLI_GetArgHex(1);
 
+  /* 
+   * Do the write and read with a repeated start condition. 
+   * The microcontroller on the Command Module is at 0x40 on the bus.
+   */
   h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
+  uint8_t cm_mcu_adr = 0x40;
 
   if (cm==1) {
-    status |= cm1_i2c_tx(&adr, 0x40);
-    status |= cm1_i2c_rx(&data, 0x40);
+    status = cm1_i2c_tx_and_rx(&adr, &data, cm_mcu_adr);
   }
-
-  if (cm==2) {
-    status |= cm2_i2c_tx(&adr, 0x40);
-    status |= cm2_i2c_rx(&data, 0x40);
+  else if (cm==2) {
+    status = cm2_i2c_tx_and_rx(&adr, &data, cm_mcu_adr);
   }
 
   if (status==H7I2C_RET_CODE_OK)
@@ -465,7 +468,7 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   return status;
 }
 
-static uint8_t apollo_write_eth_mac() {
+static uint8_t apollo_write_eth_mac_cb() {
   /*
    * Sets the MAC address field in EEPROM. Also computes the two's complement
    of the checksum for the MAC address, and saves it on EEPROM.
@@ -540,5 +543,5 @@ void add_board_specific_terminal_commands( void )
 
   CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
 
-  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac,    7, 0, "Set the ETH MAC address fields in EEPROM");
+  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac_cb, 7, 0, "Set the ETH MAC address fields in EEPROM");
 }
