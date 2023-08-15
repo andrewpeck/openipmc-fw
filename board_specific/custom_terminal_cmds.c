@@ -23,6 +23,10 @@
  */
 extern bool mt_CLI_GetIntState();
 
+#define COMMAND_APOLLO_RESTART_DESCRIPTION "\
+Restart Apollo Service Module (may disconnect terminal). Usage: \r\n \
+\t >> restart \r\n \
+"
 static uint8_t apollo_restart_cb()
 {
   mt_printf("\r\n");
@@ -35,6 +39,11 @@ static uint8_t apollo_restart_cb()
   return TE_OK;
 }
 
+#define COMMAND_APOLLO_POWERDOWN_DESCRIPTION "\
+Launch Apollo power down sequence. This is only supported in Service Modules of \r\n \
+revision 2 or more recent. Usage: \r\n \
+\t >> powerdown \r\n \
+"
 static uint8_t apollo_powerdown_cb()
 {
   mt_printf( "\r\n\n" );
@@ -47,6 +56,10 @@ static uint8_t apollo_powerdown_cb()
   return TE_OK;
 }
 
+#define COMMAND_APOLLO_POWERUP_DESCRIPTION "\
+Launch Apollo power up sequence. Usage: \r\n \
+\t >> powerup \r\n \
+"
 static uint8_t apollo_powerup_cb()
 {
   mt_printf( "\r\n\n" );
@@ -57,6 +70,9 @@ static uint8_t apollo_powerup_cb()
   return TE_OK;
 }
 
+#define COMMAND_APOLLO_READIO_DESCRIPTION "\
+Read IPMC status IOs. Usage: \r\n \
+\t >> readio \r\n"
 static uint8_t apollo_read_io_cb()
 {
   mt_printf( "\r\n\n" );
@@ -70,6 +86,10 @@ static uint8_t apollo_read_io_cb()
   return TE_OK;
 }
 
+#define COMMAND_APOLLO_BOOT_STATUS_DESCRIPTION "\
+Get the status of the Zynq boot sequence. Usage: \r\n \
+\t >> bootstatus \r\n \
+"
 static uint8_t apollo_boot_status_cb()
 {
   mt_printf( "\r\n\n" );
@@ -94,6 +114,10 @@ static uint8_t apollo_boot_status_cb()
   return TE_OK;
 }
 
+#define COMMAND_APOLLO_EEPROMRD_DESCRIPTION "\
+Read EEPROM contents on the Apollo. Usage: \r\n \
+\t >> eepromrd \r\n \
+"
 static uint8_t apollo_read_eeprom_cb() {
   mt_printf("\r\n");
 
@@ -162,6 +186,11 @@ static uint8_t apollo_read_eeprom_cb() {
   return status;
 }
 
+#define COMMAND_APOLLO_DIS_SHUTOFF_DESCRIPTION "\
+Command to write 0x1 to disable IPMC shutdown if Zynq is not booted. \r\n \
+\t >> Use dis_shdn 0x1 to disable IPMC shutdown. \r\n \
+\t >> Use dis_shdn 0x0 to enable IPMC shutdown. \r\n \
+"
 static uint8_t apollo_dis_shutoff_cb()
 {
   mt_printf( "\r\n\n" );
@@ -179,6 +208,14 @@ static uint8_t apollo_dis_shutoff_cb()
   return TE_OK;
 }
 
+#define COMMAND_SDSEL_DESCRIPTION "\
+Set the Apollo pin for the SD card selection, to pick which SD card slot will be used to boot off Zynq from. \r\n \
+Please note that this applies when the bootmode is set to 3. \r\n \
+Usage: \r\n \
+>> sdsel <slot> where slot is either 0 or 1. \r\n \
+\t - Use sdsel 0 to boot off from the SD card on the back of the Service Module. \r\n \
+\t - Use sdsel 1 to boot off from the SD card on the front-panel board slot. \r\n \
+"
 static uint8_t apollo_sdsel_cb()
 {
   mt_printf( "\r\n\n" );
@@ -197,7 +234,12 @@ static uint8_t apollo_sdsel_cb()
   return TE_OK;
 }
 
-
+#define COMMAND_BOOTMODE_DESCRIPTION "\
+Set the Apollo boot mode pin, determining how the Zynq will boot. \r\n \
+Usage: bootmode <BOOTMODE> where BOOTMODE can be between 0 and 3. \r\n \
+\t - To boot Zynq from the SD card, use bootmode 3. \r\n \
+\t - To boot Zynq from the EMMC,    use bootmode 0. \r\n \
+"
 static uint8_t apollo_boot_mode_cb()
 {
   mt_printf( "\r\n\n" );
@@ -246,10 +288,22 @@ static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
   return status;
 }
 
+#define COMMAND_CM1_I2C_RX_DESCRIPTION "\
+Perform an I2C read over the CM1 bus. The target device is the CM microcontroller, located\r\n \
+at address 0x40 by default. \r\n \
+Usage: c1rd <regAdr> where: \r\n \
+\t -regAdr : Address of the register to read. \r\n \
+"
 static uint8_t apollo_cm1_i2c_rx_cb() {
   return (apollo_cm_i2c_rx_cb(1));
 }
 
+#define COMMAND_CM2_I2C_RX_DESCRIPTION "\
+Perform an I2C read over the CM2 bus. The target device is the CM microcontroller, located\r\n \
+at address 0x40 by default. \r\n \
+Usage: c2rd <regAdr> where: \r\n \
+\t -regAdr : Address of the register to read. \r\n \
+"
 static uint8_t apollo_cm2_i2c_rx_cb() {
   return(apollo_cm_i2c_rx_cb(2));
 }
@@ -279,15 +333,35 @@ static uint8_t apollo_cm_i2c_tx_cb(uint8_t cm)
   return status;
 }
 
+#define COMMAND_CM1_I2C_TX_DESCRIPTION "\
+Perform an I2C write over the CM1 bus. The target device is the CM microcontroller, located\r\n \
+at address 0x40 by default. \r\n \
+Usage: c1wr <regAdr> <data> where: \r\n \
+\t -regAdr : Address of the register to write. \r\n \
+\t -data   : 8-bit data to write. \r\n \
+"
 static uint8_t apollo_cm1_i2c_tx_cb() {
   return (apollo_cm_i2c_tx_cb(1));
 }
 
+#define COMMAND_CM2_I2C_TX_DESCRIPTION "\
+Perform an I2C write over the CM2 bus. The target device is the CM microcontroller, located\r\n \
+at address 0x40 by default. \r\n \
+Usage: c2wr <regAdr> <data> where: \r\n \
+\t -regAdr : Address of the register to write. \r\n \
+\t -data   : 8-bit data to write. \r\n \
+"
 static uint8_t apollo_cm2_i2c_tx_cb() {
   return(apollo_cm_i2c_tx_cb(2));
 }
 
-
+#define COMMAND_ZYNQ_I2C_TX_DESCRIPTION "\
+Perform an I2C write on the Zynq I2C bus.\r\n\
+Usage: zwr <slaveNum> <regAdr> <data> where:\r\n\
+\t -slaveNum : Number of the slave I2C device on Zynq (between 0-8).\r\n\
+\t -regAdr   : Address of the register to write to on the slave device.\r\n\
+\t -data     : The 8-bit data to write.\r\n\
+"
 static uint8_t apollo_zynq_i2c_tx_cb()
 {
   mt_printf( "\r\n\n" );
@@ -308,6 +382,12 @@ static uint8_t apollo_zynq_i2c_tx_cb()
   return status;
 }
 
+#define COMMAND_LOCAL_I2C_TX_DESCRIPTION "\
+Perform an I2C write on the local I2C bus.\r\n\
+Usage: lwr <slaveAdr> <data> where:\r\n\
+\t -slaveAdr : The I2C address of the target (slave) device. \r\n\
+\t -data     : 8-bit data to write. \r\n\
+"
 static uint8_t apollo_local_i2c_tx_cb()
 {
   mt_printf( "\r\n\n" );
@@ -335,6 +415,16 @@ void print_hal_status (h7i2c_i2c_ret_code_t status) {
     mt_printf("HAL TIMEOUT\r\n");
 }
 
+#define COMMAND_APOLLO_I2C_MUX_DESCRIPTION "\
+Set the value of the multiplexer (mux) on the I2C3 bus on Apollo. \r\n \
+Usage: i2csel <busNum> where busNum is a 4-bit value representing which bus to pick. \r\n \
+\t -To pick local bus, use: i2csel 0x1 \r\n \
+\t -To pick CM1 bus,   use: i2csel 0x2 \r\n \
+\t -To pick CM2 bus,   use: i2csel 0x4 \r\n \
+\t -To pick Zynq bus,  use: i2csel 0x8 \r\n \
+Please use the command with caution as other tasks running on the OpenIPMC (e.g., the sensor manager task) \r\n \
+can interfere and write a different value to the mux. \r\n \
+"
 static uint8_t apollo_i2c_mux_cb()
 {
   mt_printf( "\r\n\n" );
@@ -353,6 +443,10 @@ static uint8_t apollo_i2c_mux_cb()
   return status;
 }
 
+#define COMMAND_APOLLO_READ_PIM_DESCRIPTION "\
+Read Apollo PIM400 sensors.\r\n \
+\t Usage: pimrd \r\n \
+"
 static uint8_t apollo_read_pim_cb() {
   mt_printf("\r\n\n");
 
@@ -378,7 +472,10 @@ static uint8_t apollo_read_pim_cb() {
   return 0;
 }
 
-
+#define COMMAND_APOLLO_READ_TCN_DESCRIPTION "\
+Read Apollo TCN Temperature sensors. \r\n \
+\t Usage: tcnrd \r\n \
+"
 static uint8_t apollo_read_tcn_cb() {
   mt_printf("\r\n\n");
 
@@ -401,6 +498,12 @@ static uint8_t apollo_read_tcn_cb() {
   return 0;
 }
 
+#define COMMAND_APOLLO_WRITE_VER_DESCRIPTION "\
+Write EEPROM dataformat revision on the EEPROM. \r\n \
+Usage: verwr <verNum> where verNum can be 0 or 1. \r\n \
+\t - verNum=1 is the latest revision which includes MAC address checksum (should be the default.) \r\n \
+\t - verNum=0 is the older version without the MAC address checksum fields. \r\n \
+"
 static uint8_t apollo_write_ver_cb() {
   mt_printf("\r\n\n");
   uint8_t rev = CLI_GetArgDec(0);
@@ -412,6 +515,12 @@ static uint8_t apollo_write_ver_cb() {
 }
 
 
+#define COMMAND_APOLLO_WRITE_REV_DESCRIPTION "\
+Write Apollo Service Module revision on the EEPROM. \r\n \
+Usage: revwr <revNum> where revNum is the numeric value representing the Service Module revision. \r\n \
+\t -For rev1 SMs,           use: revwr 1 \r\n \
+\t -For rev2 AND rev2a SMs, use: revwr 2 (please note we do not use '2a' for rev2a SMs, since expected value is numeric.) \r\n \
+"
 static uint8_t apollo_write_rev_cb() {
   mt_printf("\r\n\n");
   uint8_t rev = CLI_GetArgDec(0);
@@ -422,7 +531,10 @@ static uint8_t apollo_write_rev_cb() {
   return (apollo_read_eeprom_cb());
 }
 
-
+#define COMMAND_APOLLO_WRITE_ID_DESCRIPTION "\
+Write Apollo board ID on EEPROM. \r\n \
+Usage: idwr <apolloId> \r\n \
+"
 static uint8_t apollo_write_id_cb() {
   mt_printf("\r\n\n");
   uint8_t id = CLI_GetArgDec(0);
@@ -433,7 +545,11 @@ static uint8_t apollo_write_id_cb() {
   return (apollo_read_eeprom_cb());
 }
 
-
+#define COMMAND_LOCAL_I2C_RX_DESCRIPTION "\
+Perform an I2C read on the local I2C bus. \r\n \
+Usage: lrd <slaveAdr> where: \r\n \
+\t -slaveAdr : The I2C address of the target (slave) device. \r\n \
+"
 static uint8_t apollo_local_i2c_rx_cb() {
   mt_printf("\r\n\n");
 
@@ -450,6 +566,12 @@ static uint8_t apollo_local_i2c_rx_cb() {
   return status;
 }
 
+#define COMMAND_ZYNQ_I2C_RX_DESCRIPTION "\
+Perform an I2C read on the Zynq I2C bus. \r\n \
+Usage: zrd <slaveNum> <regAdr> where: \r\n \
+\t -slaveNum : Number of the slave I2C device on Zynq (between 0-8). \r\n \
+\t -regAdr   : Address of the register to write to on the slave device. \r\n \
+"
 static uint8_t apollo_zynq_i2c_rx_cb()
 {
   mt_printf( "\r\n\n" );
@@ -469,6 +591,14 @@ static uint8_t apollo_zynq_i2c_rx_cb()
   return status;
 }
 
+#define COMMAND_ETHMACWR_DESCRIPTION "\
+Set the MAC address of the ETH0 or ETH1 port for the Zynq on EEPROM. \r\n \
+Usage: ethmacwr <portNum> <MAC addr> where:\
+\t -portNum  : 0 for eth0, 1 for eth1 port. For Zynqs installed on rev2a SMs, eth1 is the default. \r\n \
+\t -MAC addr : Space separated MAC address. \r\n \
+For example, to set a MAC address of 00:50:51:FF:10:CC on eth1 port, you can execute: \r\n \
+\t >> ethmacwr 1 00 50 51 FF 10 CC \r\n \
+"
 static uint8_t apollo_write_eth_mac_cb() {
   /*
    * Sets the MAC address field in EEPROM. Also computes the two's complement
@@ -506,43 +636,49 @@ static uint8_t apollo_write_eth_mac_cb() {
 }
 
 /*
- * This functions is called during terminal initialization to add custom
+ * This function is called during terminal initialization to add custom
  * commands to the CLI by using CLI_AddCmd functions.
  *
- * Use the CLI_AddCmd() function according terminal documentation
+ * Use the CLI_AddCmd() function according terminal documentation.
  */
 void add_board_specific_terminal_commands( void )
 {
   // dashes and underscores don't seem to work as expected here :(
-  CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, "Set the Apollo boot mode pin");
-  CLI_AddCmd("bootstatus", apollo_boot_status_cb,   0, 0, "Get the status of the boot sequence");
-  CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, "Set the Apollo SD select pin");
-  CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, "Power down Apollo");
-  CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, "Power up Apollo");
-  CLI_AddCmd("restart",    apollo_restart_cb,       0, 0, "Restart Apollo (may disconnect terminal)");
-  CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, "Read IPMC status IOs");
-  CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, "Read Apollo EEPROM");
-  CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, "Write Apollo EEPROM Board Revision");
-  CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, "Write Apollo EEPROM Board ID");
-  CLI_AddCmd("verwr",      apollo_write_ver_cb,     1, 0, "Write Apollo EEPROM Dataformat Revision");
-  CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, "Read Apollo TCN Temperature Sensors");
-  CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, "Read Apollo PIM400");
+  CLI_AddCmd("bootmode",   apollo_boot_mode_cb,     1, 0, COMMAND_BOOTMODE_DESCRIPTION);
+  CLI_AddCmd("bootstatus", apollo_boot_status_cb,   0, 0, COMMAND_APOLLO_BOOT_STATUS_DESCRIPTION);
+  CLI_AddCmd("sdsel",      apollo_sdsel_cb,         1, 0, COMMAND_SDSEL_DESCRIPTION);
+  CLI_AddCmd("powerdown",  apollo_powerdown_cb,     0, 0, COMMAND_APOLLO_POWERDOWN_DESCRIPTION);
+  CLI_AddCmd("powerup",    apollo_powerup_cb,       0, 0, COMMAND_APOLLO_POWERUP_DESCRIPTION);
+  CLI_AddCmd("restart",    apollo_restart_cb,       0, 0, COMMAND_APOLLO_RESTART_DESCRIPTION);
+  CLI_AddCmd("readio",     apollo_read_io_cb,       0, 0, COMMAND_APOLLO_READIO_DESCRIPTION);
+  CLI_AddCmd("eepromrd",   apollo_read_eeprom_cb,   0, 0, COMMAND_APOLLO_EEPROMRD_DESCRIPTION);
+  CLI_AddCmd("revwr",      apollo_write_rev_cb,     1, 0, COMMAND_APOLLO_WRITE_REV_DESCRIPTION);
+  CLI_AddCmd("idwr",       apollo_write_id_cb,      1, 0, COMMAND_APOLLO_WRITE_ID_DESCRIPTION);
+  CLI_AddCmd("verwr",      apollo_write_ver_cb,     1, 0, COMMAND_APOLLO_WRITE_VER_DESCRIPTION);
+  CLI_AddCmd("tcnrd",      apollo_read_tcn_cb,      0, 0, COMMAND_APOLLO_READ_TCN_DESCRIPTION);
+  CLI_AddCmd("pimrd",      apollo_read_pim_cb,      0, 0, COMMAND_APOLLO_READ_PIM_DESCRIPTION);
 
-  CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, "Configure Apollo I2C Mux");
+  /* Mux configuration. */
+  CLI_AddCmd("i2csel",     apollo_i2c_mux_cb,       1, 0, COMMAND_APOLLO_I2C_MUX_DESCRIPTION);
 
-  CLI_AddCmd("zwr",        apollo_zynq_i2c_tx_cb,   3, 0, "Write Apollo Zynq I2C");
-  CLI_AddCmd("zrd",        apollo_zynq_i2c_rx_cb,   2, 0, "Read Apollo Zynq I2C");
+  /* Zynq I2C writes and reads. */
+  CLI_AddCmd("zwr",        apollo_zynq_i2c_tx_cb,   3, 0, COMMAND_ZYNQ_I2C_TX_DESCRIPTION);
+  CLI_AddCmd("zrd",        apollo_zynq_i2c_rx_cb,   2, 0, COMMAND_ZYNQ_I2C_RX_DESCRIPTION);
 
-  CLI_AddCmd("lwr",        apollo_local_i2c_tx_cb,  2, 0, "Write Apollo Local I2C");
-  CLI_AddCmd("lrd",        apollo_local_i2c_rx_cb,  1, 0, "Read Apollo Local I2C");
+  /* Local bus I2C writes and reads. */
+  CLI_AddCmd("lwr",        apollo_local_i2c_tx_cb,  2, 0, COMMAND_LOCAL_I2C_TX_DESCRIPTION);
+  CLI_AddCmd("lrd",        apollo_local_i2c_rx_cb,  1, 0, COMMAND_LOCAL_I2C_RX_DESCRIPTION);
 
-  CLI_AddCmd("c1wr",       apollo_cm1_i2c_tx_cb,    2, 0, "Write Apollo CM1 I2C");
-  CLI_AddCmd("c1rd",       apollo_cm1_i2c_rx_cb,    1, 0, "Read Apollo CM1 I2C");
+  /* CM1 bus I2C writes and reads. */
+  CLI_AddCmd("c1wr",       apollo_cm1_i2c_tx_cb,    2, 0, COMMAND_CM1_I2C_TX_DESCRIPTION);
+  CLI_AddCmd("c1rd",       apollo_cm1_i2c_rx_cb,    1, 0, COMMAND_CM1_I2C_RX_DESCRIPTION);
 
-  CLI_AddCmd("c2wr",       apollo_cm2_i2c_tx_cb,    2, 0, "Write Apollo CM2 I2C");
-  CLI_AddCmd("c2rd",       apollo_cm2_i2c_rx_cb,    1, 0, "Read Apollo CM2 I2C");
+  /* CM2 bus I2C writes and reads. */
+  CLI_AddCmd("c2wr",       apollo_cm2_i2c_tx_cb,    2, 0, COMMAND_CM2_I2C_TX_DESCRIPTION);
+  CLI_AddCmd("c2rd",       apollo_cm2_i2c_rx_cb,    1, 0, COMMAND_CM2_I2C_RX_DESCRIPTION);
 
-  CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, "1 to disable IPMC shutdown if Zynq is not booted");
+  CLI_AddCmd("dis_shdn",   apollo_dis_shutoff_cb,   1, 0, COMMAND_APOLLO_DIS_SHUTOFF_DESCRIPTION);
 
-  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac_cb, 7, 0, "Set the ETH MAC address fields in EEPROM");
+  /* Zynq MAC address write to the EEPROM. */
+  CLI_AddCmd("ethmacwr",   apollo_write_eth_mac_cb, 7, 0, COMMAND_ETHMACWR_DESCRIPTION);
 }
