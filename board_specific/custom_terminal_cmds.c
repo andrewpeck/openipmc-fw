@@ -222,7 +222,8 @@ static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
   mt_printf( "\r\n\n" );
   /* The register address to read from is the first argument to the CLI command. */
   uint8_t adr = CLI_GetArgHex(0);
-  uint8_t data = CLI_GetArgHex(1);
+
+  uint8_t rd_buf;
 
   /* 
    * Do the write and read with a repeated start condition. 
@@ -232,14 +233,14 @@ static uint8_t apollo_cm_i2c_rx_cb(uint8_t cm)
   uint8_t cm_mcu_adr = 0x40;
 
   if (cm==1) {
-    status = cm1_i2c_tx_and_rx(&adr, &data, cm_mcu_adr);
+    status = cm1_i2c_tx_and_rx(&adr, &rd_buf, cm_mcu_adr);
   }
   else if (cm==2) {
-    status = cm2_i2c_tx_and_rx(&adr, &data, cm_mcu_adr);
+    status = cm2_i2c_tx_and_rx(&adr, &rd_buf, cm_mcu_adr);
   }
 
   if (status==H7I2C_RET_CODE_OK)
-    mt_printf("CM%d I2C RX adr=0x%02X data=0x%02X\r\n", cm, adr, data);
+    mt_printf("CM%d I2C RX adr=0x%02X data=0x%02X\r\n", cm, adr, rd_buf);
   else
     mt_printf("I2C Failure\r\n");
   return status;
