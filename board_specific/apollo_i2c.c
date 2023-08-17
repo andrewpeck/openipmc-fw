@@ -183,7 +183,6 @@ h7i2c_i2c_ret_code_t h7i2c_i2c_check_and_clear_error_state(h7i2c_periph_t periph
  * @param wr_data_buf       8-bit buffer for the data being written
  * @param rd_data_buf       8-bit buffer for the data being received
  * @param timeout           Number of miliseconds to wait for a response from the target device before timing out
- * @param transaction_type  Enum representing whether the transaction is a read or write
  * 
  */
 static h7i2c_i2c_ret_code_t h7i2c_i2c_clear_error_state_and_do_transaction(h7i2c_periph_t peripheral, uint16_t dev_address, uint16_t wr_data_size, uint16_t rd_data_size, uint8_t *wr_data_buf, uint8_t *rd_data_buf, uint32_t timeout) {
