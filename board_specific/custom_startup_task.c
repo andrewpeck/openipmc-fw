@@ -7,6 +7,13 @@
 #include "ipmc_ios.h"
 #include "lwip.h"
 
+// UART interface mapping
+extern h7uart_periph_t  huart_cli;
+extern h7uart_periph_init_config_t huart_cli_config;
+
+extern h7uart_periph_t huart_sol;
+extern h7uart_periph_init_config_t huart_sol_config;
+
 void mt_printf(const char* format, ...);
 
 osThreadId_t ipmc_fp_led_blink_task_handle;
