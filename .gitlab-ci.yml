@@ -13,6 +13,7 @@ build-job:
   # Recursively clone the OpenIPMC FW submodules during the FW build.
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+    GIT_STRATEGY: clone
   before_script:
     - echo "Starting build stage. CI environment follows:"
     - export
