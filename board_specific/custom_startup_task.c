@@ -1,3 +1,4 @@
+#include "h7uart_bare.h"
 #include "cmsis_os.h"
 #include "cmsis_os2.h"
 #include "dimm_gpios.h"
@@ -197,5 +198,34 @@ void custom_startup_task( void )
     osDelay (30000); // once per 30s
     apollo_write_zynq_i2c_constants ();
   }
+
+}
+
+
+void uart_mapping( void )
+{
+  // CLI UART CONFIGURATION
+  huart_cli = H7UART_UART8 //
+  huart_cli_config.pin_rx        = H7UART_PIN_UART8_RX_PE0; //
+  huart_cli_config.pin_tx        = H7UART_PIN_UART8_TX_PE1; //
+  huart_cli_config.rcc_clksource = RCC_USART1CLKSOURCE_D2PCLK2;
+  huart_cli_config.function      = PERIPH_TX_RX;
+  huart_cli_config.data_config   = DATA_WORD_LENGTH_8_NO_PARITY;
+  huart_cli_config.fifo_enable   = FIFO_MODE_DISABLE;
+  huart_cli_config.fifo_rx_thres = FIFO_TH_1_8;
+  huart_cli_config.presc         = H7UART_PRESC_DIV_1;
+  huart_cli_config.baud_rate     = 115200UL;
+
+  // SOL UART CONFIGURATION
+  huart_sol = H7UART_UART4 //
+  huart_sol_config.pin_rx        = H7UART_PIN_UART4_RX_PH14; //
+  huart_sol_config.pin_tx        = H7UART_PIN_UART4_TX_PB9; //
+  huart_sol_config.rcc_clksource = RCC_USART1CLKSOURCE_D2PCLK2;
+  huart_sol_config.function      = PERIPH_TX_RX;
+  huart_sol_config.data_config   = DATA_WORD_LENGTH_8_NO_PARITY;
+  huart_sol_config.fifo_enable   = FIFO_MODE_DISABLE;
+  huart_sol_config.fifo_rx_thres = FIFO_TH_1_8;
+  huart_sol_config.presc         = H7UART_PRESC_DIV_1;
+  huart_sol_config.baud_rate     = 115200UL;
 
 }
