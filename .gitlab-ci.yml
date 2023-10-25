@@ -14,7 +14,7 @@ build-job:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   # In case of weird errors, GIT_STRATEGY should be turned on (related to cache problems in CI test)
-  #  GIT_STRATEGY: clone
+    GIT_STRATEGY: clone
   before_script:
     - echo "Starting build stage. CI environment follows:"
     - export
