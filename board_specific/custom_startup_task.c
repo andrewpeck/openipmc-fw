@@ -212,9 +212,9 @@ void custom_startup_task( void )
 void uart_mapping( void )
 {
   // CLI UART CONFIGURATION
-  huart_cli = H7UART_UART8; //
-  huart_cli_config.pin_rx        = H7UART_PIN_UART8_RX_PE0; //
-  huart_cli_config.pin_tx        = H7UART_PIN_UART8_TX_PE1; //
+  huart_cli = H7UART_UART5; // modified from default
+  huart_cli_config.pin_rx        = H7UART_PIN_UART5_RX_PD2; // modified from default
+  huart_cli_config.pin_tx        = H7UART_PIN_UART5_TX_PC12; // modified from default
   huart_cli_config.rcc_clksource = RCC_USART1CLKSOURCE_D2PCLK2;
   huart_cli_config.function      = PERIPH_TX_RX;
   huart_cli_config.data_config   = DATA_WORD_LENGTH_8_NO_PARITY;
@@ -224,9 +224,9 @@ void uart_mapping( void )
   huart_cli_config.baud_rate     = 115200UL;
 
   // SOL UART CONFIGURATION
-  huart_sol = H7UART_UART4; //
-  huart_sol_config.pin_rx        = H7UART_PIN_UART4_RX_PH14; //
-  huart_sol_config.pin_tx        = H7UART_PIN_UART4_TX_PB9; //
+  huart_sol = H7UART_UART4; // modified from default
+  huart_sol_config.pin_rx        = H7UART_PIN_UART4_RX_PH14; // modified from default
+  huart_sol_config.pin_tx        = H7UART_PIN_UART4_TX_PB9; // modified from default
   huart_sol_config.rcc_clksource = RCC_USART1CLKSOURCE_D2PCLK2;
   huart_sol_config.function      = PERIPH_TX_RX;
   huart_sol_config.data_config   = DATA_WORD_LENGTH_8_NO_PARITY;
