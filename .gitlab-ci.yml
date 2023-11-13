@@ -1,21 +1,70 @@
-image: "hardwario/gcc-arm-embedded:8-2018-q4-major"
+# Two job stages: FW build and release creation.
+# FW build will always be triggered when a new commit is pushed to the remote repo.
+# A release job will only run when a new tag is created for the firmware.
+stages:
+  - build
+  - release
 
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
-before_script:
-  - apt-get update
-  - apt-get --yes install libssl-dev zlib1g-dev
-
+# OpenIPMC FW build stage.
 build-job:
   stage: build
+  needs: []
+  image: "hardwario/gcc-arm-embedded:8-2018-q4-major"
+  # Recursively clone the OpenIPMC FW submodules during the FW build.
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  # In case of weird errors, GIT_STRATEGY should be turned on (related to cache problems in CI test)
+    GIT_STRATEGY: clone
+  before_script:
+    - echo "Starting build stage. CI environment follows:"
+    - export
+    - echo BUILD_JOB_ID=$CI_JOB_ID >> build.env
+    - echo BUILD_COMMIT_SHA=$CI_COMMIT_SHA >> build.env
+    - apt-get update
+    - apt-get --yes install libssl-dev zlib1g-dev
   script:
-    - make clean
-    - make -j8 hpm
+    - make -j8 batch
+  # Keep the binary files (for USB/STM32 upload) and HPM files (remote ipmitool-based upload)
   artifacts:
     paths:
-      - openipmc-fw/CM4/openipmc-fw_CM4.bin
-      - openipmc-fw/CM4/upgrade_CM4.hpm
-      - openipmc-fw/CM7/openipmc-fw_CM7.bin
-      - openipmc-fw/CM7/upgrade_CM7.hpm
+      - openipmc-fw_BL7.bin
+      - openipmc-fw_CM4.bin
+      - openipmc-fw_CM7.bin
+      - openipmc-fw_full.bin
+      - upgrade_CM4.hpm
+      - upgrade_CM7.hpm
+      - upgrade_BL7.hpm
+      - upgrade_FULL.hpm
+    reports:
+      dotenv: build.env
     expire_in: 1 month
+
+# FW release stage, only will run when a FW tag is created.
+create-release:
+  stage: release
+  needs:
+    - job: build-job
+      artifacts: true
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  # Only create the release if a tag was created via GitLab UI, or pushed to repo.
+  rules:
+    - if: $CI_COMMIT_TAG
+  before_script:
+    - apk add git
+    - git --version
+  script:
+    - echo "Running the release stage"
+    - echo "Previous job ID for FW build is ${BUILD_JOB_ID}"
+    - echo "The firmware commit for this release is ${CI_COMMIT_SHORT_SHA}"
+    - echo "The firmware tag for this release is ${CI_COMMIT_TAG}"
+    - echo "Submodule information printed below:"
+    - git submodule status
+  # Rules for the release. tag_name and description fields MUST be non-empty.
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    description: 'Apollo-customized OpenIPMC FW $CI_COMMIT_TAG. Firmware commit: $CI_COMMIT_SHORT_SHA'
+    name: 'Release binaries and HPM upgrade files for OpenIPMC FW $CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'Build artifacts archive'
+          url: 'https://gitlab.com/BU-EDF/openipmc-fw/-/jobs/${BUILD_JOB_ID}/artifacts/download?file_type=archive'

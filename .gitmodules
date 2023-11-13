@@ -1,3 +1,9 @@
 [submodule "openipmc-fw"]
 	path = openipmc-fw
 	url = https://gitlab.com/openipmc/openipmc-fw.git
+[submodule "openipmc-fw-full-image-builder"]
+	path = openipmc-fw-full-image-builder
+	url = https://gitlab.com/openipmc/openipmc-fw-full-image-builder.git
+[submodule "openipmc-fw-bootloader"]
+	path = openipmc-fw-bootloader
+	url = https://gitlab.com/openipmc/openipmc-fw-bootloader.git
