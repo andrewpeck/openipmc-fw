@@ -2,12 +2,15 @@
 
 // https://github.com/apollo-lhc/cm_mcu/wiki/MCU-I2C-target-documentation
 
+/* Different sensor types on the Apollo Command Module. */
 #define FPGA0 0
 #define FPGA1 1
 #define FIREFLY 2
 #define REGULATOR 3
 #define MCU 4
-#define ADR 0x40
+
+/* I2C address of the CM microcontroller on the CM bus. */
+#define CM_MCU_ADR 0x40
 
 const linear_sensor_constants_t cm_fpga_temp_consts = {
     .sensor_type = TEMPERATURE,
@@ -67,27 +70,31 @@ const linear_sensor_constants_t cm_mcu_temp_consts = {
 
 sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t *sensor_reading, sensor_thres_values_t *sensor_thresholds) {
 
+  uint8_t tx_data = 0xFF;
   uint8_t rx_data = 0xFF;
 
+  /* Figure out the register address we want to read from the CM MCU. */
   if (sensor == FPGA0) {
-    rx_data = 0x12;
+    tx_data = 0x12;
   } else if (sensor == FPGA1) {
-    rx_data = 0x14;
+    tx_data = 0x14;
   } else if (sensor == FIREFLY) {
-    rx_data = 0x16;
+    tx_data = 0x16;
   } else if (sensor == REGULATOR) {
-    rx_data = 0x18;
+    tx_data = 0x18;
   } else if (sensor == MCU) {
-    rx_data = 0x10;
+    tx_data = 0x10;
   }
 
-  HAL_StatusTypeDef status = 0;
-  status |= cm1_i2c_tx(&rx_data, ADR);
-  status |= cm1_i2c_rx(&rx_data, ADR);
+  /* 
+   * Do the I2C transaction. First, write the register address to the CM MCU,
+   * and then read the data in that register back.
+   */
+  const h7i2c_i2c_ret_code_t status = cm1_i2c_tx_and_rx(&tx_data, &rx_data, CM_MCU_ADR);
 
 	sensor_reading_status_t sensor_status = SENSOR_READING_OK;
 
-  if (status == HAL_OK) {
+  if (status == H7I2C_RET_CODE_OK) {
 
     if (rx_data == 0xFF) { // device not powered or present
       sensor_reading->raw_value = 2;
@@ -115,7 +122,7 @@ sensor_reading_status_t sensor_reading_cm_temp(uint8_t sensor, sensor_reading_t 
         sensor_thresholds->upper_non_recoverable_threshold
     );
 
-  return (sensor_status);
+  return sensor_status;
 }
 
 

@@ -16,6 +16,7 @@
 #include "zynq_i2c.h"
 #include "zynq_temp_sensor.h"
 #include "head_commit_sha1.h"
+#include "apollo_sensor_bus_mutex.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -31,6 +32,9 @@ uint8_t apollo_boot_mode        = APOLLO_BOOT_SD;
 uint8_t apollo_sdsel            = APOLLO_SDSEL_MIDBOARD;
 
 uint8_t apollo_status       = 0;
+
+/* Mutex for the I2C transactions using the I2C3 bus. */
+uint8_t apollo_sensor_bus_mutex = APOLLO_SENSOR_BUS_MUTEX_UNLOCKED;
 
 uint8_t apollo_get_handle_open () {
   if (ipmc_ios_read_handle() == APOLLO_HANDLE_OPEN) {
@@ -373,6 +377,12 @@ void apollo_powerdown_sequence() {
     mt_printf("   Zynq shut down ok.. powering off\r\n");
   }
 
+  /* 
+   * Lock the I2C3 bus so that no other process (i.e., sensor manager task) 
+   * will try to talk to the Zynq in the transition process.
+   */
+  apollo_sensor_bus_mutex_lock(100);
+
   // disable zynq
   mt_printf(" > Disabling Zynq Enable Line\r\n");
   apollo_set_zynq_en(0);
@@ -390,6 +400,10 @@ void apollo_powerdown_sequence() {
   mt_printf("   12V power disabled\r\n");
   apollo_status = APOLLO_STATUS_PD_DONE;
   mt_printf(" > Shutdown done\r\n");
+
+  /* Release the I2C3 mutex. */
+  apollo_sensor_bus_mutex_release();
+
   return;
 }
 
@@ -575,6 +589,12 @@ void apollo_powerup_sequence () {
   apollo_status = APOLLO_STATUS_PU_SET_12V_EN;
   mt_printf(" > Enabling 12V power\r\n");
   EN_12V_SET_STATE(SET);
+  /* 
+   * Lock the I2C3 bus so that no other process (i.e., sensor manager task) 
+   * will try to talk to the Zynq in the transition process.
+   */
+  apollo_sensor_bus_mutex_lock(100);
+
   // set zynq enable
   //------------------------------------------------------------------------------
   apollo_status = APOLLO_STATUS_PU_SET_ZYNQ_EN;
@@ -617,6 +637,8 @@ void apollo_powerup_sequence () {
     // wait for fpga to go up, if it doesn't then shut back down
     if (apollo_timeout_counter (apollo_get_fpga_done, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_FPGA)) {
       apollo_status = APOLLO_STATUS_PU_TIMEOUT_FPGA_DONE;
+      /* Release the mutex on the I2C3 bus if we're shutting back down. */
+      apollo_sensor_bus_mutex_release();
       return;
     }
 
@@ -647,15 +669,19 @@ void apollo_powerup_sequence () {
   mt_printf(" > Waiting for Zynq Up\r\n");
 
   apollo_status = APOLLO_STATUS_PU_WAIT_ZYNQ_DONE;
-    // wait for zynq to go up, if it doesn't then shut back down
+  // Wait for Zynq to go up, if it doesn't then shut back down
   if (apollo_timeout_counter(apollo_get_zynq_done_generic, 90, 100, APOLLO_ERR_TIMEOUT_ZYNQ_CPU)) {
     apollo_status = APOLLO_STATUS_PU_TIMEOUT_ZYNQ_DONE;
+    /* Release the mutex on the I2C3 bus if we're shutting back down. */
+    apollo_sensor_bus_mutex_release();
     return;
   }
 
-  // write zynq constants
-  //------------------------------------------------------------------------------
+  /* Release the mutex on the I2C3 bus. */
+  apollo_sensor_bus_mutex_release();
 
+  // Write zynq constants
+  //------------------------------------------------------------------------------
   mt_printf(" > Writing I2C Constants to Zynq\r\n");
   apollo_write_zynq_i2c_constants();
 
