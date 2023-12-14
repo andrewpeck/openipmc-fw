@@ -3,17 +3,17 @@
 
 #define ZYNQ_I2C_DONE_REG 0
 
-// Read/write targets for SLAVE8 target on the Zynq
+// Read/write targets for SLAVE8 I2C target on the Zynq
 #define IPMC_MAC_ADR_REG 0x00
 #define IPMC_IP_ADR_REG 0x08
 #define IPMC_FW_HASH_REG 0x10
 #define IPMC_UID_REG 0x14
 
-// Read/write target addresses for SLAVE6 target on the Zybq
+// Read/write target addresses for SLAVE6 I2C target on the Zynq
 #define IPMC_SITE_NUMBER_ADDR 0x0
 #define IPMC_SHELF_ID_ADDR 0x4
 
-// Read/write targets for SLAVE1 target on the Zynq
+// Read/write targets for SLAVE1 I2C target on the Zynq
 #define ZYNQ_ETH0_MAC_ADR_REG 0x14
 
 
@@ -25,7 +25,7 @@ uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr) {
 
   uint8_t data = adr;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= zynq_i2c_tx(&data, slave_addr);
   status |= zynq_i2c_rx(&data, slave_addr);
 
@@ -38,7 +38,7 @@ uint8_t zynq_rd_reg(uint8_t adr, uint8_t slave_addr) {
 uint8_t zynq_wr_reg(uint8_t adr, uint8_t data, uint8_t slave_addr) {
 
   uint8_t wr_data [] = {adr, data} ;
-  HAL_StatusTypeDef status = HAL_OK;
+  h7i2c_i2c_ret_code_t status = H7I2C_RET_CODE_OK;
   status |= zynq_i2c_tx_n(wr_data, slave_addr, 2);
 
   if (status)
