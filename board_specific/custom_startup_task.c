@@ -227,7 +227,7 @@ void uart_mapping( void )
   huart_sol = H7UART_UART4; // modified from default
   huart_sol_config.pin_rx        = H7UART_PIN_UART4_RX_PH14; // modified from default
   huart_sol_config.pin_tx        = H7UART_PIN_UART4_TX_PB9; // modified from default
-  huart_sol_config.rcc_clksource = RCC_USART1CLKSOURCE_D2PCLK2;
+  huart_sol_config.rcc_clksource = RCC_USART234578CLKSOURCE_PCLK1;
   huart_sol_config.function      = PERIPH_TX_RX;
   huart_sol_config.data_config   = DATA_WORD_LENGTH_8_NO_PARITY;
   huart_sol_config.fifo_enable   = FIFO_MODE_DISABLE;
