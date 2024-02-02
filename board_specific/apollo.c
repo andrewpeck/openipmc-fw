@@ -70,7 +70,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
 
       // somebody opened the handle
       if (apollo_get_handle_open()) {
-        apollo_powerdown_sequence();
+        apollo_powerdown_sequence(10);
         apollo_startup_started = 0;
         apollo_abormal_shutdown=APOLLO_ERR_OPEN_HANDLE;
         return 1;
@@ -80,7 +80,7 @@ uint8_t apollo_timeout_counter(uint8_t (*check_function)(),
     // timeout, shutdown! (if dis_shutoff is 0)
     apollo_startup_started=0;
     apollo_abormal_shutdown=err;
-    apollo_powerdown_sequence();
+    apollo_powerdown_sequence(10);
     return 1;
   }
 }
@@ -343,7 +343,12 @@ void apollo_set_shelf_id() {
   }
 }
 
-void apollo_powerdown_sequence() {
+/**
+ * @brief Power-down sequence of the Apollo Service Module.
+ * 
+ * @param seconds    Number of seconds to wait for Zynq to shut down before timing out and cutting power. 
+ */
+void apollo_powerdown_sequence(uint8_t seconds) {
 
   apollo_startup_done = 0;
   apollo_startup_started = 0;
@@ -357,8 +362,6 @@ void apollo_powerdown_sequence() {
   // wait for zynq to shut down
   mt_printf(" > Waiting for Zynq to shut down\r\n");
   apollo_status = APOLLO_STATUS_PD_WAIT_ZYNQ_OFF;
-
-  const uint8_t seconds = 10;
 
   for (int8_t i = 0; i < seconds * 10; i++) {
     if (apollo_get_zynq_done_generic() == 0) {
@@ -811,27 +814,18 @@ void apollo_write_zynq_i2c_constants () {
 void board_specific_activation_policy (uint8_t current_power_level,
                                        uint8_t new_power_level) {
   if (new_power_level == 0) {
-    apollo_powerdown_sequence();
+    apollo_powerdown_sequence(10);
   } else {
     apollo_powerup_sequence();
   }
   return;
 }
 
-/*
- * Payload Cold Reset
- *
- * This function is called by OpenIPMC when a Cold Reset command is received
- * from Shelf Manager
+/* 
+ * Implementation of board-specific sensors. 
+ * The create_linear_sensor() calls register Apollo sensors to Sensor Data Record (SDR) 
+ * with the respective callback functions.
  */
-void payload_cold_reset(void) {
-  PAYLOAD_RESET_SET_STATE(RESET);
-  apollo_powerdown_sequence();
-
-  PAYLOAD_RESET_SET_STATE(SET);
-  apollo_powerup_sequence();
-}
-
 void create_board_specific_sensors() {
 
   //------------------------------------------------------------------------------
